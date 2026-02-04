@@ -86,7 +86,7 @@ class DashboardService:
 
             # Performance simple v1
             perf_eur = current_value - net_contributions
-            perf_pct = safe_divide(perf_eur, net_contributions, 2) if net_contributions > 0 else Decimal(0)
+            perf_pct = safe_divide(perf_eur, net_contributions, 2) * 100 if net_contributions > 0 else Decimal(0)
 
             allocation_pct = Decimal(0)
 
@@ -139,6 +139,8 @@ class DashboardService:
 
         for tx in transactions:
             if tx.type == TransactionType.DEPOSIT and tx.amount_eur:
+                net += tx.amount_eur
+            elif tx.type == TransactionType.BUY and tx.amount_eur:
                 net += tx.amount_eur
             elif tx.type == TransactionType.WITHDRAW and tx.amount_eur:
                 net -= tx.amount_eur
