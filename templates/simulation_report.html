@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rapport Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 11pt;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #008080;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 24pt;
+            color: #008080;
+            margin-bottom: 5px;
+        }
+
+        header p {
+            font-size: 10pt;
+            color: #666;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        section h2 {
+            font-size: 14pt;
+            color: #008080;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            page-break-after: avoid;
+        }
+
+        section h3 {
+            font-size: 12pt;
+            color: #333;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-left: 4px solid #008080;
+            padding: 15px;
+            border-radius: 4px;
+        }
+
+        .summary-card .label {
+            font-size: 9pt;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .summary-card .value {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #008080;
+        }
+
+        .config-table {
+            font-size: 9pt;
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        .config-table td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .config-table td:first-child {
+            font-weight: bold;
+            width: 40%;
+            color: #555;
+        }
+
+        .config-table td:last-child {
+            text-align: right;
+        }
+
+        .chart-container {
+            margin: 25px 0;
+            text-align: center;
+            page-break-inside: avoid;
+        }
+
+        .chart-container img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .chart-title {
+            font-size: 10pt;
+            color: #666;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Tables PDF: éviter le débordement horizontal */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          table-layout: fixed;         /* clé: largeur fixe par colonne */
+        }
+        th, td {
+          padding: 4px 4px;
+          vertical-align: top;
+          white-space: normal;         /* autorise le retour à la ligne */
+          overflow-wrap: anywhere;     /* casse même sans espaces */
+          word-break: break-word;      /* fallback */
+        }
+
+        table th {
+            background: #008080;
+            color: white;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        table td {
+            font-size: 6pt;
+            border-bottom: 1px solid #ddd;
+        }
+
+        table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .table-striped tbody tr:hover {
+            background: #f0f0f0;
+        }
+
+        /* Annexes: plus petit pour faire tenir plus de colonnes */
+        .table-small, .table-small th, .table-small td { font-size: 7pt; }
+
+          .annex-note {
+              font-size: 9pt;
+              color: #666;
+              font-style: italic;
+              margin: 15px 0;
+          }
+
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 9pt;
+            color: #999;
+            text-align: center;
+        }
+
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            section {
+                page-break-inside: avoid;
+            }
+        }
+      @page { size: A4; margin: 14mm; }
+      @page landscape { size: A4 landscape; margin: 12mm; }
+
+      /* Appliquer une page "landscape" à une section */
+      .landscape { page: landscape; }
+
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <h1>📊 Rapport de Simulation</h1>
+        <p>Simulation long terme - {{ generated_at }}</p>
+    </header>
+
+    <!-- SECTION 1: RÉSUMÉ FINAL -->
+    <section>
+        <h2>Résumé Final</h2>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="label">Valeur finale</div>
+                <div class="value">{{ final_value }}€</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Valeur finale réelle</div>
+                <div class="value">{{ final_value_real }}€</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Investi cumulé</div>
+                <div class="value">{{ final_invested }}€</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Gains totaux</div>
+                <div class="value">{{ final_gains }}€</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Rendement %</div>
+                <div class="value">{{ gains_pct }}</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Impôt dû (N+1)</div>
+                <div class="value">{{ tax_due_next_year }}€</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECTION 2: PARAMÈTRES DE SIMULATION -->
+    <section>
+        <h2>Paramètres de Simulation</h2>
+
+        <table class="config-table">
+            <tr>
+                <td>Durée</td>
+                <td>{{ config_years }} ans</td>
+            </tr>
+            <tr>
+                <td>Période de calcul</td>
+                <td>{{ config_period }}</td>
+            </tr>
+            <tr>
+                <td>Inflation annuelle</td>
+                <td>{{ config_inflation }}</td>
+            </tr>
+            <tr>
+                <td>Revenu brut initial</td>
+                <td>{{ config_income_start }}€</td>
+            </tr>
+            <tr>
+                <td>Augmentation revenu/an</td>
+                <td>{{ config_income_growth }}</td>
+            </tr>
+            <tr>
+                <td>Dépenses annuelles</td>
+                <td>{{ config_living_costs }}€</td>
+            </tr>
+        </table>
+    </section>
+
+    <!-- Paramèters par produit -->
+    <section>
+      <h2>Paramètres par produit</h2>
+
+      <table class="table table-striped table-small">
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th>Catégorie</th>
+            <th>Priorité</th>
+            <th>Rendement annuel</th>
+            <th>Apport fixe/période</th>
+            <th>Apport % revenu</th>
+            <th>Valeur initiale</th>
+            <th>Investi initial</th>
+            <th>SCPI (si scpi)</th>
+            <th>FCPI (si fcpi)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in products_params %}
+          <tr>
+            <td>{{ p.name }}</td>
+            <td>{{ p.kind }}</td>
+            <td>{{ p.priority }}</td>
+            <td>{{ p.annual_return_pct }}%</td>
+            <td>{{ p.contrib_fixed_eur }}€</td>
+            <td>{{ p.contrib_pct_income }}%</td>
+            <td>{{ p.initial_value_eur }}€</td>
+            <td>{{ p.initial_invested_eur }}</td>
+            <td>{{ p.scpi_text }}</td>
+            <td>{{ p.fcpi_text }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SECTION 3: GRAPHIQUES -->
+    {% if metrics_count > 0 %}
+    <section>
+        <h2>Graphiques - Évolution des Métriques</h2>
+        <p style="font-size: 9pt; color: #666; margin-bottom: 15px;">
+            {{ metrics_count }} métrique(s) sélectionnée(s) et affichée(s) ci-dessous.
+        </p>
+
+        {% for metric, chart_base64 in charts.items() %}
+        <div class="chart-container">
+            <img src="{{ chart_base64 }}" alt="Graphique {{ metric }}" />
+            <div class="chart-title">{{ metric.replace('_', ' ') }}</div>
+        </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+
+    <!-- SECTION 4: ANNEXES -->
+    <section class="page-break landscape">
+      <h2>Annexe A – Données par Période</h2>
+      {{ periods_table_html | safe }}
+      <p class="annex-note">
+          Tableau détaillé des résultats pour chaque période (mois/trimestre/année).
+      </p>
+    </section>
+
+    <section class="landscape">
+      <h2>Annexe B – Données par Produit</h2>
+      {{ products_table_html | safe }}
+      <p class="annex-note">
+          Tableau détaillé des résultats pour chaque produit et chaque période.
+      </p>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>Généré automatiquement - Finance Tracker</p>
+    </footer>
+</body>
+</html>
