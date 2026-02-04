@@ -20,6 +20,7 @@ dependencies = [
     "pydantic>=2.0.0",
     "python-dateutil>=2.8.2",
     "tabulate",
+    "streamlit",
 ]
 
 [project.optional-dependencies]
