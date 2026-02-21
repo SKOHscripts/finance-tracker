@@ -50,8 +50,20 @@ def render(session: Session) -> None:
                 )
                 add_date = st.date_input("Date", value=date.today(), key="tx_add_date")
             with c2:
-                add_amount = st.number_input("Montant EUR (optionnel)", value=0.0, step=10.0, key="tx_add_amount")
-                add_quantity = st.number_input("Quantité (optionnel)", value=0.0, step=1.0, key="tx_add_qty")
+                add_amount = st.number_input(
+                    "Montant EUR (optionnel)",
+                    value=0.0,
+                    step=0.01,
+                    format="%.2f",
+                    key="tx_add_amount"
+                )
+                add_quantity = st.number_input(
+                    "Quantité (optionnel)",
+                    value=0.0,
+                    step=0.00000001,
+                    format="%.8f",
+                    key="tx_add_qty"
+                )
             with c3:
                 add_note = st.text_input("Note", value="", key="tx_add_note")
 
@@ -71,7 +83,7 @@ def render(session: Session) -> None:
                         type=_enum_from_value(TransactionType, add_type),
                         amount_eur=to_decimal(add_amount) if add_amount and add_amount > 0 else None,
                         quantity=to_decimal(add_quantity) if add_quantity and add_quantity > 0 else None,
-                        note=add_note.strip(),  # CORRIGÉ ICI (Pas de 'or None')
+                        note=add_note.strip(),
                     )
                     tx_repo.create(tx)
                     st.success("✅ Transaction ajoutée.")
@@ -92,16 +104,12 @@ def render(session: Session) -> None:
 
     txs = tx_repo.get_all()
 
-    # Filtrage
-
     if filter_product != "Tous":
         pid = product_by_name[filter_product].id
         txs = [t for t in txs if t.product_id == pid]
 
     if filter_type != "Tous":
         txs = [t for t in txs if t.type.value == filter_type]
-
-    # Tri
 
     if sort_mode == "Date croissante":
         txs = sorted(txs, key=lambda t: t.date)
@@ -148,8 +156,19 @@ def render(session: Session) -> None:
             "date": st.column_config.DateColumn("Date", format="YYYY-MM-DD"),
             "produit": st.column_config.SelectboxColumn("Produit", options=product_names, required=True),
             "type": st.column_config.SelectboxColumn("Type", options=[e.value for e in TransactionType], required=True),
-            "montant_eur": st.column_config.NumberColumn("Montant EUR", min_value=0.0, step=10.0),
-            "quantite": st.column_config.NumberColumn("Quantité", min_value=0.0, step=1.0),
+
+            "montant_eur": st.column_config.NumberColumn(
+                "Montant EUR",
+                min_value=0.0,
+                step=0.01,
+                format="%.2f"
+            ),
+            "quantite": st.column_config.NumberColumn(
+                "Quantité",
+                min_value=0.0,
+                step=0.01,
+                format="%.2f"
+            ),
             "note": st.column_config.TextColumn("Note"),
             "🗑️ Supprimer": st.column_config.CheckboxColumn("🗑️ Supprimer"),
         },
@@ -195,7 +214,7 @@ def render(session: Session) -> None:
                     tx.amount_eur = to_decimal(amount) if amount > 0 else None
                     tx.quantity = to_decimal(qty) if qty > 0 else None
 
-                    tx.note = str(r.get("note") or "").strip()  # CORRIGÉ ICI (Chaîne vide assurée)
+                    tx.note = str(r.get("note") or "").strip()
 
                     tx_repo.update(tx)
 

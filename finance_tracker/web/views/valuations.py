@@ -37,10 +37,22 @@ def render(session: Session) -> None:
                 add_product_name = st.selectbox("Produit", product_names, key="val_add_product")
                 add_date = st.date_input("Date", value=date.today(), key="val_add_date")
             with c2:
-                add_total = st.number_input("Valeur totale EUR", value=0.0, step=100.0, key="val_add_total")
-                add_unit = st.number_input("Prix unitaire (optionnel)", value=0.0, step=1.0, key="val_add_unit")
-
             submitted = st.form_submit_button("Ajouter", width="stretch")
+                add_total = st.number_input(
+                    "Valeur totale EUR",
+                    value=0.0,
+                    step=0.01,
+                    format="%.2f",
+                    key="val_add_total"
+                )
+                add_unit = st.number_input(
+                    "Prix unitaire (optionnel)",
+                    value=0.0,
+                    step=0.01,
+                    format="%.2f",
+                    key="val_add_unit"
+                )
+
 
             if submitted:
                 try:
@@ -120,8 +132,19 @@ def render(session: Session) -> None:
             "id": st.column_config.NumberColumn("ID", disabled=True),
             "date": st.column_config.DateColumn("Date", format="YYYY-MM-DD"),
             "produit": st.column_config.SelectboxColumn("Produit", options=product_names, required=True),
-            "valeur_totale_eur": st.column_config.NumberColumn("Valeur totale EUR", min_value=0.0, step=100.0),
-            "prix_unitaire_eur": st.column_config.NumberColumn("Prix unitaire EUR", min_value=0.0, step=1.0),
+
+            "valeur_totale_eur": st.column_config.NumberColumn(
+                "Valeur totale EUR",
+                min_value=0.0,
+                step=0.01,
+                format="%.2f"
+            ),
+            "prix_unitaire_eur": st.column_config.NumberColumn(
+                "Prix unitaire EUR",
+                min_value=0.0,
+                step=0.01,
+                format="%.2f"
+            ),
             "🗑️ Supprimer": st.column_config.CheckboxColumn("🗑️ Supprimer"),
         },
     )
