@@ -130,34 +130,57 @@ def render(session: Session) -> None:
     c1, c2, _ = st.columns([1, 1, 2])
 
     with c1:
-        if st.button("📄 Générer un rapport PDF", width="stretch"):
-            with st.spinner("Génération du rapport en cours..."):
-                try:
-                    pdf_service = PDFReportService()
-                    filepath = pdf_service.generate_report(portfolio)
-                    with open(filepath, "rb") as f:
-                        st.download_button(
-                            "⬇️ Télécharger le PDF",
-                            data=f.read(),
-                            file_name="rapport_portefeuille.pdf",
-                            mime="application/pdf",
-                            type="primary",
-                            width="stretch",
-                        )
-                except Exception as e:
-                    st.error(f"❌ Erreur : {e}")
+        # Clé de cache pour le PDF du dashboard
+        pdf_cache_key = "dashboard_pdf_bytes"
+
+        if pdf_cache_key not in st.session_state:
+            if st.button("⚙️ Préparer le rapport PDF", use_container_width=True):
+                with st.spinner("⏳ Génération du rapport PDF..."):
+                    try:
+                        pdf_service = PDFReportService()
+                        filepath = pdf_service.generate_report(portfolio)
+                        with open(filepath, "rb") as f:
+                            st.session_state[pdf_cache_key] = f.read()
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Erreur : {e}")
+        else:
+            st.download_button(
+                "⬇️ Télécharger le PDF",
+                data=st.session_state[pdf_cache_key],
+                file_name="rapport_portefeuille.pdf",
+                mime="application/pdf",
+                type="primary",
+                use_container_width=True,
+            )
 
     with c2:
-        if st.button("💾 Exporter la Data (JSON)", width="stretch"):
-            try:
-                json_data = service.export_json(portfolio)
-                st.download_button(
-                    "⬇️ Télécharger le JSON",
-                    data=json_data,
-                    file_name="dashboard_data.json",
-                    mime="application/json",
-                    type="primary",
-                    width="stretch",
-                )
-            except Exception as e:
-                st.error(f"❌ Erreur : {e}")
+        # Clé de cache pour le JSON du dashboard
+        json_cache_key = "dashboard_json_bytes"
+
+        if json_cache_key not in st.session_state:
+            if st.button("⚙️ Préparer l'export JSON", use_container_width=True):
+                with st.spinner("⏳ Structuration des données..."):
+                    try:
+                        json_data = service.export_json(portfolio)
+                        st.session_state[json_cache_key] = json_data
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Erreur : {e}")
+        else:
+            st.download_button(
+                "⬇️ Télécharger le JSON",
+                data=st.session_state[json_cache_key],
+                file_name="dashboard_data.json",
+                mime="application/json",
+                type="primary",
+                use_container_width=True,
+            )
+
+    # Petit bouton discret pour vider le cache et forcer une mise à jour des rapports
+
+    if pdf_cache_key in st.session_state or json_cache_key in st.session_state:
+        if st.button("🔄 Rafraîchir les données d'export", type="secondary"):
+            st.session_state.pop(pdf_cache_key, None)
+            st.session_state.pop(json_cache_key, None)
+            st.rerun()

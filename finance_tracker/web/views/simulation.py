@@ -552,6 +552,8 @@ def render(session: Session) -> None:
     # ── Calcul ─────────────────────────────────────────────────────────────
 
     if submitted:
+        st.session_state["sim_pdf_needs_update"] = True  # Force la regénération du PDF
+
         if not any(p.kind == "cash" for p in sim_products):
             st.stop()
 
@@ -737,35 +739,59 @@ def render(session: Session) -> None:
         chart = alt.layer(lines, points, rule).properties(height=340)
         st.altair_chart(chart, width="stretch")
 
-    st.subheader("💾 Exports")
+    st.subheader("Exports")
     c1, c2, c3 = st.columns(3)
+
     with c1:
         st.download_button(
             "⬇️ CSV périodes",
             data=df_period.to_csv(index=False).encode("utf-8"),
             file_name="simulation_periods.csv",
             mime="text/csv",
+            use_container_width=True
         )
+
     with c2:
         st.download_button(
             "⬇️ CSV produits",
             data=df_long.to_csv(index=False).encode("utf-8"),
             file_name="simulation_products.csv",
             mime="text/csv",
+            use_container_width=True
         )
+
     with c3:
-        config_params = st.session_state.sim_config_params or {}
-        pdf_bytes = SimulationPDFService().generate_report(
-            df_period=df_period,
-            df_long=df_long,
-            summary=summary,
-            selected_metrics=st.session_state.sim_selected_metrics,
-            config_params=config_params,
-            products_params=st.session_state.sim_products_params,
-        )
-        st.download_button(
-            "⬇️ PDF Rapport",
-            data=pdf_bytes,
-            file_name=f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
-            mime="application/pdf",
-        )
+        # Clé unique pour forcer la regénération si les données de simulation changent
+        pdf_cache_key = "sim_pdf_bytes"
+
+        # Si le PDF n'a pas encore été généré pour cette session
+
+        if pdf_cache_key not in st.session_state or st.session_state.get("sim_pdf_needs_update", True):
+            if st.button("⚙️ Préparer le rapport PDF", use_container_width=True):
+                with st.spinner("⏳ Génération du rapport PDF avec graphiques en cours (cela peut prendre quelques secondes)..."):
+                    try:
+                        config_params = st.session_state.sim_config_params or {}
+                        pdf_bytes = SimulationPDFService().generate_report(
+                            df_period=df_period,
+                            df_long=df_long,
+                            summary=summary,
+                            selected_metrics=st.session_state.sim_selected_metrics,
+                            config_params=config_params,
+                            products_params=st.session_state.sim_products_params,
+                        )
+                        st.session_state[pdf_cache_key] = pdf_bytes
+                        st.session_state["sim_pdf_needs_update"] = False
+                        st.rerun()  # Rafraîchit l'interface pour afficher le bouton de téléchargement
+                    except Exception as e:
+                        st.error(f"Erreur lors de la génération du PDF : {e}")
+
+        # Si le PDF est prêt dans le cache de la session
+        else:
+            st.download_button(
+                "⬇️ Télécharger le PDF",
+                data=st.session_state[pdf_cache_key],
+                file_name=f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+                mime="application/pdf",
+                type="primary",
+                use_container_width=True
+            )
