@@ -101,13 +101,19 @@ def render(session: Session) -> None:
     # Provide JSON export functionality
 
     if st.button("📥 Exporter données en JSON"):
-        json_data = service.export_json(portfolio)
-        st.download_button(
-            label="Télécharger JSON",
-            data=json_data,
-            file_name="dashboard.json",
-            mime="application/json",
-            )
+        try:
+            json_data = service.export_json(portfolio)
+            st.success(f"✅ JSON généré")
+
+            # Provide a download button
+            st.download_button(
+                label="⬇️ Télécharger JSON",
+                data=json_data,
+                file_name="dashboard.json",
+                mime="application/json",
+                )
+        except Exception as e:
+            st.error(f"❌ Erreur : {e}")
 
     if st.button("📥 Générer PDF"):
         try:

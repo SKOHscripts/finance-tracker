@@ -26,20 +26,24 @@ class Product(SQLModel, table=True):
 
 
 class Transaction(SQLModel, table=True):
-    """Transaction/mouvement de cash ou quantité."""
+    """
+    Represents a transaction record in the database.
 
+    This model tracks financial or quantity-based movements associated with a product.
+    It supports both cash transactions (EUR) and quantity-based transactions (e.g., shares, satoshis).
+    """
     id: Optional[int] = Field(default=None, primary_key=True)
     product_id: int = Field(foreign_key="product.id")
-    date: datetime  # Date de la transaction
+    date: datetime  # Date of the transaction
     type: TransactionType
     amount_eur: Optional[Decimal] = Field(
         default=None,
         sa_column=Column(Numeric(precision=12, scale=2)),
-        )  # Montant en EUR
+        )  # Amount in EUR
     quantity: Optional[Decimal] = Field(
         default=None,
         sa_column=Column(Numeric(precision=20, scale=8)),
-        )  # Quantité (parts, sats)
+        )  # Quantity (shares, sats, etc.)
     note: str = ""
     created_at: datetime = Field(
         default_factory=datetime.utcnow,
