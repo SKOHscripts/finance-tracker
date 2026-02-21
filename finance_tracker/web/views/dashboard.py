@@ -1,135 +1,163 @@
 """
 Finance Tracker Dashboard Module
-
-This module implements the main dashboard interface for the finance tracker application.
-It provides a comprehensive overview of a user's investment portfolio, displaying key
-metrics such as total value, invested amount, gains, and performance percentage.
-
-The dashboard is built using Streamlit and presents data in an organized manner:
-- Key portfolio metrics at the top
-- Detailed product breakdown with current value, investments, gains, and allocation
-- Additional information like available cash and product count
-- Export functionality to download portfolio data as JSON
-
-The module relies on the DashboardService to fetch and process portfolio data,
-and uses UI formatters for proper currency display.
 """
-
 import streamlit as st
-from sqlmodel import Session
+import pandas as pd
+import altair as alt
 
+from sqlmodel import Session
 from finance_tracker.services.dashboard_service import DashboardService
 from finance_tracker.services.pdf_report_service import PDFReportService
 from finance_tracker.web.ui.formatters import format_eur
 
 
 def render(session: Session) -> None:
-    """
-    Display the portfolio dashboard.
+    st.title("📊 Tableau de bord")
+    st.caption("Aperçu global et performances de votre portefeuille d'investissement.")
 
-    This function generates the dashboard user interface, including key metrics,
-    product details, and export options.
-
-    Parameters
-    ----------
-    session : Session
-        User session containing authentication information.
-
-    Returns
-    -------
-    None
-        Directly displays the dashboard in the Streamlit interface.
-
-    Raises
-    ------
-    Exception
-        If an error occurs while constructing the portfolio or displaying it.
-    """
-    st.header("Tableau de bord")
-
-    # Initialize the service and build the portfolio data
     service = DashboardService(session)
-    portfolio = service.build_portfolio()
+    try:
+        portfolio = service.build_portfolio()
+    except Exception as e:
+        st.error(f"Impossible de charger le portefeuille : {e}")
 
-    # Display key portfolio metrics in a horizontal row
+        return
+
+    # --- KPIs ---
+    st.markdown("### 📈 Vue d'ensemble")
+    perf_pct = (
+        float(portfolio.total_gains_eur / portfolio.total_invested_eur * 100)
+
+        if portfolio.total_invested_eur > 0
+        else 0
+    )
+
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Valeur Totale", format_eur(portfolio.total_value_eur))
+        st.metric(label="💼 Valeur Totale", value=format_eur(portfolio.total_value_eur))
     with col2:
-        st.metric("Investi", format_eur(portfolio.total_invested_eur))
+        st.metric(label="📥 Total Investi", value=format_eur(portfolio.total_invested_eur))
     with col3:
-        st.metric("Gains", format_eur(portfolio.total_gains_eur))
+        st.metric(
+            label="📈 Plus-values",
+            value=format_eur(portfolio.total_gains_eur),
+            delta=f"{perf_pct:.2f}%",
+            delta_color="normal",
+        )
     with col4:
-        # Calculate performance percentage; avoid division by zero
-        perf_pct = float(portfolio.total_gains_eur / portfolio.total_invested_eur * 100) if portfolio.total_invested_eur > 0 else 0
-        st.metric("Performance %", f"{perf_pct:.2f}%")
+        st.metric(label="💶 Cash disponible", value=format_eur(portfolio.cash_available))
 
     st.markdown("---")
-    st.subheader("Détail par produit")
 
-    # Prepare rows for the product details table
+    # --- Tableau et graphique d'allocation ---
+    st.markdown("### 🧩 Répartition du portefeuille")
+
     rows = []
 
     for p in portfolio.products:
-        # Only include products with value or contributions
-
         if p.get("current_value_eur", 0) > 0 or p.get("net_contributions_eur", 0) > 0:
-            rows.append({
-                "Produit": p["name"],
-                "Valeur": f"{float(p['current_value_eur']):.2f}€",
-                "Investi": f"{float(p['net_contributions_eur']):.2f}€",
-                "Gains": f"{float(p['performance_eur']):.2f}€",
-                "Perf %": f"{float(p['performance_pct']):.2f}%",
-                "Allocation %": f"{float(p['allocation_pct']):.2f}%",
-                })
-
-    # Display product details or a message if none exist
+            rows.append(
+                {
+                    "Produit": p["name"],
+                    "Valeur_brute": float(p["current_value_eur"]),
+                    "Valeur": f"{float(p['current_value_eur']):.2f} €",
+                    "Investi": f"{float(p['net_contributions_eur']):.2f} €",
+                    "Gains": f"{float(p['performance_eur']):.2f} €",
+                    "Perf %": f"{float(p['performance_pct']):.2f} %",
+                    "Allocation": float(p["allocation_pct"]),
+                }
+            )
 
     if rows:
-        st.dataframe(rows, width="stretch")
+        df = pd.DataFrame(rows)
+        df_sorted = df.sort_values("Allocation", ascending=True)
+
+        c_chart, c_table = st.columns([1, 1.6])
+
+        with c_chart:
+            # Barres horizontales d'allocation via Altair (déjà dépendance du projet)
+            chart = (
+                alt.Chart(df_sorted)
+                .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
+                .encode(
+                    x=alt.X(
+                        "Allocation:Q",
+                        title="Poids (%)",
+                        scale=alt.Scale(domain=[0, 100]),
+                    ),
+                    y=alt.Y(
+                        "Produit:N",
+                        sort=None,
+                        title="",
+                        axis=alt.Axis(labelLimit=150),
+                    ),
+                    color=alt.Color(
+                        "Produit:N",
+                        legend=None,
+                        scale=alt.Scale(scheme="tableau10"),
+                    ),
+                    tooltip=[
+                        alt.Tooltip("Produit:N", title="Produit"),
+                        alt.Tooltip("Allocation:Q", title="Poids (%)", format=".1f"),
+                        alt.Tooltip("Valeur:N", title="Valeur"),
+                    ],
+                )
+                .properties(height=min(40 * len(df_sorted) + 40, 400))
+            )
+            st.altair_chart(chart, use_container_width=True)
+
+        with c_table:
+            display_df = df.drop(columns=["Valeur_brute"])
+            st.dataframe(
+                display_df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Allocation": st.column_config.ProgressColumn(
+                        "Poids (%)", min_value=0, max_value=100, format="%.1f%%"
+                    )
+                },
+            )
     else:
-        st.info("Aucun produit avec valorisation")
+        st.info(
+            "💡 Votre portefeuille est vide. Ajoutez des valorisations dans l'onglet correspondant."
+        )
 
     st.markdown("---")
-    # Display additional portfolio information
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Cash disponible", format_eur(portfolio.cash_available))
-    with col2:
-        st.metric("Nombre de produits", len(portfolio.products))
 
-    # Provide JSON export functionality
+    # --- Exports ---
+    st.markdown("### 🖨️ Exports & Rapports")
+    c1, c2, _ = st.columns([1, 1, 2])
 
-    if st.button("📥 Exporter données en JSON"):
-        try:
-            json_data = service.export_json(portfolio)
-            st.success(f"✅ JSON généré")
+    with c1:
+        if st.button("📄 Générer un rapport PDF", use_container_width=True):
+            with st.spinner("Génération du rapport en cours..."):
+                try:
+                    pdf_service = PDFReportService()
+                    filepath = pdf_service.generate_report(portfolio)
+                    with open(filepath, "rb") as f:
+                        st.download_button(
+                            "⬇️ Télécharger le PDF",
+                            data=f.read(),
+                            file_name="rapport_portefeuille.pdf",
+                            mime="application/pdf",
+                            type="primary",
+                            use_container_width=True,
+                        )
+                except Exception as e:
+                    st.error(f"❌ Erreur : {e}")
 
-            # Provide a download button
-            st.download_button(
-                label="⬇️ Télécharger JSON",
-                data=json_data,
-                file_name="dashboard.json",
-                mime="application/json",
-                )
-        except Exception as e:
-            st.error(f"❌ Erreur : {e}")
-
-    if st.button("📥 Générer PDF"):
-        try:
-            # Generate the PDF report using the portfolio data
-            pdf_service = PDFReportService()
-            filepath = pdf_service.generate_report(portfolio)
-            st.success(f"✅ PDF généré : {filepath}")
-
-            # Provide a download button for the generated PDF
-            with open(filepath, "rb") as f:
+    with c2:
+        if st.button("💾 Exporter la Data (JSON)", use_container_width=True):
+            try:
+                json_data = service.export_json(portfolio)
                 st.download_button(
-                    label="⬇️ Télécharger le PDF",
-                    data=f.read(),
-                    file_name=filepath.split("/")[-1],
-                    mime="application/pdf",
-                    )
-        except Exception as e:
-            # Display any error that occurs during PDF generation
-            st.error(f"❌ Erreur : {e}")
+                    "⬇️ Télécharger le JSON",
+                    data=json_data,
+                    file_name="dashboard_data.json",
+                    mime="application/json",
+                    type="primary",
+                    use_container_width=True,
+                )
+            except Exception as e:
+                st.error(f"❌ Erreur : {e}")
