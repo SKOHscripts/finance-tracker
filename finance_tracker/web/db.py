@@ -12,27 +12,33 @@ be imported wherever database access is required.
 
 import streamlit as st
 from sqlmodel import Session, create_engine
+import uuid
+import streamlit as st
+from sqlmodel import create_engine, Session
 
 from finance_tracker.config import DATABASE_URL
 
 
-@st.cache_resource
-def get_session() -> Session:
-    """
-    Crée et retourne une session de base de données.
+def get_db_path():
+    # Création d'un identifiant de session unique si inexistant
 
-    Cette fonction utilise une URL de base de données définie dans la configuration
-    pour initialiser une session SQLAlchemy. La session est mise en cache pour
-    éviter les reconstructions inutiles.
+    if "session_id" not in st.session_state:
+        st.session_state.session_id = str(uuid.uuid4())
+    # Fichier temporaire isolé pour la session en cours
 
-    Returns
-    -------
-    Session
-        Une instance de session SQLAlchemy connectée à la base de données.
-    """
-    # Create a database engine using the URL from config
-    engine = create_engine(DATABASE_URL, echo=False)
+    return f"/tmp/finance_{st.session_state.session_id}.db"
 
-    # Return a new session bound to the engine
+
+def get_engine():
+    db_path = get_db_path()
+    # Utilisation du chemin dynamique
+    sqlite_url = f"sqlite:///{db_path}"
+
+    return create_engine(sqlite_url)
+
+
+def get_session():
+    engine = get_engine()
+    # Retourner l'objet directement (sans 'with' et 'yield')
 
     return Session(engine)

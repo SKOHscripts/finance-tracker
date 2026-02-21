@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, List
 
 from sqlalchemy import desc, select
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, SQLModel
 
 from finance_tracker.config import DATABASE_URL
 from finance_tracker.domain.enums import ProductType, TransactionType
@@ -210,10 +210,6 @@ class SQLModelRateScheduleRepository:
         return result.annual_rate if result else None
 
 
-def get_engine():
-    return create_engine(DATABASE_URL, echo=False)
-
-
-def init_db() -> None:
-    engine = get_engine()
+def init_db(engine):
+    # Ceci crée toutes les tables manquantes dans la base SQLite de l'utilisateur
     SQLModel.metadata.create_all(engine)
