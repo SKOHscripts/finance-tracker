@@ -748,7 +748,7 @@ def render(session: Session) -> None:
             data=df_period.to_csv(index=False).encode("utf-8"),
             file_name="simulation_periods.csv",
             mime="text/csv",
-            use_container_width=True
+            width="stretch"
         )
 
     with c2:
@@ -757,7 +757,7 @@ def render(session: Session) -> None:
             data=df_long.to_csv(index=False).encode("utf-8"),
             file_name="simulation_products.csv",
             mime="text/csv",
-            use_container_width=True
+            width="stretch"
         )
 
     with c3:
@@ -767,7 +767,7 @@ def render(session: Session) -> None:
         # Si le PDF n'a pas encore été généré pour cette session
 
         if pdf_cache_key not in st.session_state or st.session_state.get("sim_pdf_needs_update", True):
-            if st.button("⚙️ Préparer le rapport PDF", use_container_width=True):
+            if st.button("⚙️ Préparer le rapport PDF", width="stretch"):
                 with st.spinner("⏳ Génération du rapport PDF avec graphiques en cours (cela peut prendre quelques secondes)..."):
                     try:
                         config_params = st.session_state.sim_config_params or {}
@@ -793,5 +793,5 @@ def render(session: Session) -> None:
                 file_name=f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                 mime="application/pdf",
                 type="primary",
-                use_container_width=True
+                width="stretch"
             )

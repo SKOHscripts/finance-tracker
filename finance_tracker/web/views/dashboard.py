@@ -134,7 +134,7 @@ def render(session: Session) -> None:
         pdf_cache_key = "dashboard_pdf_bytes"
 
         if pdf_cache_key not in st.session_state:
-            if st.button("⚙️ Préparer le rapport PDF", use_container_width=True):
+            if st.button("⚙️ Préparer le rapport PDF", width="stretch"):
                 with st.spinner("⏳ Génération du rapport PDF..."):
                     try:
                         pdf_service = PDFReportService()
@@ -151,7 +151,7 @@ def render(session: Session) -> None:
                 file_name="rapport_portefeuille.pdf",
                 mime="application/pdf",
                 type="primary",
-                use_container_width=True,
+                width="stretch",
             )
 
     with c2:
@@ -159,7 +159,7 @@ def render(session: Session) -> None:
         json_cache_key = "dashboard_json_bytes"
 
         if json_cache_key not in st.session_state:
-            if st.button("⚙️ Préparer l'export JSON", use_container_width=True):
+            if st.button("⚙️ Préparer l'export JSON", width="stretch"):
                 with st.spinner("⏳ Structuration des données..."):
                     try:
                         json_data = service.export_json(portfolio)
@@ -174,7 +174,7 @@ def render(session: Session) -> None:
                 file_name="dashboard_data.json",
                 mime="application/json",
                 type="primary",
-                use_container_width=True,
+                width="stretch",
             )
 
     # Petit bouton discret pour vider le cache et forcer une mise à jour des rapports
