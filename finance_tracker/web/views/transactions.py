@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 
 from datetime import datetime, date
-
 from sqlmodel import Session
 
 from finance_tracker.domain.enums import TransactionType
@@ -12,6 +11,8 @@ from finance_tracker.repositories.sqlmodel_repo import (
     SQLModelTransactionRepository,
 )
 from finance_tracker.web.ui.formatters import to_decimal
+
+SATS_PER_BTC = 100_000_000
 
 
 def _enum_from_value(enum_cls, value: str):
@@ -38,32 +39,28 @@ def render(session: Session) -> None:
 
         return
 
+    # ════════════════════════════════════════════════
+    # FORMULAIRE D'AJOUT
+    # ════════════════════════════════════════════════
     with st.expander("➕ Ajouter une transaction", expanded=False):
+        # On place le sélecteur HORS du formulaire pour pouvoir adapter le champ "Quantité" en direct
+        add_product_name = st.selectbox("Produit", product_names, key="tx_add_product")
+
+        is_btc = add_product_name.lower() == "bitcoin"
+        qty_label = "Quantité (en Satoshis)" if is_btc else "Quantité (Parts / Unités)"
+        qty_step = 100_000.0 if is_btc else 0.01
+        qty_format = "%d" if is_btc else "%.2f"
+        qty_help = "Rappel: 1 BTC = 100 000 000 Sats" if is_btc else ""
+
         with st.form("tx_add_form", clear_on_submit=True):
             c1, c2, c3 = st.columns([2, 2, 3])
             with c1:
-                add_product_name = st.selectbox("Produit", product_names, key="tx_add_product")
-                add_type = st.selectbox(
-                    "Type",
-                    [e.value for e in TransactionType],
-                    key="tx_add_type",
-                )
+                add_type = st.selectbox("Type", [e.value for e in TransactionType], key="tx_add_type")
                 add_date = st.date_input("Date", value=date.today(), key="tx_add_date")
             with c2:
-                add_amount = st.number_input(
-                    "Montant EUR (optionnel)",
-                    value=0.0,
-                    step=0.01,
-                    format="%.2f",
-                    key="tx_add_amount"
-                )
-                add_quantity = st.number_input(
-                    "Quantité (optionnel)",
-                    value=0.0,
-                    step=0.00000001,
-                    format="%.8f",
-                    key="tx_add_qty"
-                )
+                add_amount = st.number_input("Montant EUR (optionnel)", value=0.0, step=0.01, format="%.2f", key="tx_add_amount")
+                # Le champ s'adapte automatiquement grâce au sélecteur du dessus
+                add_quantity = st.number_input(qty_label, value=0.0, step=qty_step, format=qty_format, help=qty_help, key="tx_add_qty")
             with c3:
                 add_note = st.text_input("Note", value="", key="tx_add_note")
 
@@ -74,15 +71,17 @@ def render(session: Session) -> None:
                     p = product_by_name.get(add_product_name)
 
                     if not p or p.id is None:
-                        st.error("Produit invalide.")
                         st.stop()
+
+                    # Si c'est du bitcoin (saisi en sats), on le stocke en satoshis bruts dans la DB
+                    final_qty = float(add_quantity)
 
                     tx = Transaction(
                         product_id=p.id,
                         date=datetime.combine(add_date, datetime.min.time()),
                         type=_enum_from_value(TransactionType, add_type),
                         amount_eur=to_decimal(add_amount) if add_amount and add_amount > 0 else None,
-                        quantity=to_decimal(add_quantity) if add_quantity and add_quantity > 0 else None,
+                        quantity=to_decimal(final_qty) if final_qty > 0 else None,
                         note=add_note.strip(),
                     )
                     tx_repo.create(tx)
@@ -93,7 +92,9 @@ def render(session: Session) -> None:
 
     st.markdown("---")
 
-    # Filtres
+    # ════════════════════════════════════════════════
+    # LISTE ET EDITION
+    # ════════════════════════════════════════════════
     f1, f2, f3 = st.columns([2, 2, 2])
     with f1:
         filter_product = st.selectbox("Filtrer produit", ["Tous"] + product_names, index=0)
@@ -122,18 +123,16 @@ def render(session: Session) -> None:
 
     for t in txs:
         p = product_by_id.get(t.product_id)
-        rows.append(
-            {
-                "id": t.id,
-                "date": t.date.date(),
-                "produit": p.name if p else f"#{t.product_id}",
-                "type": t.type.value,
-                "montant_eur": float(t.amount_eur) if t.amount_eur is not None else 0.0,
-                "quantite": float(t.quantity) if t.quantity is not None else 0.0,
-                "note": t.note or "",
-                "🗑️ Supprimer": False,
-            }
-        )
+        rows.append({
+            "id": t.id,
+            "date": t.date.date(),
+            "produit": p.name if p else f"#{t.product_id}",
+            "type": t.type.value,
+            "montant_eur": float(t.amount_eur) if t.amount_eur is not None else 0.0,
+            "quantite": float(t.quantity) if t.quantity is not None else 0.0,
+            "note": t.note or "",
+            "🗑️ Supprimer": False,
+        })
 
     if not rows:
         st.info("Aucune transaction pour ce filtre.")
@@ -143,7 +142,9 @@ def render(session: Session) -> None:
     df = pd.DataFrame(rows)
 
     st.subheader("Historique (éditable)")
-    st.write("Modifiez des cellules puis cliquez sur “Appliquer les changements”.")
+
+    # Message informatif global
+    st.info("ℹ️ Les quantités concernant Bitcoin sont affichées et enregistrées en **Satoshis** (nombres entiers). Les autres produits restent en unités standards.")
 
     edited = st.data_editor(
         df,
@@ -156,19 +157,9 @@ def render(session: Session) -> None:
             "date": st.column_config.DateColumn("Date", format="YYYY-MM-DD"),
             "produit": st.column_config.SelectboxColumn("Produit", options=product_names, required=True),
             "type": st.column_config.SelectboxColumn("Type", options=[e.value for e in TransactionType], required=True),
-
-            "montant_eur": st.column_config.NumberColumn(
-                "Montant EUR",
-                min_value=0.0,
-                step=0.01,
-                format="%.2f"
-            ),
-            "quantite": st.column_config.NumberColumn(
-                "Quantité",
-                min_value=0.0,
-                step=0.01,
-                format="%.2f"
-            ),
+            "montant_eur": st.column_config.NumberColumn("Montant EUR", min_value=0.0, step=0.01, format="%.2f"),
+            # On laisse le step à 0.01 ici car le tableau gère TOUS les produits, il doit donc accepter les décimales pour les SCPI par ex.
+            "quantite": st.column_config.NumberColumn("Quantité (Sats ou Unités)", min_value=0.0, step=0.01, format="%.2f"),
             "note": st.column_config.TextColumn("Note"),
             "🗑️ Supprimer": st.column_config.CheckboxColumn("🗑️ Supprimer"),
         },
@@ -186,14 +177,11 @@ def render(session: Session) -> None:
                     if tx_id is None or (isinstance(tx_id, float) and pd.isna(tx_id)):
                         continue
 
-                    # 1. Traitement de la suppression en priorité
-
                     if bool(r.get("🗑️ Supprimer", False)):
                         tx_repo.delete(int(tx_id))
 
                         continue
 
-                    # 2. Mise à jour des autres lignes
                     tx = tx_repo.get_by_id(int(tx_id))
 
                     if not tx:
@@ -210,10 +198,15 @@ def render(session: Session) -> None:
                     tx.type = _enum_from_value(TransactionType, r["type"])
 
                     amount = float(r.get("montant_eur") or 0.0)
-                    qty = float(r.get("quantite") or 0.0)
-                    tx.amount_eur = to_decimal(amount) if amount > 0 else None
-                    tx.quantity = to_decimal(qty) if qty > 0 else None
+                    raw_qty = float(r.get("quantite") or 0.0)
 
+                    # Si c'est du bitcoin, on force l'arrondi entier (Satoshis purs)
+
+                    if prod_name.lower() == "bitcoin":
+                        raw_qty = float(int(raw_qty))
+
+                    tx.amount_eur = to_decimal(amount) if amount > 0 else None
+                    tx.quantity = to_decimal(raw_qty) if raw_qty > 0 else None
                     tx.note = str(r.get("note") or "").strip()
 
                     tx_repo.update(tx)

@@ -31,35 +31,28 @@ def render(session: Session) -> None:
     product_by_id = {p.id: p for p in products if p.id is not None}
 
     with st.expander("➕ Ajouter une valorisation", expanded=False):
+        # Sélecteur sorti du form pour dynamique
+        add_product_name = st.selectbox("Produit", product_names, key="val_add_product")
+        is_btc = add_product_name.lower() == "bitcoin"
+
         with st.form("val_add_form", clear_on_submit=True):
             c1, c2 = st.columns([2, 2])
             with c1:
-                add_product_name = st.selectbox("Produit", product_names, key="val_add_product")
                 add_date = st.date_input("Date", value=date.today(), key="val_add_date")
             with c2:
-            submitted = st.form_submit_button("Ajouter", width="stretch")
-                add_total = st.number_input(
-                    "Valeur totale EUR",
-                    value=0.0,
-                    step=0.01,
-                    format="%.2f",
-                    key="val_add_total"
-                )
-                add_unit = st.number_input(
-                    "Prix unitaire (optionnel)",
-                    value=0.0,
-                    step=0.01,
-                    format="%.2f",
-                    key="val_add_unit"
-                )
+                add_total = st.number_input("Valeur totale EUR", value=0.0, step=0.01, format="%.2f", key="val_add_total")
 
+                # Le libellé change pour être précis
+                unit_label = "Prix d'un BTC plein (EUR)" if is_btc else "Prix unitaire (EUR, optionnel)"
+                add_unit = st.number_input(unit_label, value=0.0, step=0.01, format="%.2f", key="val_add_unit")
+
+            submitted = st.form_submit_button("Ajouter", width="stretch")
 
             if submitted:
                 try:
                     p = product_by_name.get(add_product_name)
 
                     if not p or p.id is None:
-                        st.error("Produit invalide.")
                         st.stop()
 
                     if add_total <= 0:
@@ -132,19 +125,8 @@ def render(session: Session) -> None:
             "id": st.column_config.NumberColumn("ID", disabled=True),
             "date": st.column_config.DateColumn("Date", format="YYYY-MM-DD"),
             "produit": st.column_config.SelectboxColumn("Produit", options=product_names, required=True),
-
-            "valeur_totale_eur": st.column_config.NumberColumn(
-                "Valeur totale EUR",
-                min_value=0.0,
-                step=0.01,
-                format="%.2f"
-            ),
-            "prix_unitaire_eur": st.column_config.NumberColumn(
-                "Prix unitaire EUR",
-                min_value=0.0,
-                step=0.01,
-                format="%.2f"
-            ),
+            "valeur_totale_eur": st.column_config.NumberColumn("Valeur totale EUR", min_value=0.0, step=0.01, format="%.2f"),
+            "prix_unitaire_eur": st.column_config.NumberColumn("Prix unitaire EUR", min_value=0.0, step=0.01, format="%.2f"),
             "🗑️ Supprimer": st.column_config.CheckboxColumn("🗑️ Supprimer"),
         },
     )
