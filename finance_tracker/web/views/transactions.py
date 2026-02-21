@@ -55,7 +55,7 @@ def render(session: Session) -> None:
             with c3:
                 add_note = st.text_input("Note", value="", key="tx_add_note")
 
-            submitted = st.form_submit_button("Ajouter", use_container_width=True)
+            submitted = st.form_submit_button("Ajouter", width="stretch")
 
             if submitted:
                 try:
@@ -141,7 +141,7 @@ def render(session: Session) -> None:
         df,
         key="tx_editor",
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
         num_rows="fixed",
         column_config={
             "id": st.column_config.NumberColumn("ID", disabled=True),
@@ -157,7 +157,7 @@ def render(session: Session) -> None:
 
     c1, c2 = st.columns([2, 1])
     with c1:
-        if st.button("💾 Appliquer les changements", use_container_width=True):
+        if st.button("💾 Appliquer les changements", width="stretch"):
             try:
                 edited_rows = edited.to_dict(orient="records")
 
@@ -205,5 +205,5 @@ def render(session: Session) -> None:
                 st.error(f"❌ Erreur : {e}")
 
     with c2:
-        if st.button("↩️ Recharger depuis la DB", use_container_width=True):
+        if st.button("↩️ Recharger depuis la DB", width="stretch"):
             st.rerun()

@@ -100,7 +100,7 @@ def _add_transaction_form(session: Session) -> None:
             quantity = st.number_input("Quantité (parts/sats)", value=0.0, step=1.0)
             note = st.text_input("Note (optionnel)")
 
-        submitted = st.form_submit_button("➕ Ajouter la transaction", use_container_width=True)
+        submitted = st.form_submit_button("➕ Ajouter la transaction", width="stretch")
 
         if submitted:
             try:
@@ -141,7 +141,7 @@ def _add_valuation_form(session: Session) -> None:
             total_value = st.number_input("Valeur totale (EUR)", value=0.0, step=100.0)
             unit_price = st.number_input("Prix unitaire optionnel (EUR)", value=0.0, step=1.0)
 
-        submitted = st.form_submit_button("📈 Enregistrer la valorisation", use_container_width=True)
+        submitted = st.form_submit_button("📈 Enregistrer la valorisation", width="stretch")
 
         if submitted:
             try:
@@ -176,7 +176,7 @@ def _add_product_form(session: Session) -> None:
             fees_description = st.text_area("Structure de frais", height=68)
             tax_info = st.text_area("Règles fiscales", height=68)
 
-        submitted = st.form_submit_button("💾 Créer le produit", use_container_width=True)
+        submitted = st.form_submit_button("💾 Créer le produit", width="stretch")
 
         if submitted:
             if not name.strip():

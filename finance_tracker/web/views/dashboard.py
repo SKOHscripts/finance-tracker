@@ -104,13 +104,13 @@ def render(session: Session) -> None:
                 )
                 .properties(height=min(40 * len(df_sorted) + 40, 400))
             )
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
 
         with c_table:
             display_df = df.drop(columns=["Valeur_brute"])
             st.dataframe(
                 display_df,
-                use_container_width=True,
+                width="stretch",
                 hide_index=True,
                 column_config={
                     "Allocation": st.column_config.ProgressColumn(
@@ -130,7 +130,7 @@ def render(session: Session) -> None:
     c1, c2, _ = st.columns([1, 1, 2])
 
     with c1:
-        if st.button("📄 Générer un rapport PDF", use_container_width=True):
+        if st.button("📄 Générer un rapport PDF", width="stretch"):
             with st.spinner("Génération du rapport en cours..."):
                 try:
                     pdf_service = PDFReportService()
@@ -142,13 +142,13 @@ def render(session: Session) -> None:
                             file_name="rapport_portefeuille.pdf",
                             mime="application/pdf",
                             type="primary",
-                            use_container_width=True,
+                            width="stretch",
                         )
                 except Exception as e:
                     st.error(f"❌ Erreur : {e}")
 
     with c2:
-        if st.button("💾 Exporter la Data (JSON)", use_container_width=True):
+        if st.button("💾 Exporter la Data (JSON)", width="stretch"):
             try:
                 json_data = service.export_json(portfolio)
                 st.download_button(
@@ -157,7 +157,7 @@ def render(session: Session) -> None:
                     file_name="dashboard_data.json",
                     mime="application/json",
                     type="primary",
-                    use_container_width=True,
+                    width="stretch",
                 )
             except Exception as e:
                 st.error(f"❌ Erreur : {e}")

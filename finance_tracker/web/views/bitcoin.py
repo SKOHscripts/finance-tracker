@@ -39,7 +39,7 @@ def render(session: Session) -> None:
         with c2:
             st.write("")  # Espace vertical
 
-            if st.button("🔄 Actualiser le cours actuel", use_container_width=True):
+            if st.button("🔄 Actualiser le cours actuel", width="stretch"):
                 with st.spinner("Interrogation de l'API..."):
                     try:
                         btc_service = BTCPriceService()
@@ -70,7 +70,7 @@ def render(session: Session) -> None:
         with c3:
             btc_quantity = st.number_input("Quantité possédée (Nb de BTC)", value=0.0, step=0.01, format="%.8f")
 
-        submit = st.form_submit_button("💾 Enregistrer la valorisation dans l'historique", type="primary", use_container_width=True)
+        submit = st.form_submit_button("💾 Enregistrer la valorisation dans l'historique", type="primary", width="stretch")
 
         if submit:
             if btc_quantity <= 0 or btc_unit_price <= 0:

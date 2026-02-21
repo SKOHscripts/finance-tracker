@@ -40,7 +40,7 @@ def render(session: Session) -> None:
                 fees = st.text_area("Frais", height=80)
                 tax = st.text_area("Fiscalité", height=80)
 
-            submitted = st.form_submit_button("Créer", use_container_width=True)
+            submitted = st.form_submit_button("Créer", width="stretch")
 
             if submitted:
                 try:
@@ -104,7 +104,7 @@ def render(session: Session) -> None:
         df,
         key="products_editor",
         hide_index=True,
-        use_container_width=True,
+        width="stretch",
         num_rows="fixed",
         column_config={
             "id": st.column_config.NumberColumn("ID", disabled=True),
@@ -127,7 +127,7 @@ def render(session: Session) -> None:
 
     c1, c2 = st.columns([2, 1])
     with c1:
-        if st.button("💾 Appliquer les changements", use_container_width=True):
+        if st.button("💾 Appliquer les changements", width="stretch"):
             try:
                 edited_rows = edited.to_dict(orient="records")
 
@@ -184,5 +184,5 @@ def render(session: Session) -> None:
                 st.error(f"❌ Erreur : {e}")
 
     with c2:
-        if st.button("↩️ Recharger depuis la DB", use_container_width=True):
+        if st.button("↩️ Recharger depuis la DB", width="stretch"):
             st.rerun()
