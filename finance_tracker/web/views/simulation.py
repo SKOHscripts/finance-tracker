@@ -388,7 +388,7 @@ def render(session: Session) -> None:
         ]
         st.caption("Tranches annuelles — laisse `up_to` vide pour la dernière tranche.")
         df_brackets = st.data_editor(
-            pd.DataFrame(default_brackets), use_container_width=True, num_rows="dynamic",
+            pd.DataFrame(default_brackets), width="stretch", num_rows="dynamic",
         )
         brackets: list[TaxBracket] = []
 
@@ -546,7 +546,7 @@ def render(session: Session) -> None:
             st.error("⚠️ Il faut au moins un produit de catégorie 'cash'.")
 
         submitted = st.form_submit_button(
-            "▶️ Lancer la simulation", type="primary", use_container_width=True,
+            "▶️ Lancer la simulation", type="primary", width="stretch",
         )
 
     # ── Calcul ─────────────────────────────────────────────────────────────
@@ -696,9 +696,9 @@ def render(session: Session) -> None:
     st.subheader("📋 Tableaux de données")
     tab1, tab2 = st.tabs(["Par période", "Par produit (long)"])
     with tab1:
-        st.dataframe(df_period, use_container_width=True)
+        st.dataframe(df_period, width="stretch")
     with tab2:
-        st.dataframe(df_long, use_container_width=True)
+        st.dataframe(df_long, width="stretch")
 
     st.subheader("📈 Graphiques")
     selected_metrics = st.multiselect(
@@ -735,7 +735,7 @@ def render(session: Session) -> None:
             x="period:Q",
         ).transform_filter(hover)
         chart = alt.layer(lines, points, rule).properties(height=340)
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
 
     st.subheader("💾 Exports")
     c1, c2, c3 = st.columns(3)
