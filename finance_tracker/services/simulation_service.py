@@ -308,6 +308,9 @@ class SimulationService:
 
         if not cash_candidates:
             raise ValueError("Simulation: il faut au moins un produit de type 'cash'.")
+
+        if len(cash_candidates) > 1:
+            raise ValueError(f"Simulation: plusieurs produits 'cash' détectés: {cash_candidates}. Garde-en un seul.")
         cash_name = cash_candidates[0]
 
         product_names = [p.name for p in products]
@@ -554,9 +557,25 @@ class SimulationService:
                 value[p.name] *= (D(1) + r_p)
 
             total_value = sum(value.values())
-            total_invested = sum(invested.values())
-            total_gains = total_value - total_invested
             total_value_real = (total_value / infl_idx) if infl_idx > 0 else total_value
+
+            # Totaux "investissement" = uniquement hors cash (sinon le revenu/dépenses polluent)
+            total_invested = sum(
+                invested[p.name]
+
+                for p in products
+
+                if p.kind != "cash"
+            )
+
+            # Gains réels (inflation) uniquement hors cash, cohérent avec total_value_real
+            total_gains = sum(
+                ((value[p.name] / infl_idx) if infl_idx > 0 else value[p.name]) - invested[p.name]
+
+                for p in products
+
+                if p.kind != "cash"
+            )
 
             # Plafond PER = 10% revenu N-1
 
@@ -579,6 +598,8 @@ class SimulationService:
                 tax_due = compute_progressive_tax(taxable_after_per, cfg.tax)
 
                 # Réduction FCPI (agrégée par produit, capée)
+                tax_due_before_fcpi = tax_due  # impôt avant réduction FCPI
+
                 fcpi_reduction_total = D(0)
 
                 for p in products:
@@ -588,8 +609,10 @@ class SimulationService:
                     eligible = min(contrib_y, p.fcpi.annual_eligible_cap)
                     fcpi_reduction_total += eligible * p.fcpi.tax_reduction_rate
 
-                fcpi_tax_reduction_for_year = fcpi_reduction_total
-                tax_due = max(D(0), tax_due - fcpi_reduction_total)
+                # Réduction "effective" (on ne peut pas réduire plus que l'impôt dû)
+                fcpi_tax_reduction_for_year = min(fcpi_reduction_total, tax_due_before_fcpi)
+
+                tax_due = max(D(0), tax_due_before_fcpi - fcpi_reduction_total)
 
                 tax_due_by_year[year_idx] = tax_due
                 tax_due_for_year = tax_due
@@ -624,10 +647,10 @@ class SimulationService:
                     value_by_product={k: v for k, v in value.items()},
                     invested_by_product={k: v for k, v in invested.items()},
                     total_value=total_value,
+                    total_value_real=total_value_real,
                     total_invested=total_invested,
                     total_gains=total_gains,
                     inflation_index=infl_idx,
-                    total_value_real=total_value_real,
                 )
             )
 
