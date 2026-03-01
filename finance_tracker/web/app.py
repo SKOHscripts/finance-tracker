@@ -30,10 +30,14 @@ with col1:
     st.markdown("")
 
 with col2:
-    st.markdown(f"""
-    **[💰 Finance Tracker]({GITHUB_BASE_URL}/README.md)**
-    """)
-
+    st.markdown(
+        f'<a href="{GITHUB_BASE_URL}/README.md" target="_blank" '
+        f'title="Voir le projet" '
+        f'style="text-decoration:none; color:#888; font-size:1.2em;">💰 Finance Tracker</a>',
+        unsafe_allow_html=True
+        )
+col1, col2 = st.columns([6, 1])
+    
 
 def render_db_manager():
     """Manage database lifecycle operations in the sidebar.
