@@ -62,22 +62,21 @@
       color: #111827;
     }
 
-    /* ===== SUMMARY CORRIGÉ ===== */
     /* 2 colonnes fixes, prend toute la largeur disponible */
     .summary{
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr)); /* ✅ toujours 2 colonnes */
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
       width: 100%;
     }
     /* Très important en CSS Grid: autoriser les items à rétrécir */
     .card{
-      min-width: 0; /* ✅ évite que le contenu force la colonne à dépasser */
+      min-width: 0;
     }
     /* Empêcher la note / texte long de “pousser” la colonne */
     .note{
       min-width: 0;
-      overflow-wrap: anywhere;  /* ✅ coupe les longs mots/URLs */
+      overflow-wrap: anywhere;
       word-break: break-word;
     }
     .card-value{
@@ -88,7 +87,7 @@
     .card {
       border: 1px solid #e5e7eb;
       border-radius: 10px;
-      padding: 16px 14px 14px 14px; /* ✅ Padding uniforme */
+      padding: 16px 14px 14px 14px;
       background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
     }
     .card-label {
@@ -100,7 +99,7 @@
       line-height: 1.2;
     }
     .card-value {
-      font-size: 16pt; /* ✅ Plus grand */
+      font-size: 16pt;
       font-weight: 700;
       color: #0f172a;
       margin-bottom: 4px;
@@ -136,7 +135,7 @@
     .chart img {
       width: 100%;
       height: auto;
-      max-height: 450px; /* ✅ Optimisé A4 portrait */
+      max-height: 450px;
       object-fit: contain;
       border: 1px solid #eef2f7;
       border-radius: 8px;

@@ -1,11 +1,13 @@
-"""Service Dashboard - calcule et formate les données portefeuille."""
+"""Service Dashboard - calculates and formats portfolio data."""
+# Standard library
 import json
 from decimal import Decimal
 
+# Third-party
 from sqlmodel import Session
-
 from tabulate import tabulate
 
+# Local application
 from finance_tracker.domain.enums import TransactionType
 from finance_tracker.domain.models import Product, Transaction, Valuation
 from finance_tracker.repositories.sqlmodel_repo import (
@@ -17,9 +19,18 @@ from finance_tracker.utils.money import format_eur, round_decimal, safe_divide
 
 
 class PortfolioData:
-    """Données du portefeuille."""
+    """Portfolio data container.
+
+    Stores portfolio metrics including total value, invested amount,
+    gains, available cash, and product holdings.
+    """
 
     def __init__(self):
+        """Initialize a new Portfolio instance.
+
+        Sets all monetary values to zero and initializes an empty products list.
+
+        """
         self.total_value_eur = Decimal(0)
         self.total_invested_eur = Decimal(0)
         self.total_gains_eur = Decimal(0)
@@ -27,15 +38,16 @@ class PortfolioData:
         self.products: list[dict] = []
 
     def to_dict(self) -> dict:
-        """Convertir l'objet en dictionnaire Python avec les valeurs numériques formatées.
+        """Convert the portfolio data to a dictionary with formatted numeric values.
 
-        Les valeurs décimales sont converties en flottants, avec gestion sécurisée des divisions nulles.
+        Decimal values are converted to floats with safe handling of
+        zero division cases.
 
         Returns
         -------
         dict
-            Dictionnaire contenant les champs : total_value_eur, total_invested_eur,
-            total_gains_eur, total_gains_pct, cash_available, et products.
+            Dictionary containing the fields: total_value_eur, total_invested_eur,
+            total_gains_eur, total_gains_pct, cash_available, and products.
         """
 
         return {
@@ -54,37 +66,62 @@ class PortfolioData:
 
 
 class DashboardService:
-    """Service de dashboard."""
+    """Dashboard service for portfolio management and visualization."""
 
     def __init__(self, session: Session):
-        self.session = session
-        self.product_repo = SQLModelProductRepository(session)
-        self.transaction_repo = SQLModelTransactionRepository(session)
-        self.valuation_repo = SQLModelValuationRepository(session)
+        """Initialize the unit of work with a database session.
 
-    def build_portfolio(self) -> PortfolioData:
-        """
-        Construit les données du portefeuille à partir des produits, valorisations et transactions.
+        Sets up repositories for product, transaction, and valuation data access.
 
-        Génère les indicateurs de performance, d'allocation et le cash disponible.
+        Parameters
+        ----------
+        session : Session
+            Database session for managing transactions and repository connections.
 
         Returns
         -------
-            PortfolioData avec tous les calculs
+        None
+
+        Raises
+        ------
+        None
+        """
+        # Store session to coordinate transactions across all repositories
+        self.session = session
+        # Product repository for inventory and pricing operations
+        self.product_repo = SQLModelProductRepository(session)
+        # Transaction repository for recording buy/sell operations
+        self.transaction_repo = SQLModelTransactionRepository(session)
+        # Valuation repository for portfolio value calculations
+        self.valuation_repo = SQLModelValuationRepository(session)
+
+    def build_portfolio(self) -> PortfolioData:
+        """Build portfolio data from products, valuations, and transactions.
+
+        Generates performance metrics, allocation percentages, and available cash.
+
+        Returns
+        -------
+        PortfolioData
+            PortfolioData object containing all calculated metrics.
+
+        Raises
+        ------
+        None
         """
         portfolio = PortfolioData()
         products = self.product_repo.get_all()
 
         for product in products:
-            # Dernière valorisation
+            # Use 0 as fallback when product.id is None to avoid passing None to repo
             latest_val = self.valuation_repo.get_latest_by_product_id(product.id or 0)
             current_value = latest_val.total_value_eur if latest_val else Decimal(0)
 
-            # Contributions nettes (DEPOSIT - WITHDRAW)
+            # Net contributions = deposits - withdrawals (positive = net inflow)
             transactions = self.transaction_repo.get_by_product_id(product.id or 0)
             net_contributions = self._calc_net_contributions(transactions)
 
-            # Performance simple v1
+            # Performance = current value minus money invested (not time-weighted)
             perf_eur = current_value - net_contributions
             perf_pct = safe_divide(perf_eur, net_contributions, 2) * 100 if net_contributions > 0 else Decimal(0)
 
@@ -98,7 +135,7 @@ class DashboardService:
                 "net_contributions_eur": float(net_contributions),
                 "performance_eur": float(perf_eur),
                 "performance_pct": float(perf_pct),
-                "allocation_pct": float(allocation_pct),  # Calculé après total
+                "allocation_pct": float(allocation_pct),  # Will be calculated after we know total
                 "latest_valuation": {
                     "date": latest_val.date.isoformat() if latest_val else None,
                     "total_value_eur": float(latest_val.total_value_eur) if latest_val else 0,
@@ -110,15 +147,15 @@ class DashboardService:
             portfolio.total_value_eur += current_value
             portfolio.total_invested_eur += net_contributions
 
-            # Déterminer le cash
+            # Identify cash product by name (convention over configuration)
 
             if product.name.lower() == "cash":
                 portfolio.cash_available = current_value
 
-        # Calculer gains totaux
+        # Total gains = unrealized profit + realized gains
         portfolio.total_gains_eur = portfolio.total_value_eur - portfolio.total_invested_eur
 
-        # Calculer allocations
+        # Second pass: now that total portfolio value is known, calculate allocations
 
         for product in portfolio.products:
             if portfolio.total_value_eur > 0:
@@ -134,24 +171,58 @@ class DashboardService:
         return portfolio
 
     def _calc_net_contributions(self, transactions: list[Transaction]):
-        """Calcule les contributions nettes (DEPOSIT - WITHDRAW)."""
+        """Calculate net contributions (DEPOSIT - WITHDRAW).
+
+        Sums deposits and buys, subtracts withdrawals.
+
+        Parameters
+        ----------
+        transactions : list[Transaction]
+            List of transactions to calculate net contributions from.
+
+        Returns
+        -------
+        Decimal
+            Net contribution amount (positive for deposits, negative for withdrawals).
+
+        Raises
+        ------
+        None
+        """
         net = Decimal(0)
 
         for tx in transactions:
+            # Deposits increase available funds
+
             if tx.type == TransactionType.DEPOSIT and tx.amount_eur:
                 net += tx.amount_eur
+            # Buys increase portfolio value (crypto received for EUR paid)
             elif tx.type == TransactionType.BUY and tx.amount_eur:
                 net += tx.amount_eur
+            # Withdrawals decrease available funds
             elif tx.type == TransactionType.WITHDRAW and tx.amount_eur:
                 net -= tx.amount_eur
 
         return net
 
     def display_dashboard(self, portfolio: PortfolioData) -> str:
-        """Formate un affichage texte du dashboard avec tabulate.
+        """Format a text dashboard display using tabulate.
 
-        Returns:
-            String formaté pour affichage CLI
+        Create a formatted CLI output with portfolio summary and product details.
+
+        Parameters
+        ----------
+        portfolio : PortfolioData
+            The portfolio data object containing products and summary information.
+
+        Returns
+        -------
+        str
+            Formatted string for CLI display with tables showing portfolio summary and product details.
+
+        Raises
+        ------
+        None
         """
         output = []
 
@@ -201,24 +272,24 @@ class DashboardService:
         return "\n".join(output)
 
     def export_json(self, portfolio: PortfolioData) -> str:
-        """Exporte les données du portefeuille au format JSON.
+        """Export portfolio data to JSON format.
 
-        Convertit les données du portefeuille en une chaîne JSON formatée.
+        Converts portfolio data to a formatted JSON string.
 
         Parameters
         ----------
         portfolio : PortfolioData
-            Les données du portefeuille à exporter.
+            The portfolio data to export.
 
         Returns
         -------
         str
-            Une chaîne JSON représentant les données du portefeuille.
+            A JSON string representing the portfolio data.
 
         Raises
         ------
         TypeError
-            Si le portefeuille n'est pas une instance de PortfolioData.
+            If the portfolio is not an instance of PortfolioData.
         """
 
         return json.dumps(portfolio.to_dict(), indent=2, ensure_ascii=False)

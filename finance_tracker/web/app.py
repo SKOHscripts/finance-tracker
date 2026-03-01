@@ -16,13 +16,13 @@ from finance_tracker.web.db import get_session, get_db_path, get_engine
 from finance_tracker.web.navigation import build_pages
 from finance_tracker.repositories.sqlmodel_repo import init_db
 
+# Used for linking to GitHub documentation from the UI
 GITHUB_BASE_URL = "https://github.com/SKOHscripts/finance-tracker/blob/main"
 
-# Positionner le titre en haut à droite dans Streamlit
-
+# Must be called before any other Streamlit commands that modify the page
 st.set_page_config(page_title="Finance Tracker", page_icon="💰", layout="wide")
 
-# Créer une ligne avec le titre à droite
+# Create a right-aligned title using column layout
 col1, col2 = st.columns([6, 1])
 
 with col1:
@@ -35,10 +35,15 @@ with col2:
 
 
 def render_db_manager():
+    """Manage database lifecycle operations in the sidebar.
+
+    Handles importing, creating, and exporting SQLite database files for the application.
+    """
     st.sidebar.markdown("### 💾 Gestion des Données")
     db_path = get_db_path()
 
     # IMPORT
+    # Allow users to restore a previously exported database file
     uploaded_file = st.sidebar.file_uploader("Importer votre sauvegarde (.db)", type=["db", "sqlite", "sqlite3"])
 
     if uploaded_file is not None and not st.session_state.get("db_loaded", False):
@@ -46,23 +51,25 @@ def render_db_manager():
             f.write(uploaded_file.getbuffer())
         st.session_state.db_loaded = True
         st.sidebar.success("Base de données chargée !")
+        # Force Streamlit to re-run to proceed with the loaded database
         st.rerun()
 
     # INITIALISATION SI VIDE
-
+    # Create a fresh database if none exists
     if not os.path.exists(db_path):
         if st.sidebar.button("Créer un nouveau portefeuille"):
-            # Il est très important de passer l'engine dynamique à init_db
+            # Each user gets their own database instance via dynamic engine
             engine = get_engine()
             init_db(engine)
             st.session_state.db_loaded = True
             st.rerun()
 
         st.warning("Veuillez importer ou créer une base pour commencer.")
-        st.stop()  # <-- Empêche l'exécution de la suite si pas de base
+        # Stop execution here - no point loading the rest of the app without a database
+        st.stop()
 
     # EXPORT
-
+    # Provide a way to backup the current database state
     if os.path.exists(db_path):
         with open(db_path, "rb") as f:
             st.sidebar.download_button(
@@ -73,11 +80,11 @@ def render_db_manager():
             )
 
 
-# 1. On exécute le gestionnaire de base de données
+# 1. Validate and setup database before any page logic runs
 render_db_manager()
 
-# 2. Si on arrive ici, c'est que la base existe (sinon st.stop() a bloqué plus haut).
-# On peut donc ouvrir la session en toute sécurité.
+# 2. At this point, database is guaranteed to exist (st.stop() would have blocked otherwise)
+# Safe to create a session for database queries
 session = get_session()
 
 st.sidebar.markdown("---")
@@ -88,6 +95,6 @@ st.sidebar.markdown("---")
 
 st.sidebar.info("**Finance Tracker v1.0.0**\n\nOutil de suivi de portefeuille avec support SCPI, Bitcoin, épargne et plus.")
 
-# 3. On rend la page
+# 3. Render the selected navigation page with database access
 page = next(p for p in pages if p.label == selected)
 page.render(session)

@@ -25,13 +25,20 @@ def _get_docs_path() -> Path:
 
 def _load_markdown_file(filename: str) -> str:
     """
-    Load markdown content from docs directory.
+    Load markdown content from a file in the docs directory.
 
-    Args:
-        filename: Name of the markdown file (e.g., "CONCEPTS_FONDAMENTAUX.md")
+    Returns an error message if the file cannot be found or read.
 
-    Returns:
-        Content of the file as string, or error message if not found
+    Parameters
+    ----------
+    filename : str
+        Name of the markdown file to load (e.g., "CONCEPTS_FONDAMENTAUX.md").
+
+    Returns
+    -------
+    str
+        Content of the file as a string, or an error message if the file
+        was not found or could not be read.
     """
     try:
         docs_path = _get_docs_path()
@@ -343,7 +350,7 @@ def _render_tab_interface() -> None:
         "💸 Mes Transactions": "Historique et saisie des mouvements (DEPOSIT, BUY, SELL, etc.)",
         "📈 Mes Valorisations": "Mise à jour des prix unitaires par produit",
         "₿ Espace Bitcoin": "Prix temps réel (CoinGecko), historique, conversions",
-    }
+        }
 
     for page, desc in pages_data.items():
         st.markdown(f"**{page}**")
@@ -605,7 +612,7 @@ Pour restaurer: utilisez "Importer votre sauvegarde"
 Oui! L'**₿ Espace Bitcoin** utilise l'API CoinGecko pour récupérer
 le prix en temps réel. Les mises à jour sont automatiques.
         """),
-    ]
+        ]
 
     for question, answer in faq_items:
         with st.expander(f"❓ {question}"):
@@ -668,7 +675,8 @@ def render(session: Session) -> None:
     Main entry point called from navigation.py.
     Displays documentation in multiple tabs for better organization.
 
-    Args:
+    Parameters
+    ----------
         session: SQLModel database session (required by navigation pattern)
     """
 
@@ -687,7 +695,7 @@ def render(session: Session) -> None:
         "🗄️ Base de Données",
         "🛠️ Installation",
         "🆘 Aide"
-    ])
+        ])
 
     tab_home, tab_concepts, tab_calculs, tab_interface, tab_database, tab_install, tab_help = tabs
 

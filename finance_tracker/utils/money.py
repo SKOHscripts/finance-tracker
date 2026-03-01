@@ -1,15 +1,19 @@
-"""Utilitaires monétaires."""
+"""Money utilities"""
 from decimal import Decimal, ROUND_HALF_UP
 
 
 def format_eur(amount: Decimal | float) -> str:
-    """Formate un montant en EUR.
+    """Format a monetary amount in EUR.
 
-    Args:
-        amount: Montant en Decimal ou float
+    Parameters
+    ----------
+    amount : Decimal or float
+        The amount to format.
 
-    Returns:
-        Chaîne formatée "1 234,56 €"
+    Returns
+    -------
+    str
+        Formatted string in the format "1 234,56 €".
     """
 
     if isinstance(amount, float):
@@ -20,13 +24,17 @@ def format_eur(amount: Decimal | float) -> str:
 
 
 def to_decimal(value: str | float | int) -> Decimal:
-    """Convertit une valeur en Decimal de manière sûre.
+    """Convert a value to Decimal safely.
 
-    Args:
-        value: Valeur à convertir
+    Parameters
+    ----------
+    value : str, float, or int
+        The value to convert.
 
-    Returns:
-        Decimal
+    Returns
+    -------
+    Decimal
+        The converted Decimal value.
     """
 
     if isinstance(value, str):
@@ -36,14 +44,19 @@ def to_decimal(value: str | float | int) -> Decimal:
 
 
 def round_decimal(value: Decimal, places: int = 2):
-    """Arrondit un Decimal au nombre de décimales demandé.
+    """Round a Decimal to the specified number of decimal places.
 
-    Args:
-        value: Decimal à arrondir
-        places: Nombre de décimales
+    Parameters
+    ----------
+    value : Decimal
+        The Decimal value to round.
+    places : int, optional
+        Number of decimal places (default is 2).
 
-    Returns:
-        Decimal arrondi
+    Returns
+    -------
+    Decimal
+        The rounded Decimal value.
     """
     quantizer = Decimal(10) ** -places
 
@@ -51,15 +64,21 @@ def round_decimal(value: Decimal, places: int = 2):
 
 
 def safe_divide(numerator: Decimal | int, denominator: Decimal | int, places: int = 2):
-    """Division sûre avec Decimal.
+    """Perform safe division with Decimal.
 
-    Args:
-        numerator: Numérateur
-        denominator: Dénominateur
-        places: Décimales pour arrondi
+    Parameters
+    ----------
+    numerator : Decimal or int
+        The numerator.
+    denominator : Decimal or int
+        The denominator.
+    places : int, optional
+        Number of decimal places for rounding (default is 2).
 
-    Returns:
-        Résultat arrondi, ou Decimal(0) si dénominateur nul
+    Returns
+    -------
+    Decimal
+        The rounded result, or Decimal(0) if denominator is zero.
     """
 
     if denominator == 0:
