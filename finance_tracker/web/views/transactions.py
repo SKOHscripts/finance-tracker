@@ -23,7 +23,7 @@ def _enum_from_value(enum_cls, value: str):
 
 
 def render(session: Session) -> None:
-    st.title("💸 Transactions")
+    st.title("💸 Mes Transactions")
     st.caption("Ajout, modification et suppression directement depuis la liste.")
 
     product_repo = SQLModelProductRepository(session)

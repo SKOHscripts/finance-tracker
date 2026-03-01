@@ -305,7 +305,7 @@ def _render_kind_selectors(product_names: list[str]) -> None:
 # ── Rendu principal ────────────────────────────────────────────────────────────
 def render(session: Session) -> None:
     _init_state()
-    st.header("🧮 Simulation long terme")
+    st.header("🔮 Simulation Long Terme")
 
     product_repo = SQLModelProductRepository(session)
     products_db = product_repo.get_all()

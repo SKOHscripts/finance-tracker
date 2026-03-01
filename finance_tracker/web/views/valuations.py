@@ -13,7 +13,7 @@ from finance_tracker.web.ui.formatters import to_decimal
 
 
 def render(session: Session) -> None:
-    st.title("📈 Valorisations")
+    st.title("📈 Mes Valorisations")
     st.caption("Snapshots de valeur : ajout, édition et suppression depuis une table unique.")
 
     product_repo = SQLModelProductRepository(session)

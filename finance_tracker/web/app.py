@@ -16,10 +16,22 @@ from finance_tracker.web.db import get_session, get_db_path, get_engine
 from finance_tracker.web.navigation import build_pages
 from finance_tracker.repositories.sqlmodel_repo import init_db
 
-st.set_page_config(page_title="Finance Tracker", page_icon="💰", layout="wide", initial_sidebar_state="expanded")
+GITHUB_BASE_URL = "https://github.com/SKOHscripts/finance-tracker/blob/main"
 
-st.title("💰 Finance Tracker")
-st.markdown("Gestion complète de votre portefeuille d'investissement")
+# Positionner le titre en haut à droite dans Streamlit
+
+st.set_page_config(page_title="Finance Tracker", page_icon="💰", layout="wide")
+
+# Créer une ligne avec le titre à droite
+col1, col2 = st.columns([6, 1])
+
+with col1:
+    st.markdown("")
+
+with col2:
+    st.markdown(f"""
+    **[💰 Finance Tracker]({GITHUB_BASE_URL}/README.md)**
+    """)
 
 
 def render_db_manager():

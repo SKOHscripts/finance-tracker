@@ -20,7 +20,7 @@ def _enum_from_value(enum_cls, value: str):
 
 
 def render(session: Session) -> None:
-    st.title("🧾 Produits")
+    st.title("🏷️ Mes Produits")
     st.caption("Créez, éditez et supprimez vos produits. (La suppression peut échouer si des transactions/valorisations existent.)")
 
     product_repo = SQLModelProductRepository(session)
