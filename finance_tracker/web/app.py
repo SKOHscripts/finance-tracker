@@ -15,6 +15,7 @@ import os
 from finance_tracker.web.db import get_session, get_db_path, get_engine
 from finance_tracker.web.navigation import build_pages
 from finance_tracker.repositories.sqlmodel_repo import init_db
+from finance_tracker.services.seed_service import seed_default_products
 
 # Used for linking to GitHub documentation from the UI
 GITHUB_BASE_URL = "https://github.com/SKOHscripts/finance-tracker/blob/main"
@@ -38,6 +39,7 @@ def render_db_manager():
     """Manage database lifecycle operations in the sidebar.
 
     Handles importing, creating, and exporting SQLite database files for the application.
+    Also seeds default products when creating a new database.
     """
     st.sidebar.markdown("### 💾 Gestion des Données")
     db_path = get_db_path()
@@ -54,14 +56,26 @@ def render_db_manager():
         # Force Streamlit to re-run to proceed with the loaded database
         st.rerun()
 
-    # INITIALISATION SI VIDE
+    # INITIALISATION IF EMPTY
     # Create a fresh database if none exists
     if not os.path.exists(db_path):
         if st.sidebar.button("Créer un nouveau portefeuille"):
             # Each user gets their own database instance via dynamic engine
             engine = get_engine()
             init_db(engine)
+
+            # Seed default products for new databases
+            session = get_session()
+            created_count = seed_default_products(session)
+            session.close()
+
             st.session_state.db_loaded = True
+
+            if created_count > 0:
+                st.sidebar.success(f"✅ Base initialisée avec {created_count} produits par défaut")
+            else:
+                st.sidebar.success("✅ Base initialisée")
+
             st.rerun()
 
         st.warning("Veuillez importer ou créer une base pour commencer.")
@@ -77,7 +91,7 @@ def render_db_manager():
                 data=f,
                 file_name="finance_tracker_backup.db",
                 mime="application/octet-stream"
-            )
+                )
 
 
 # 1. Validate and setup database before any page logic runs
