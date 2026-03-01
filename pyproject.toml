@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "finance-tracker"
-version = "0.1.0"
+version = "1.0.0"
 description = "Advanced personal finance tracking with SCPI, Bitcoin, insurance, and portfolio analysis"
 readme = "README.md"
 requires-python = ">=3.11"

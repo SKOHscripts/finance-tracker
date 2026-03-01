@@ -243,7 +243,7 @@ Vous saisissez:
   - Produit: SCPI Eurizon
   - Prix unitaire: 262.5
   - Date: 28/02/2024
-  
+
 Résultat:
   - Valeur actuelle: 40 × 262.5 = 10 500€
   - Gain latent: 10 500 - 10 000 = +500€ (+5%)
@@ -447,7 +447,7 @@ Générer un rapport imprimable de votre portefeuille.
 ```
 ┌────────────────────────────────────┐
 │   RAPPORT DE PORTEFEUILLE         │
-│   Finance Tracker v0.1.0           │
+│   Finance Tracker v1.0.0           │
 │   Généré le: 28/02/2024            │
 ├────────────────────────────────────┤
 │                                    │
@@ -515,7 +515,7 @@ Sans versements:
 Avec versements de 500€/mois:
   Valeur à 20 ans: 323 156€
   Gain total: 283 556€ (intérêts composés)
-  
+
 Graphique de croissance:
 [Courbe exponentielle 1: Capital seul]
 [Courbe exponentielle 2: Capital + versements]

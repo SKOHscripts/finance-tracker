@@ -86,7 +86,7 @@ labels = [p.label for p in pages]
 selected = st.sidebar.radio("Navigation", labels)
 st.sidebar.markdown("---")
 
-st.sidebar.info("**Finance Tracker v0.1.0**\n\nOutil de suivi de portefeuille avec support SCPI, Bitcoin, épargne et plus.")
+st.sidebar.info("**Finance Tracker v1.0.0**\n\nOutil de suivi de portefeuille avec support SCPI, Bitcoin, épargne et plus.")
 
 # 3. On rend la page
 page = next(p for p in pages if p.label == selected)

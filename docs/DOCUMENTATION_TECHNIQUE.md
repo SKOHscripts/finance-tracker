@@ -700,7 +700,7 @@ mypy finance_tracker/
 
 ## 🚀 Roadmap Technique
 
-### V0.1.0 (Actuelle) ✅
+### V1.0.0 (Actuelle) ✅
 - ✅ CRUD complet produits/transactions/valorisations
 - ✅ Calculs financiers (PRU, performance, gains)
 - ✅ Dashboard Streamlit
@@ -708,21 +708,21 @@ mypy finance_tracker/
 - ✅ Export PDF
 - ✅ CLI basique
 
-### V0.2.0 (Q2 2026)
+### V2.0.0
 - 📋 Import CSV historique
 - 📊 Calculs TRI/XIRR
 - 🔗 Intégration APIs brokers (Interactive Brokers, Degiro)
 - 📈 Alertes performance
 - 🎯 Recommandations allocation
 
-### V0.3.0 (Q4 2026)
+### V3.0.0
 - 👥 Multi-portefeuilles
 - 🏛️ Gestion fiscalité (Plus/moins values)
 - 📊 Rapports fiscaux PDF
 - 🤖 Suggestions intelligentes
 - 📱 App mobile (React Native)
 
-### V1.0.0 (2027)
+### V4.0.0
 - 🌐 Plateforme complète (multi-users)
 - 🔐 Authentification OAuth
 - ☁️ Sync cloud optionnel (AWS)
