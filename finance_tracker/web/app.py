@@ -107,6 +107,13 @@ labels = [p.label for p in pages]
 selected = st.sidebar.radio("Navigation", labels)
 st.sidebar.markdown("---")
 
+st.sidebar.markdown("### ☕ Soutenir le projet")
+st.sidebar.link_button(
+    "☕+₿ Buy me a Bitcoffee",
+    "https://html-preview.github.io/?url=https://github.com/SKOHscripts/donate.github.io/blob/main/donate%2Fredirect.html"
+)
+st.sidebar.markdown("---")
+
 st.sidebar.info("**Finance Tracker v1.0.0**\n\nOutil de suivi de portefeuille avec support SCPI, Bitcoin, épargne et plus.")
 
 # 3. Render the selected navigation page with database access
