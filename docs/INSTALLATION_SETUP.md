@@ -774,5 +774,3 @@ Après une installation réussie:
 ---
 
 **Happy Coding!** 🚀
-
-Dernière mise à jour: 28/02/2026

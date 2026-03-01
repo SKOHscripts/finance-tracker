@@ -144,6 +144,7 @@ Guide pas à pas de chaque page Streamlit :
 Description de la **structure SQLite** (tables `products`, `transactions`, `valuations`, etc.), types de champs, contraintes, et conventions de nommage.
 
 - 👉 **[docs/BASE_DONNEES.md](./docs/BASE_DONNEES.md)**
+- 👉 **[docs/DOCUMENTATION_TECHNIQUE.md](./docs/DOCUMENTATION_TECHNIQUE.md)**
 
 ### Formules & modèles
 
