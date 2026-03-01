@@ -22,8 +22,12 @@ def build_pages() -> list[Page]:
     from finance_tracker.web.views.products import render as products_render
     from finance_tracker.web.views.transactions import render as transactions_render
     from finance_tracker.web.views.valuations import render as valuations_render
+    from finance_tracker.web.views.documentation import render as documentation_render
 
     return [
+        # --- Documentation ---
+        Page("📖 Documentation", documentation_render),
+
         # --- Analyses ---
         Page("📊 Tableau de Bord", dashboard_render),
         Page("🔮 Simulation Long Terme", simulation_render),
