@@ -168,12 +168,13 @@ _KIND_META: dict[str, dict] = {
     "per": {"icon": "📋", "label": "PER", "color": "#f3e5f5", "border": "#8e24aa"},
     "fcpi": {"icon": "📈", "label": "FCPI", "color": "#fce4ec", "border": "#e91e63"},
     "other": {"icon": "💼", "label": "Autre", "color": "#f5f5f5", "border": "#757575"},
+    "btc": {"icon": "🟠", "label": "Bitcoin", "color": "#FFF3E0", "border": "#F7931A"},
     }
 """Metadata for each product category: icon, label, colors for UI styling."""
 
 _DEFAULT_RETURN_BY_KIND: dict[str, float] = {
     "cash": 0.0, "savings": 3.0, "scpi": 0.0,
-    "per": 5.0, "fcpi": 4.0, "other": 3.0,
+    "per": 5.0, "fcpi": 4.0, "other": 3.0, "btc": 6.4,
     }
 """Default annual return percentage by product category."""
 
@@ -184,6 +185,7 @@ _KIND_HELP: dict[str, str] = {
     "per": "💡 PER : les versements sont **déduits du revenu imposable** dans la limite du plafond défini dans les paramètres globaux.",
     "fcpi": "💡 FCPI : **réduction d'impôt** sur les versements, capital bloqué pendant la durée définie.",
     "other": "💡 Produit générique : rendement annuel capitalisé.",
+    "btc" : "💡 Bitcoin : les intérêts sont capitalisés chaque période.",
     }
 """Help text displayed for each product category in the form."""
 
@@ -642,9 +644,9 @@ def render(session: Session) -> None:
         with c2:
             inflation_pct = st.number_input("Inflation annuelle (%)", 0.0, 20.0, 2.0, 0.1)
         with c3:
-            income_start = st.number_input("Revenu brut annuel N (€)", 0.0, value=50000.0, step=1000.0)
+            income_start = st.number_input("Revenu brut annuel N (€)", 0.0, value=30000.0, step=1000.0)
             income_prev = st.number_input(
-                "Revenu brut annuel N-1 (€)", 0.0, value=50000.0, step=1000.0,
+                "Revenu brut annuel N-1 (€)", 0.0, value=30000.0, step=1000.0,
                 help="Utilisé pour le plafond PER (10% du revenu N-1).",
                 )
         with c4:
@@ -652,7 +654,7 @@ def render(session: Session) -> None:
 
         c1, c2, c3 = st.columns(3)
         with c1:
-            annual_living_costs = st.number_input("Dépenses annuelles (€)", 0.0, value=24000.0, step=500.0)
+            annual_living_costs = st.number_input("Dépenses annuelles (€)", 0.0, value=10000.0, step=500.0)
         with c2:
             emergency_target = st.number_input(
                 "Épargne de précaution (€)", 0.0, value=5000.0, step=500.0,
