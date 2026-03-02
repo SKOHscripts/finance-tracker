@@ -162,19 +162,19 @@ def _fmt_pct(x: float) -> str:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 _KIND_META: dict[str, dict] = {
-    "cash": {"icon": "💵", "label": "Cash", "color": "#e8f5e9", "border": "#43a047"},
-    "savings": {"icon": "🏦", "label": "Épargne", "color": "#e3f2fd", "border": "#1e88e5"},
-    "scpi": {"icon": "🏢", "label": "SCPI", "color": "#fff3e0", "border": "#fb8c00"},
-    "per": {"icon": "📋", "label": "PER", "color": "#f3e5f5", "border": "#8e24aa"},
-    "fcpi": {"icon": "📈", "label": "FCPI", "color": "#fce4ec", "border": "#e91e63"},
-    "other": {"icon": "💼", "label": "Autre", "color": "#f5f5f5", "border": "#757575"},
-    "btc": {"icon": "🟠", "label": "Bitcoin", "color": "#FFF3E0", "border": "#F7931A"},
+    "cash": {"icon": "💵", "label": "Cash", "color": "rgba(67, 160, 71, 0.15)", "border": "#43a047"},
+    "savings": {"icon": "🏦", "label": "Épargne", "color": "rgba(30, 136, 229, 0.15)", "border": "#1e88e5"},
+    "scpi": {"icon": "🏢", "label": "SCPI", "color": "rgba(251, 140, 0, 0.15)", "border": "#fb8c00"},
+    "per": {"icon": "📋", "label": "PER", "color": "rgba(142, 36, 170, 0.15)", "border": "#8e24aa"},
+    "fcpi": {"icon": "📈", "label": "FCPI", "color": "rgba(233, 30, 99, 0.15)", "border": "#e91e63"},
+    "other": {"icon": "💼", "label": "Autre", "color": "rgba(117, 117, 117, 0.15)", "border": "#757575"},
+    "btc": {"icon": "₿", "label": "Bitcoin", "color": "rgba(247, 147, 26, 0.15)", "border": "#F7931A"},
     }
 """Metadata for each product category: icon, label, colors for UI styling."""
 
 _DEFAULT_RETURN_BY_KIND: dict[str, float] = {
     "cash": 0.0, "savings": 3.0, "scpi": 0.0,
-    "per": 5.0, "fcpi": 4.0, "other": 3.0, "btc": 6.4,
+    "per": 5.0, "fcpi": 4.0, "other": 3.0, "bitcoin": 6.4,
     }
 """Default annual return percentage by product category."""
 
@@ -345,11 +345,11 @@ def _render_scpi_params(name: str) -> dict:
         - init_scpi_parts : int or None, initial shares (if forced)
     """
     st.markdown(
-        "<div style='background:#fff3e0;border-left:4px solid #fb8c00;"
-        "padding:8px 14px;border-radius:4px;margin:10px 0 6px 0'>"
-        "🏢 <strong>Paramètres SCPI</strong></div>",
-        unsafe_allow_html=True,
-        )
+    "<div style='background:rgba(251, 140, 0, 0.15);border-left:4px solid #fb8c00;"
+    "padding:8px 14px;border-radius:4px;margin:10px 0 6px 0'>"
+    "🏢 <strong>Paramètres SCPI</strong></div>",
+    unsafe_allow_html=True,
+    )
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
@@ -438,11 +438,11 @@ def _render_fcpi_params(name: str) -> dict:
         - exit_mode : str, redemption mode at maturity ('principal' or 'full_value')
     """
     st.markdown(
-        "<div style='background:#fce4ec;border-left:4px solid #e91e63;"
-        "padding:8px 14px;border-radius:4px;margin:10px 0 6px 0'>"
-        "📈 <strong>Paramètres FCPI</strong></div>",
-        unsafe_allow_html=True,
-        )
+    "<div style='background:rgba(233, 30, 99, 0.15);border-left:4px solid #e91e63;"
+    "padding:8px 14px;border-radius:4px;margin:10px 0 6px 0'>"
+    "📈 <strong>Paramètres FCPI</strong></div>",
+    unsafe_allow_html=True,
+    )
 
     c1, c2, c3, c4 = st.columns(4)
     with c1:
