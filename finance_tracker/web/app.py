@@ -19,6 +19,7 @@ from finance_tracker.services.seed_service import seed_default_products
 
 # Used for linking to GitHub documentation from the UI
 GITHUB_BASE_URL = "https://github.com/SKOHscripts/finance-tracker/blob/main"
+LOGO_URL = "https://raw.githubusercontent.com/SKOHscripts/finance-tracker/main/images/logo_color_horizontal_white.png"
 
 # Must be called before any other Streamlit commands that modify the page
 st.set_page_config(page_title="Finance Tracker", page_icon="💰", layout="wide")
@@ -30,14 +31,23 @@ with col1:
     st.markdown("")
 
 with col2:
+    # st.markdown(
+    #     f'<a href="{GITHUB_BASE_URL}/README.md" target="_blank" '
+    #     f'title="Voir le projet" '
+    #     f'style="text-decoration:none; color:#888; font-size:1.2em;">💰 Finance Tracker</a>',
+    #     unsafe_allow_html=True
+    #     )
     st.markdown(
         f'<a href="{GITHUB_BASE_URL}/README.md" target="_blank" '
         f'title="Voir le projet" '
-        f'style="text-decoration:none; color:#888; font-size:1.2em;">💰 Finance Tracker</a>',
+        f'style="text-decoration:none; color:#888; font-size:1.2em;">'
+        f'<img src="{LOGO_URL}" height="24" style="vertical-align:middle; margin-right:8px;">'
+        f'Finance Tracker</a>',
         unsafe_allow_html=True
         )
+
 col1, col2 = st.columns([6, 1])
-    
+
 
 def render_db_manager():
     """Manage database lifecycle operations in the sidebar.
@@ -62,6 +72,7 @@ def render_db_manager():
 
     # INITIALISATION IF EMPTY
     # Create a fresh database if none exists
+
     if not os.path.exists(db_path):
         if st.sidebar.button("Créer un nouveau portefeuille"):
             # Each user gets their own database instance via dynamic engine
@@ -88,6 +99,7 @@ def render_db_manager():
 
     # EXPORT
     # Provide a way to backup the current database state
+
     if os.path.exists(db_path):
         with open(db_path, "rb") as f:
             st.sidebar.download_button(
