@@ -21,6 +21,7 @@ _serialize_products_for_pdf : Prepares product configs for PDF generation
 _render_scpi_params : Renders SCPI-specific parameters form
 _render_fcpi_params : Renders FCPI-specific parameters form
 _render_kind_selectors : Renders category selectors outside the form
+_render_inflation_selector : Renders inflation profile selector outside the form
 
 Session State Keys
 ------------------
@@ -40,6 +41,10 @@ sim_pdf_bytes : bytes
     Cached PDF report bytes.
 sim_pdf_needs_update : bool
     Flag to force PDF regeneration.
+sim_inflation_profile_idx : int
+    Index of the currently selected inflation profile.
+sim_inflation_custom_rate : float
+    Custom inflation rate entered by the user (used when profile is 'custom').
 
 Examples
 --------
@@ -287,6 +292,8 @@ def _init_state() -> None:
     st.session_state.setdefault("sim_selected_metrics", ["value_eur", "value_real_eur"])
     st.session_state.setdefault("sim_products_params", [])
     st.session_state.setdefault("sim_config_params", None)
+    st.session_state.setdefault("sim_inflation_profile_idx", 0)
+    st.session_state.setdefault("sim_inflation_custom_rate", 2.0)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -540,6 +547,62 @@ def _render_fcpi_params(name: str) -> dict:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# INFLATION SELECTOR (OUTSIDE FORM)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _render_inflation_selector() -> tuple[float, str]:
+    """
+    Render the inflation profile selector outside the main form.
+
+    Placing this selector outside the form allows immediate dynamic updates:
+    the profile description and the custom rate input field appear instantly
+    when the user changes the selection, without requiring form submission.
+
+    The selected profile index and custom rate are stored in session state
+    (``sim_inflation_profile_idx`` and ``sim_inflation_custom_rate``) so they
+    persist across reruns and can be read inside the form.
+
+    Returns
+    -------
+    tuple[float, str]
+        A tuple of (inflation_pct, profile_label) where:
+        - inflation_pct : float — the effective annual inflation rate (%)
+        - profile_label : str — the label of the selected profile (for PDF)
+    """
+    st.markdown("#### 📈 Profil d'inflation")
+
+    profile_idx = st.selectbox(
+        "Profil d'inflation",
+        options=range(len(_INFLATION_PROFILES)),
+        format_func=lambda i: _INFLATION_PROFILES[i]["label"],
+        index=st.session_state.sim_inflation_profile_idx,
+        key="sim_inflation_profile",
+        help="Choisir un profil prédéfini ou saisir un taux personnalisé.",
+        label_visibility="collapsed",
+        )
+    # Persist the selection
+    st.session_state.sim_inflation_profile_idx = profile_idx
+    selected_profile = _INFLATION_PROFILES[profile_idx]
+
+    if selected_profile["rate"] is None:
+        # Custom profile: show the input field immediately
+        custom_rate = st.number_input(
+            "Taux d'inflation personnalisé (%)",
+            min_value=0.0, max_value=30.0,
+            value=st.session_state.sim_inflation_custom_rate,
+            step=0.1,
+            key="sim_inflation_custom",
+            )
+        st.session_state.sim_inflation_custom_rate = custom_rate
+        inflation_pct = custom_rate
+    else:
+        inflation_pct = selected_profile["rate"]
+        st.caption(f"💡 {selected_profile['description']}")
+
+    return inflation_pct, selected_profile["label"]
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # CATEGORY SELECTORS (OUTSIDE FORM)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -611,11 +674,12 @@ def render(session: Session) -> None:
 
     The page is organized into several sections:
 
-    1. Category Selectors - Assign product types before form submission
-    2. Global Parameters - Duration, inflation, income, expenses, tax brackets
-    3. PER Settings - Deductible contribution cap configuration
-    4. Product Parameters - Per-product settings with type-specific options
-    5. Results Display - Summary metrics, tables, charts, and exports
+    1. Inflation Selector - Dynamic profile and rate selection (outside form)
+    2. Category Selectors - Assign product types before form submission
+    3. Global Parameters - Duration, income, expenses, tax brackets
+    4. PER Settings - Deductible contribution cap configuration
+    5. Product Parameters - Per-product settings with type-specific options
+    6. Results Display - Summary metrics, tables, charts, and exports
 
     Parameters
     ----------
@@ -670,6 +734,10 @@ def render(session: Session) -> None:
         for p in portfolio.products
         }
 
+    # ── Inflation selector (outside form for immediate rerun) ─────────────────
+    inflation_pct, _inflation_profile_label = _render_inflation_selector()
+    st.markdown("---")
+
     # ── Category selectors (outside form for immediate rerun) ───────────────
     _render_kind_selectors(product_names)
     st.markdown("---")
@@ -694,27 +762,18 @@ def render(session: Session) -> None:
                 index=0,
                 )
         with c2:
-            _profile_labels = [p["label"] for p in _INFLATION_PROFILES]
-            _profile_index = st.selectbox(
-                "Profil d'inflation",
-                options=range(len(_INFLATION_PROFILES)),
-                format_func=lambda i: _INFLATION_PROFILES[i]["label"],
-                index=0,
-                key="sim_inflation_profile",
-                help="Choisir un profil prédéfini ou saisir un taux personnalisé.",
+            # Inflation profile is selected outside the form for immediate dynamic
+            # updates. Display a read-only recap of the active selection here.
+            _selected_profile = _INFLATION_PROFILES[st.session_state.sim_inflation_profile_idx]
+            _active_rate = (
+                st.session_state.sim_inflation_custom_rate
+                if _selected_profile["rate"] is None
+                else _selected_profile["rate"]
                 )
-            _selected_profile = _INFLATION_PROFILES[_profile_index]
-            if _selected_profile["rate"] is None:
-                inflation_pct = st.number_input(
-                    "Taux personnalisé (%)", 0.0, 30.0, 2.0, 0.1,
-                    key="sim_inflation_custom",
-                    )
-            else:
-                inflation_pct = _selected_profile["rate"]
-                st.caption(
-                    f"💡 {_selected_profile['description']}"
-                    )
-            _inflation_profile_label = _selected_profile["label"]
+            st.markdown("**Inflation sélectionnée**")
+            st.info(
+                f"{_selected_profile['label']} — {_active_rate:.1f} %/an"
+                )
         with c3:
             income_start = st.number_input("Revenu brut annuel N (€)", 0.0, value=30000.0, step=1000.0)
             income_prev = st.number_input(
