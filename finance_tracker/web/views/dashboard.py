@@ -191,6 +191,106 @@ def render(session: Session) -> None:
     st.markdown("---")
 
     # ═══════════════════════════════════════════════════════════════════════════
+    # SECTION 2b: PER-PRODUCT DETAIL SECTIONS
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    st.markdown("### 🔍 Détail par produit")
+
+    for p in portfolio.products:
+        if p.get("current_value_eur", 0) <= 0:
+            continue
+
+        product_id = p["id"]
+        details = service.get_product_details(product_id)
+        if not details or not details["history"]:
+            continue
+
+        with st.expander(f"**{p['name']}** — {format_eur(details['current_value'])}"):
+            # Mini KPI row
+            k1, k2, k3, k4 = st.columns(4)
+            with k1:
+                st.metric("Valeur actuelle", format_eur(details["current_value"]))
+            with k2:
+                st.metric("Investi net", format_eur(details["net_invested"]))
+            with k3:
+                st.metric(
+                    "Gains",
+                    format_eur(details["gains_eur"]),
+                    delta=f"{details['gains_pct']:.2f}%",
+                    delta_color="normal",
+                    )
+            with k4:
+                if details["pru"] is not None:
+                    st.metric("PRU", format_eur(details["pru"]))
+                else:
+                    st.metric("PRU", "—")
+
+            # Valuation curve chart
+            if len(details["history"]) >= 2:
+                chart_df = pd.DataFrame(details["history"])
+                chart_df["date"] = pd.to_datetime(chart_df["date"])
+
+                base = alt.Chart(chart_df).encode(
+                    x=alt.X("date:T", title="Date", axis=alt.Axis(format="%b %Y")),
+                    )
+
+                area = base.mark_area(
+                    color=details["color"],
+                    opacity=0.15,
+                    line={"color": details["color"], "strokeWidth": 2.5},
+                    ).encode(
+                        y=alt.Y("total_value_eur:Q", title="Valeur (€)"),
+                        tooltip=[
+                            alt.Tooltip("date:T", title="Date", format="%d/%m/%Y"),
+                            alt.Tooltip("total_value_eur:Q", title="Valeur (€)", format=",.2f"),
+                            ],
+                        )
+
+                points = base.mark_circle(color=details["color"], size=40).encode(
+                    y="total_value_eur:Q",
+                    )
+
+                chart = (area + points).properties(height=240)
+
+                # Add PRU line if available
+                if details["pru"] is not None:
+                    pru_df = pd.DataFrame([
+                        {"date": chart_df["date"].min(), "PRU": details["pru"]},
+                        {"date": chart_df["date"].max(), "PRU": details["pru"]},
+                        ])
+                    pru_line = alt.Chart(pru_df).mark_line(
+                        color="#6366f1", strokeDash=[6, 4], strokeWidth=1.8,
+                        ).encode(
+                            x="date:T",
+                            y=alt.Y("PRU:Q"),
+                            tooltip=[alt.Tooltip("PRU:Q", title="PRU (€)", format=",.2f")],
+                            )
+                    chart = (chart + pru_line).properties(height=240)
+
+                st.altair_chart(chart, use_container_width=True)
+
+                legend_parts = [f"<span style='color:{details['color']}'>■</span> Valeur"]
+                if details["pru"] is not None:
+                    legend_parts.append("<span style='color:#6366f1'>- -</span> PRU")
+                st.caption(" · ".join(legend_parts))
+
+            # Recent valuations table
+            recent = list(reversed(details["history"]))[:8]
+            if recent:
+                table_rows = []
+                for v in recent:
+                    row = {
+                        "Date": v["date"].strftime("%d/%m/%Y") if hasattr(v["date"], "strftime") else str(v["date"]),
+                        "Valeur (€)": f"{v['total_value_eur']:,.2f}".replace(",", " "),
+                        }
+                    if v.get("unit_price_eur"):
+                        row["Prix unitaire (€)"] = f"{v['unit_price_eur']:,.2f}".replace(",", " ")
+                    table_rows.append(row)
+                st.dataframe(pd.DataFrame(table_rows), hide_index=True, use_container_width=True)
+
+    st.markdown("---")
+
+    # ═══════════════════════════════════════════════════════════════════════════
     # SECTION 3: EXPORTS & REPORTS
     # ═══════════════════════════════════════════════════════════════════════════
 
@@ -211,8 +311,16 @@ def render(session: Session) -> None:
             if st.button("⚙️ Préparer le rapport PDF", width="stretch"):
                 with st.spinner("⏳ Génération du rapport PDF..."):
                     try:
+                        # Build per-product chart data for PDF
+                        chart_details = []
+                        for p in portfolio.products:
+                            if p.get("current_value_eur", 0) > 0:
+                                d = service.get_product_details(p["id"])
+                                if d and d.get("history") and len(d["history"]) >= 2:
+                                    chart_details.append(d)
+
                         pdf_service = PDFReportService()
-                        filepath = pdf_service.generate_report(portfolio)
+                        filepath = pdf_service.generate_report(portfolio, chart_details or None)
 
                         # Read and cache PDF bytes
                         with open(filepath, "rb") as f:

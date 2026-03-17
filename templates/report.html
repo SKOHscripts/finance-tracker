@@ -8,147 +8,121 @@
     @page {
       size: A4;
       margin: 18mm 14mm;
-      @bottom-left { content: "Finance Tracker — Rapport Portefeuille"; font-size: 9pt; color: #6b7280; }
-      @bottom-right { content: "Page " counter(page) " / " counter(pages); font-size: 9pt; color: #6b7280; }
+      @bottom-left { content: "Finance Tracker — Rapport Portefeuille"; font-size: 9pt; color: #666; }
+      @bottom-right { content: "Page " counter(page) " / " counter(pages); font-size: 9pt; color: #666; }
     }
 
-    * { box-sizing: border-box; }
-    html, body { margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      color: #111827;
-      line-height: 1.35;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #333;
+      line-height: 1.5;
       font-size: 11pt;
       background: #ffffff;
     }
 
     .container { width: 100%; max-width: 100%; }
 
+    /* ===== Header — teal accent ===== */
     .header {
-      padding-bottom: 14px;
-      border-bottom: 2px solid #e5e7eb;
-      margin-bottom: 18px;
+      text-align: center;
+      padding: 20px 0;
+      border-bottom: 2px solid #008080;
+      margin-bottom: 30px;
     }
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      gap: 12px;
+    .header h1 {
+      font-size: 24pt;
+      color: #008080;
+      margin-bottom: 5px;
     }
-    .title-block h1 {
-      margin: 0;
-      font-size: 22pt;
-      letter-spacing: 0.2px;
-      color: #0f172a;
-    }
-    .subtitle {
-      margin-top: 4px;
+    .header p {
       font-size: 10pt;
-      color: #6b7280;
-    }
-    .meta {
-      text-align: right;
-      font-size: 10pt;
-      color: #6b7280;
-      white-space: nowrap;
+      color: #666;
     }
 
-    .section { margin-top: 18px; }
+    /* ===== Sections ===== */
+    .section { margin-bottom: 30px; }
     .section h2 {
-      margin: 0 0 10px 0;
-      padding-bottom: 6px;
-      border-bottom: 1px solid #e5e7eb;
-      font-size: 13pt;
-      color: #111827;
+      font-size: 14pt;
+      color: #008080;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 8px;
+      margin-bottom: 15px;
+      page-break-after: avoid;
+    }
+    .section h3 {
+      font-size: 12pt;
+      color: #333;
+      margin-top: 15px;
+      margin-bottom: 10px;
     }
 
-    /* 2 colonnes fixes, prend toute la largeur disponible */
-    .summary{
+    /* ===== Summary cards — teal left border (matches simulation_report) ===== */
+    .summary-grid {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      width: 100%;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
     }
-    /* Très important en CSS Grid: autoriser les items à rétrécir */
-    .card{
+    .summary-card {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-left: 4px solid #008080;
+      padding: 15px;
+      border-radius: 4px;
       min-width: 0;
     }
-    /* Empêcher la note / texte long de “pousser” la colonne */
-    .note{
-      min-width: 0;
-      overflow-wrap: anywhere;
-      word-break: break-word;
+    .summary-card .label {
+      font-size: 9pt;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 5px;
     }
-    .card-value{
+    .summary-card .value {
+      font-size: 14pt;
+      font-weight: bold;
+      color: #008080;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .card {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 16px 14px 14px 14px;
-      background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
-    }
-    .card-label {
-      font-size: 9pt;
-      color: #6b7280;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      margin-bottom: 6px;
-      line-height: 1.2;
-    }
-    .card-value {
-      font-size: 16pt;
-      font-weight: 700;
-      color: #0f172a;
-      margin-bottom: 4px;
-    }
-    .card-hint {
+    .summary-card .hint {
       margin-top: 6px;
       font-size: 9pt;
-      color: #6b7280;
+      color: #666;
       line-height: 1.3;
     }
 
     .positive { color: #16a34a; }
     .negative { color: #dc2626; }
 
-    /* ===== Charts (1 colonne = grands) ===== */
+    /* ===== Charts ===== */
     .charts {
       display: grid;
       grid-template-columns: 1fr;
       gap: 16px;
       margin-top: 16px;
     }
-    .chart {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 16px;
+    .chart-container {
+      margin: 25px 0;
+      text-align: center;
       page-break-inside: avoid;
     }
-    .chart h3 {
-      margin: 0 0 12px 0;
-      font-size: 12pt;
-      color: #0f172a;
-    }
-    .chart img {
-      width: 100%;
+    .chart-container img {
+      max-width: 100%;
       height: auto;
-      max-height: 450px;
-      object-fit: contain;
-      border: 1px solid #eef2f7;
-      border-radius: 8px;
-      display: block;
-      background: #ffffff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
     }
-    .chart-note {
-      margin-top: 10px;
-      font-size: 9pt;
-      color: #6b7280;
+    .chart-title {
+      font-size: 10pt;
+      color: #666;
+      margin-top: 8px;
+      font-style: italic;
     }
 
-    /* ===== Table ===== */
+    /* ===== Table — teal headers (matches simulation_report) ===== */
     table {
       width: 100%;
       border-collapse: collapse;
@@ -156,21 +130,21 @@
       font-size: 10pt;
     }
     thead th {
-      background: #f8fafc;
-      color: #111827;
+      background: #008080;
+      color: white;
       font-weight: 700;
-      border-bottom: 2px solid #e5e7eb;
-      padding: 12px 10px;
+      padding: 10px 10px;
+      text-align: left;
       text-transform: uppercase;
       letter-spacing: 0.4px;
       font-size: 9pt;
     }
     tbody td {
-      border-bottom: 1px solid #eef2f7;
-      padding: 11px 10px;
+      border-bottom: 1px solid #ddd;
+      padding: 10px 10px;
       vertical-align: middle;
     }
-    tbody tr:nth-child(even) { background: #fcfcfd; }
+    tbody tr:nth-child(even) { background: #f9f9f9; }
 
     td:first-child, th:first-child { text-align: left; }
     td:not(:first-child), th:not(:first-child) { text-align: right; }
@@ -180,101 +154,123 @@
     .col-perf { width: 12%; }
     .col-alloc { width: 10%; }
 
+    /* ===== Per-product section ===== */
+    .product-section {
+      page-break-inside: avoid;
+      margin-bottom: 25px;
+    }
+    .product-section h3 {
+      font-size: 13pt;
+      color: #008080;
+      margin-bottom: 10px;
+    }
+    .product-kpis {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
     /* ===== Notes ===== */
     .note {
       font-size: 9.5pt;
-      color: #6b7280;
+      color: #666;
       margin-top: 12px;
       line-height: 1.4;
       padding: 12px;
-      background: #f9fafb;
-      border-left: 3px solid #d1d5db;
+      background: #f9f9f9;
+      border-left: 3px solid #008080;
       border-radius: 4px;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
-    .hr {
-      height: 1px;
-      background: linear-gradient(to right, transparent, #e5e7eb, transparent);
-      margin: 20px 0;
+
+    /* ===== Footer (matches simulation_report) ===== */
+    footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      font-size: 9pt;
+      color: #999;
+      text-align: center;
     }
   </style>
 </head>
 
 <body>
   <div class="container">
+    <!-- HEADER -->
     <div class="header">
-      <div class="header-top">
-        <div class="title-block">
-          <h1>Rapport Portefeuille</h1>
-          <div class="subtitle">Synthèse complète et analyses</div>
-        </div>
-        <div class="meta">Généré le {{ generated_at }}</div>
-      </div>
+      <h1>Rapport Portefeuille</h1>
+      <p>Synthèse complète et analyses — {{ generated_at }}</p>
     </div>
 
+    <!-- SECTION 1: RÉSUMÉ GLOBAL -->
     <div class="section">
       <h2>Résumé global</h2>
-      <div class="summary">
-        <div class="card">
-          <div class="card-label">Valeur totale</div>
-          <div class="card-value">{{ total_value_eur }}</div>
-          <div class="card-hint">Valeur estimée à date de génération</div>
+      <div class="summary-grid">
+        <div class="summary-card">
+          <div class="label">Valeur totale</div>
+          <div class="value">{{ total_value_eur }}</div>
+          <div class="hint">Valeur estimée à date de génération</div>
         </div>
 
-        <div class="card">
-          <div class="card-label">Investissement net</div>
-          <div class="card-value">{{ total_invested_eur }}</div>
-          <div class="card-hint">Dépôts – retraits (+/- flux)</div>
+        <div class="summary-card">
+          <div class="label">Investissement net</div>
+          <div class="value">{{ total_invested_eur }}</div>
+          <div class="hint">Dépôts – retraits (+/- flux)</div>
         </div>
 
-        <div class="card">
-          <div class="card-label">Gains nets</div>
-          <div class="card-value {{ total_gains_class }}">{{ total_gains_eur_formatted }}</div>
-          <div class="card-hint">Valeur totale – investissement net</div>
+        <div class="summary-card">
+          <div class="label">Gains nets</div>
+          <div class="value {{ total_gains_class }}">{{ total_gains_eur_formatted }}</div>
+          <div class="hint">Valeur totale – investissement net</div>
         </div>
 
-        <div class="card">
-          <div class="card-label">Performance globale</div>
-          <div class="card-value {{ total_gains_class }}">{{ total_gains_pct }}</div>
-          <div class="card-hint">Performance simple (gains/investi)</div>
+        <div class="summary-card">
+          <div class="label">Performance globale</div>
+          <div class="value {{ total_gains_class }}">{{ total_gains_pct }}</div>
+          <div class="hint">Performance simple (gains/investi)</div>
         </div>
 
-        <div class="card">
-          <div class="card-label">Liquidités disponibles</div>
-          <div class="card-value">{{ cash_available }}</div>
-          <div class="card-hint">Cash + épargne (mobilisables)</div>
+        <div class="summary-card">
+          <div class="label">Liquidités disponibles</div>
+          <div class="value">{{ cash_available }}</div>
+          <div class="hint">Cash + épargne (mobilisables)</div>
         </div>
 
-        <div class="card">
-          <div class="card-label">Lecture rapide</div>
+        <div class="summary-card">
+          <div class="label">Lecture rapide</div>
           <div class="note">
-            <strong>Performance :</strong> Les graphiques et métriques dépendent de la fraîcheur des valorisations. Si un produit n’a pas été valorisé depuis > 1 mois, le rapport peut sous/surestimer sa performance.<br>
+            <strong>Performance :</strong> Les graphiques et métriques dépendent de la fraîcheur des valorisations. Si un produit n'a pas été valorisé depuis > 1 mois, le rapport peut sous/surestimer sa performance.<br>
             <strong>Conseil :</strong> Valorise mensuellement SCPI/Bitcoin, trimestriellement AV/PER.
           </div>
         </div>
       </div>
     </div>
 
+    <!-- SECTION 2: ANALYSES GRAPHIQUES -->
     <div class="section">
       <h2>Analyses graphiques</h2>
       <div class="charts">
         {% if chart_allocation %}
-        <div class="chart">
-          <h3>Répartition du portefeuille</h3>
+        <div class="chart-container">
           <img src="{{ chart_allocation }}" alt="Répartition par produit" />
-          <div class="chart-note">Allocation actuelle. Conseil : 40-60% stable (SCPI, cash), 40-60% croissance (Bitcoin, actions).</div>
+          <div class="chart-title">Répartition du portefeuille — Allocation actuelle</div>
         </div>
         {% endif %}
 
         {% if chart_performance %}
-        <div class="chart">
-          <h3>Performance absolue par produit</h3>
+        <div class="chart-container">
           <img src="{{ chart_performance }}" alt="Performance absolue par produit" />
-          <div class="chart-note">Gains nets par produit. Barres vertes = positif, rouges = négatif. Performance simple (valeur – investi).</div>
+          <div class="chart-title">Performance par produit — Gains nets (valeur – investi)</div>
         </div>
         {% endif %}
       </div>
     </div>
 
+    <!-- SECTION 3: DÉTAIL PAR PRODUIT (TABLE) -->
     <div class="section">
       <h2>Détail par produit</h2>
       <table>
@@ -303,10 +299,46 @@
       </table>
     </div>
 
-    <div class="hr"></div>
-    <div class="note">
-      <strong>Finance Tracker</strong> — Rapport généré automatiquement. Données à titre informatif uniquement, sans valeur de conseil en investissement.
+    <!-- SECTION 4: HISTORIQUE PAR PRODUIT (CHARTS) -->
+    {% if products_with_charts %}
+    <div class="section">
+      <h2>Historique par Produit</h2>
+
+      {% for product in products_with_charts %}
+      <div class="product-section">
+        <h3>{{ product.name }}</h3>
+
+        <div class="product-kpis">
+          <div class="summary-card">
+            <div class="label">Valeur actuelle</div>
+            <div class="value">{{ product.current_value }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">Investi net</div>
+            <div class="value">{{ product.net_invested }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">PRU</div>
+            <div class="value">{{ product.pru }}</div>
+          </div>
+          <div class="summary-card">
+            <div class="label">Gains</div>
+            <div class="value {{ product.gains_class }}">{{ product.gains_eur }} ({{ product.gains_pct }})</div>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <img src="{{ product.chart_base64 }}" alt="Historique {{ product.name }}" />
+        </div>
+      </div>
+      {% endfor %}
     </div>
+    {% endif %}
+
+    <!-- FOOTER -->
+    <footer>
+      <p>Généré automatiquement — Finance Tracker</p>
+    </footer>
   </div>
 </body>
 </html>

@@ -8,7 +8,7 @@ from sqlmodel import Session
 from tabulate import tabulate
 
 # Local application
-from finance_tracker.domain.enums import TransactionType
+from finance_tracker.domain.enums import ProductType, TransactionType
 from finance_tracker.domain.models import Product, Transaction, Valuation
 from finance_tracker.repositories.sqlmodel_repo import (
     SQLModelProductRepository,
@@ -16,6 +16,19 @@ from finance_tracker.repositories.sqlmodel_repo import (
     SQLModelValuationRepository,
     )
 from finance_tracker.utils.money import format_eur, round_decimal, safe_divide
+
+
+PRODUCT_COLORS = {
+    "BITCOIN": "#F7931A",
+    "SCPI": "#2563EB",
+    "CASH": "#16A34A",
+    "SAVINGS": "#8B5CF6",
+    "INSURANCE": "#EC4899",
+    "PER": "#F59E0B",
+    "FCPI": "#06B6D4",
+    }
+
+DEPOSIT_BASED_TYPES = {ProductType.CASH, ProductType.SAVINGS, ProductType.INSURANCE, ProductType.PER}
 
 
 class PortfolioData:
@@ -204,6 +217,99 @@ class DashboardService:
                 net -= tx.amount_eur
 
         return net
+
+    def get_product_history(self, product_id: int) -> list[dict]:
+        """Return chronological list of valuations for a product.
+
+        Each dict: {date, total_value_eur, unit_price_eur}
+        """
+        valuations = self.valuation_repo.get_by_product_id(product_id)
+        return [
+            {
+                "date": v.date,
+                "total_value_eur": float(v.total_value_eur),
+                "unit_price_eur": float(v.unit_price_eur) if v.unit_price_eur else None,
+                }
+            for v in valuations
+            ]
+
+    def get_product_pru(self, product_id: int) -> float | None:
+        """Calculate PRU for a product.
+
+        For BUY-based products: sum(BUY amount_eur) / quantity from latest valuation.
+        For DEPOSIT-based products: sum(DEPOSIT amount_eur).
+        Returns None if no data.
+        """
+        product = self.product_repo.get_by_id(product_id)
+        if not product:
+            return None
+
+        transactions = self.transaction_repo.get_by_product_id(product_id)
+
+        if product.type in DEPOSIT_BASED_TYPES:
+            total = sum(
+                float(t.amount_eur)
+                for t in transactions
+                if t.type == TransactionType.DEPOSIT and t.amount_eur
+                )
+            return total if total > 0 else None
+
+        # BUY-based products (BITCOIN, SCPI, FCPI)
+        buy_total = sum(
+            float(t.amount_eur)
+            for t in transactions
+            if t.type == TransactionType.BUY and t.amount_eur
+            )
+        if buy_total <= 0:
+            return None
+
+        latest_val = self.valuation_repo.get_latest_by_product_id(product_id)
+        if not latest_val or not latest_val.unit_price_eur or float(latest_val.unit_price_eur) <= 0:
+            return None
+
+        total_value = float(latest_val.total_value_eur)
+        unit_price = float(latest_val.unit_price_eur)
+        if unit_price <= 0:
+            return None
+
+        quantity = total_value / unit_price
+        if quantity <= 0:
+            return None
+
+        return buy_total / quantity
+
+    def get_product_details(self, product_id: int) -> dict | None:
+        """Return comprehensive per-product data for dashboard display."""
+        product = self.product_repo.get_by_id(product_id)
+        if not product:
+            return None
+
+        history = self.get_product_history(product_id)
+        pru = self.get_product_pru(product_id)
+
+        latest_val = self.valuation_repo.get_latest_by_product_id(product_id)
+        current_value = float(latest_val.total_value_eur) if latest_val else 0.0
+
+        transactions = self.transaction_repo.get_by_product_id(product_id)
+        net_invested = float(self._calc_net_contributions(transactions))
+
+        gains_eur = current_value - net_invested
+        gains_pct = (gains_eur / net_invested * 100) if net_invested > 0 else 0.0
+
+        color = PRODUCT_COLORS.get(product.type.value, "#6B7280")
+
+        return {
+            "id": product.id,
+            "name": product.name,
+            "type": product.type.value,
+            "color": color,
+            "history": history,
+            "pru": pru,
+            "current_value": current_value,
+            "net_invested": net_invested,
+            "gains_eur": gains_eur,
+            "gains_pct": gains_pct,
+            }
 
     def display_dashboard(self, portfolio: PortfolioData) -> str:
         """Format a text dashboard display using tabulate.
