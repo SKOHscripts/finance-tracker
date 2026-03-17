@@ -145,6 +145,7 @@ class SimulationPDFService:
             config_years=config_params.get("years", "N/A"),
             config_period=config_params.get("period", "N/A"),
             config_inflation=f"{config_params.get('inflation_pct', 0):.1f}%",
+            config_inflation_profile=config_params.get("inflation_profile", ""),
             config_income_start=f"{config_params.get('income_start', 0):,.0f}".replace(",", " "),
             config_income_growth=f"{config_params.get('income_growth_pct', 0):.1f}%",
             config_living_costs=f"{config_params.get('annual_living_costs', 0):,.0f}".replace(",", " "),

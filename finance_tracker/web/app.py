@@ -125,6 +125,10 @@ st.sidebar.markdown("---")
 pages = build_pages()
 labels = [p.label for p in pages]
 selected = st.sidebar.radio("Navigation", labels)
+st.sidebar.link_button(
+    "📖 Documentation (README)",
+    f"{GITHUB_BASE_URL}/README.md",
+    )
 st.sidebar.markdown("---")
 
 # donation button
