@@ -255,7 +255,12 @@
             </tr>
             <tr>
                 <td>Inflation annuelle</td>
-                <td>{{ config_inflation }}</td>
+                <td>
+                    {{ config_inflation }}
+                    {% if config_inflation_profile %}
+                    <br><small style="color:#666;">{{ config_inflation_profile }}</small>
+                    {% endif %}
+                </td>
             </tr>
             <tr>
                 <td>Revenu brut initial</td>

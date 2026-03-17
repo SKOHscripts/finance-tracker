@@ -203,6 +203,58 @@ _METRIC_LABELS: dict[str, str] = {
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# INFLATION PROFILES
+# ═══════════════════════════════════════════════════════════════════════════════
+
+_INFLATION_PROFILES: list[dict] = [
+    {
+        "key": "standard_cpi",
+        "label": "📊 Standard IPC — 2,0 %/an",
+        "rate": 2.0,
+        "description": (
+            "Utilise l'inflation officielle moyenne (IPC France). "
+            "Adapté pour neutraliser l'inflation sur les dépenses courantes "
+            "(alimentation, transports, services…)."
+        ),
+    },
+    {
+        "key": "urban_tenant",
+        "label": "🏙️ Urbain locataire — 2,3 %/an",
+        "rate": 2.3,
+        "description": (
+            "Recommandé si tu es locataire en ville et que ton loyer pèse lourd "
+            "dans ton budget. Combine inflation conso (70%) et logement (30%)."
+        ),
+    },
+    {
+        "key": "urban_owner",
+        "label": "🏠 Vie urbaine + projet immo — 3,0 %/an",
+        "rate": 3.0,
+        "description": (
+            "À choisir si ton objectif inclut l'accession à la propriété en ville. "
+            "Combine inflation conso, loyers et prix d'achat des logements."
+        ),
+    },
+    {
+        "key": "urban_sqm",
+        "label": "📐 Indexé m² de ville — 4,0 %/an",
+        "rate": 4.0,
+        "description": (
+            "Profil patrimonial avancé : ton patrimoine financier suit le prix "
+            "du m² immobilier en grande ville (hausse historique ~4–5 %/an)."
+        ),
+    },
+    {
+        "key": "custom",
+        "label": "✏️ Personnalisé",
+        "rate": None,
+        "description": "Saisir manuellement le taux d'inflation annuel souhaité.",
+    },
+]
+"""Predefined inflation profiles with rates and descriptions."""
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SESSION STATE INITIALIZATION
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -642,7 +694,27 @@ def render(session: Session) -> None:
                 index=0,
                 )
         with c2:
-            inflation_pct = st.number_input("Inflation annuelle (%)", 0.0, 20.0, 2.0, 0.1)
+            _profile_labels = [p["label"] for p in _INFLATION_PROFILES]
+            _profile_index = st.selectbox(
+                "Profil d'inflation",
+                options=range(len(_INFLATION_PROFILES)),
+                format_func=lambda i: _INFLATION_PROFILES[i]["label"],
+                index=0,
+                key="sim_inflation_profile",
+                help="Choisir un profil prédéfini ou saisir un taux personnalisé.",
+                )
+            _selected_profile = _INFLATION_PROFILES[_profile_index]
+            if _selected_profile["rate"] is None:
+                inflation_pct = st.number_input(
+                    "Taux personnalisé (%)", 0.0, 30.0, 2.0, 0.1,
+                    key="sim_inflation_custom",
+                    )
+            else:
+                inflation_pct = _selected_profile["rate"]
+                st.caption(
+                    f"💡 {_selected_profile['description']}"
+                    )
+            _inflation_profile_label = _selected_profile["label"]
         with c3:
             income_start = st.number_input("Revenu brut annuel N (€)", 0.0, value=30000.0, step=1000.0)
             income_prev = st.number_input(
@@ -905,6 +977,7 @@ def render(session: Session) -> None:
         st.session_state.sim_config_params = {
             "years": int(years), "period": period,
             "inflation_pct": float(inflation_pct),
+            "inflation_profile": _inflation_profile_label,
             "income_start": float(income_start),
             "income_growth_pct": float(income_growth_pct),
             "annual_living_costs": float(annual_living_costs),

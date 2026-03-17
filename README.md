@@ -113,7 +113,28 @@ Pour un guide complet, voir :
 - **📈 Simulateur long terme**
   Projections multi‑scénarios, croissance composée, analyse de sensibilité.
 
+- **📊 Inflation paramétrable**
+  Profils d'inflation prédéfinis (IPC standard, urbain locataire, projet immo, m² de ville) ou taux personnalisé. Voir la section [Inflation](#-inflation-paramétrable) ci-dessous.
+
 👉 Détails : **[docs/INTERFACE_WEB.md](./docs/INTERFACE_WEB.md)**
+
+---
+
+## 📊 Inflation Paramétrable
+
+Le simulateur long terme propose quatre profils d'inflation prédéfinis, plus une option personnalisée :
+
+| Profil | Taux | Plage indicative | Cas d'usage |
+|---|---|---|---|
+| **Standard IPC** (défaut) | 2,0 %/an | 1,7–2,0 % | Neutraliser l'inflation officielle sur les dépenses courantes |
+| **Urbain locataire** | 2,3 %/an | 2,2–2,5 % | Locataire en ville avec un loyer significatif |
+| **Vie urbaine + projet immo** | 3,0 %/an | 2,7–3,2 % | Utilisateur visant l'accession à la propriété en ville |
+| **Indexé m² de ville** | 4,0 %/an | 3,5–5,0 % | Suivi du patrimoine au prix du m² immobilier urbain |
+| **Personnalisé** | libre | — | Saisir manuellement tout autre taux |
+
+Les taux sont basés sur les séries longues [INSEE IPC](https://www.insee.fr/fr/statistiques/4268033), les indices de référence des loyers ([IRL — ANIL](https://www.anil.org/outils/indices-et-plafonds/tableau-de-lirl/)) et les travaux [IGEDD/Friggit](https://www.cgedd.fr/prix-immobilier-friggit.pdf) sur l'évolution des prix immobiliers.
+
+> **Comment ça marche ?** Dans le simulateur, remplace le simple champ *Inflation annuelle (%)* par un sélecteur de profil. Le taux correspondant est appliqué automatiquement à toutes les projections et apparaît dans le rapport PDF exporté.
 
 ---
 
