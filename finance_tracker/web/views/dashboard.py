@@ -272,7 +272,10 @@ def render(session: Session) -> None:
                 legend_parts = [f"<span style='color:{details['color']}'>■</span> Valeur"]
                 if details["pru"] is not None:
                     legend_parts.append("<span style='color:#6366f1'>- -</span> PRU")
-                st.caption(" · ".join(legend_parts))
+                st.markdown(
+                    "<span style='font-size:0.85em;color:gray'>" + " · ".join(legend_parts) + "</span>",
+                    unsafe_allow_html=True,
+                )
 
             # Recent valuations table
             recent = list(reversed(details["history"]))[:8]
