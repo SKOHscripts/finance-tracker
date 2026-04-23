@@ -19,7 +19,7 @@ from finance_tracker.services.seed_service import seed_default_products
 
 # Used for linking to GitHub documentation from the UI
 GITHUB_BASE_URL = "https://github.com/SKOHscripts/finance-tracker/blob/main"
-LOGO_ICON_URL = "https://raw.githubusercontent.com/SKOHscripts/finance-tracker/main/images/logo_monochrome_64x64.png"
+LOGO_ICON_URL = "https://raw.githubusercontent.com/SKOHscripts/finance-tracker/main/images/logo-icon.svg"
 
 # Must be called before any other Streamlit commands that modify the page
 st.set_page_config(
