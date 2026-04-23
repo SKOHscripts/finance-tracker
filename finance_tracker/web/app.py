@@ -38,7 +38,6 @@ with col1:
 with col2:
     # get theme
     theme_type = st.context.theme.type
-    st.context.theme.type = "dark"
 
     if theme_type == "light":
         LOGO_URL = "https://raw.githubusercontent.com/SKOHscripts/finance-tracker/main/images/logo_horizontal_light.svg"
