@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 285 47.048294"
+   width="285"
+   height="47.048294"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="logo_horizontal_light.svg"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview8"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="true"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="3.6383869"
+     inkscape:cx="137.14869"
+     inkscape:cy="48.510509"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg8" />
+  <defs
+     id="defs1">
+    <clipPath
+       id="hlc">
+      <path
+         d="M 32,55 C 32,55 12,46 12,34 V 18 q 0,-9 7,-9 h 26 q 7,0 7,9 V 34 C 52,46 32,55 32,55 Z"
+         id="path1" />
+    </clipPath>
+    <clipPath
+       id="sc">
+      <path
+         d="M 24,54 C 24,54 2,45 2,32 V 14 Q 2,4 10,4 h 28 q 8,0 8,10 V 32 C 46,45 24,54 24,54 Z"
+         id="path2-2" />
+    </clipPath>
+  </defs>
+  <g
+     id="g2"
+     transform="translate(-11.5,-8.5)">
+    <path
+       d="M 32,55 C 32,55 12,46 12,34 V 18 q 0,-9 7,-9 h 26 q 7,0 7,9 V 34 C 52,46 32,55 32,55 Z"
+       fill="#1e2636"
+       id="path2" />
+    <path
+       d="M 32,55 C 32,55 12,46 12,34 V 18 q 0,-9 7,-9 h 26 q 7,0 7,9 V 34 C 52,46 32,55 32,55 Z"
+       fill="none"
+       stroke="#3a4a62"
+       stroke-width="1"
+       id="path3" />
+  </g>
+  <path
+     d="m 20.5,43.5 c 0,0 -17,-8 -17,-20 v -13 q 0,-7 7,-7 h 20 q 7,0 7,7 v 13 c 0,12 -17,20 -17,20 z"
+     fill="none"
+     stroke="#3a4a62"
+     stroke-width="0.6"
+     opacity="0.4"
+     id="path4" />
+  <g
+     clip-path="url(#hlc)"
+     id="g7"
+     transform="matrix(0.91428551,0,0,0.90312568,-8.5148581,-8.677458)">
+    <polyline
+       points="21,43 27,35 35,29 46,21"
+       fill="none"
+       stroke="#7aadc8"
+       stroke-width="2"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="polyline4" />
+    <circle
+       cx="21"
+       cy="43"
+       r="2"
+       fill="#7aadc8"
+       id="circle4" />
+    <circle
+       cx="27"
+       cy="35"
+       r="2"
+       fill="#7aadc8"
+       id="circle5" />
+    <circle
+       cx="35"
+       cy="29"
+       r="2"
+       fill="#7aadc8"
+       id="circle6" />
+    <circle
+       cx="46"
+       cy="21"
+       r="2"
+       fill="#7aadc8"
+       id="circle7" />
+  </g>
+  <g
+     id="g1"
+     transform="translate(-11.5,-8.5)">
+    <line
+       x1="65"
+       y1="16"
+       x2="65"
+       y2="48"
+       stroke="#c8cedb"
+       stroke-width="1"
+       id="line7" />
+    <text
+       font-family="Figtree, 'DM Sans', ui-sans-serif, system-ui, sans-serif"
+       font-size="23px"
+       y="40"
+       id="text8"><tspan
+         x="77"
+         font-weight="300"
+         fill="#5a6478"
+         letter-spacing="2"
+         id="tspan7">Finance</tspan><tspan
+         dx="12"
+         font-weight="600"
+         fill="#1c2235"
+         letter-spacing="0.3"
+         id="tspan8">Tracker</tspan></text>
+  </g>
+</svg>

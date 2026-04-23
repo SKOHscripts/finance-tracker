@@ -12,7 +12,7 @@ from weasyprint import HTML, CSS
 
 # Local application
 from finance_tracker.config import REPORTS_DIR, TEMPLATES_DIR
-from finance_tracker.services.dashboard_service import PortfolioData
+from finance_tracker.services.dashboard_service import PRODUCT_COLORS, PortfolioData
 from finance_tracker.utils.money import format_eur
 
 
@@ -23,13 +23,16 @@ class PDFReportService:
         self.templates_dir = templates_dir
         self.reports_dir = reports_dir
 
-    def generate_report(self, portfolio: PortfolioData) -> str:
+    def generate_report(self, portfolio: PortfolioData, products_with_charts: list | None = None) -> str:
         """Generate a PDF report and save it to disk.
 
         Parameters
         ----------
         portfolio : PortfolioData
             Portfolio data to export as PDF.
+        products_with_charts : list | None
+            Optional list of per-product detail dicts (from DashboardService.get_product_details)
+            to include per-product valuation charts in the report.
 
         Returns
         -------
@@ -37,7 +40,7 @@ class PDFReportService:
             Path to the generated PDF file.
         """
         # Render template to HTML first, then convert to PDF
-        html_content = self._render_html(portfolio)
+        html_content = self._render_html(portfolio, products_with_charts)
 
         # Use timestamp in filename to ensure uniqueness and traceability
         timestamp = datetime.utcnow().strftime("%Y-%m-%d_%H%M%S")
@@ -49,13 +52,15 @@ class PDFReportService:
 
         return str(filepath)
 
-    def _render_html(self, portfolio: PortfolioData) -> str:
+    def _render_html(self, portfolio: PortfolioData, products_with_charts: list | None = None) -> str:
         """Render portfolio data using Jinja2 template.
 
         Parameters
         ----------
         portfolio : PortfolioData
             Portfolio data to render.
+        products_with_charts : list | None
+            Optional per-product detail dicts for chart sections.
 
         Returns
         -------
@@ -79,6 +84,30 @@ class PDFReportService:
         # Generate charts as base64 images to embed directly in HTML
         chart_allocation = self._generate_allocation_chart(portfolio.products)
         chart_performance = self._generate_performance_chart(portfolio.products)
+
+        # Build per-product chart data for the template
+        product_chart_data = []
+        if products_with_charts:
+            for details in products_with_charts:
+                if not details.get("history") or len(details["history"]) < 2:
+                    continue
+                chart_b64 = self._generate_product_history_chart(
+                    details["name"],
+                    details["history"],
+                    details.get("pru"),
+                    details.get("color", "#6B7280"),
+                    )
+                gains_class = "positive" if details["gains_eur"] >= 0 else "negative"
+                product_chart_data.append({
+                    "name": details["name"],
+                    "current_value": format_eur(details["current_value"]),
+                    "net_invested": format_eur(details["net_invested"]),
+                    "pru": format_eur(details["pru"]) if details.get("pru") else "—",
+                    "gains_eur": format_eur(details["gains_eur"]),
+                    "gains_pct": f"{details['gains_pct']:.2f}%",
+                    "gains_class": gains_class,
+                    "chart_base64": chart_b64,
+                    })
 
         # Pass both raw values and formatted strings to template
         # Raw values enable calculations in template if needed
@@ -108,6 +137,7 @@ class PDFReportService:
 
                 for p in portfolio.products
                 ],
+            products_with_charts=product_chart_data,
             )
 
     def _generate_allocation_chart(self, products: list) -> str:
@@ -283,6 +313,66 @@ class PDFReportService:
         # Remove unnecessary frame borders for cleaner look
 
         for spine in ["top", "right", "left"]:
+            ax.spines[spine].set_visible(False)
+
+        plt.tight_layout()
+
+        img_buffer = BytesIO()
+        plt.savefig(img_buffer, format="png", bbox_inches="tight")
+        img_buffer.seek(0)
+        img_str = base64.b64encode(img_buffer.read()).decode()
+        plt.close(fig)
+
+        return f"data:image/png;base64,{img_str}"
+
+    def _generate_product_history_chart(
+        self,
+        product_name: str,
+        history: list[dict],
+        pru: float | None,
+        color: str = "#008080",
+    ) -> str:
+        """Generate a line chart for a product's valuation history with optional PRU line.
+
+        Returns base64-encoded PNG data URL.
+        """
+        import matplotlib as mpl
+        import matplotlib.dates as mdates
+
+        dates = [h["date"] for h in history]
+        values = [h["total_value_eur"] for h in history]
+
+        mpl.rcParams.update({
+            "font.size": 10,
+            "axes.titlesize": 12,
+            "axes.edgecolor": "#E5E7EB",
+            "axes.labelcolor": "#333",
+            "xtick.color": "#666",
+            "ytick.color": "#333",
+            })
+
+        fig, ax = plt.subplots(figsize=(10, 4), dpi=160)
+        fig.patch.set_facecolor("white")
+        ax.set_facecolor("white")
+
+        ax.plot(dates, values, color=color, linewidth=2.2, marker="o", markersize=4, zorder=3)
+        ax.fill_between(dates, values, alpha=0.10, color=color, zorder=2)
+
+        if pru is not None:
+            ax.axhline(y=pru, color="#6366f1", linewidth=1.6, linestyle="--", zorder=2, label=f"PRU ({pru:,.0f} €)")
+            ax.legend(loc="upper left", fontsize=9, frameon=False)
+
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+        ax.xaxis.set_major_locator(mdates.AutoDateLocator())
+        fig.autofmt_xdate(rotation=30)
+
+        ax.yaxis.grid(True, color="#E5E7EB", linewidth=0.8, alpha=0.8)
+        ax.set_axisbelow(True)
+
+        ax.set_ylabel("Valeur (€)")
+        ax.set_title(f"Historique — {product_name}", pad=12)
+
+        for spine in ["top", "right"]:
             ax.spines[spine].set_visible(False)
 
         plt.tight_layout()
