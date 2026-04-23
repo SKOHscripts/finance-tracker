@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 48 56"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="logo-icon.svg"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview8"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="10.776252"
+     inkscape:cx="35.9587"
+     inkscape:cy="25.426281"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg8" />
+  <defs
+     id="defs2">
+    <linearGradient
+       id="sg"
+       x1="24"
+       y1="4"
+       x2="24"
+       y2="54"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         stop-color="#2A3347"
+         id="stop1" />
+      <stop
+         offset="100%"
+         stop-color="#1C2235"
+         id="stop2" />
+    </linearGradient>
+    <clipPath
+       id="sc">
+      <path
+         d="M24,54 C24,54 2,45 2,32 L2,14 Q2,4 10,4 L38,4 Q46,4 46,14 L46,32 C46,45 24,54 24,54Z"
+         id="path2" />
+    </clipPath>
+  </defs>
+  <path
+     d="M24,54 C24,54 2,45 2,32 L2,14 Q2,4 10,4 L38,4 Q46,4 46,14 L46,32 C46,45 24,54 24,54Z"
+     fill="url(#sg)"
+     id="path3" />
+  <path
+     d="M24,54 C24,54 2,45 2,32 L2,14 Q2,4 10,4 L38,4 Q46,4 46,14 L46,32 C46,45 24,54 24,54Z"
+     fill="none"
+     stroke="#3A4A62"
+     stroke-width="1"
+     id="path4" />
+  <path
+     d="M24,51 C24,51 5,43 5,31 L5,15 Q5,7 11,7 L37,7 Q43,7 43,15 L43,31 C43,43 24,51 24,51Z"
+     fill="none"
+     stroke="#3A4A62"
+     stroke-width="0.7"
+     opacity="0.4"
+     id="path5" />
+  <g
+     clip-path="url(#sc)"
+     id="g8"
+     transform="translate(1.9784245,-0.63370018)">
+    <polyline
+       points="10,42 17,33 26,27 38,17"
+       fill="none"
+       stroke="#7aadc8"
+       stroke-width="2.2"
+       stroke-linecap="round"
+       stroke-linejoin="round"
+       id="polyline5"
+       transform="matrix(0.90752497,0,0,0.93608138,1.6175185,-1.9027181)" />
+    <circle
+       cx="10.637287"
+       cy="37.609802"
+       r="2.2"
+       fill="#7aadc8"
+       id="circle5" />
+    <circle
+       cx="17.283239"
+       cy="29.105469"
+       r="2.2"
+       fill="#7aadc8"
+       id="circle6" />
+    <circle
+       cx="24.796236"
+       cy="23.813564"
+       r="2.2"
+       fill="#7aadc8"
+       id="circle7" />
+    <circle
+       cx="36.371376"
+       cy="14.167613"
+       r="2.2"
+       fill="#7aadc8"
+       id="circle8" />
+  </g>
+</svg>
