@@ -83,6 +83,7 @@ from finance_tracker.services.simulation_service import (
     TaxBracket,
     TaxConfig,
     )
+from finance_tracker.i18n import t
 from finance_tracker.web.ui.formatters import to_decimal
 
 
@@ -184,13 +185,13 @@ _DEFAULT_RETURN_BY_KIND: dict[str, float] = {
 """Default annual return percentage by product category."""
 
 _KIND_HELP: dict[str, str] = {
-    "cash": "💡 Le cash reçoit les revenus et paie les dépenses. Aucun rendement applicable.",
-    "savings": "💡 Compte d'épargne : les intérêts sont capitalisés chaque période.",
-    "scpi": "💡 SCPI : le rendement est géré via le **taux de distribution** ci-dessous. Le rendement nominal est donc 0.",
-    "per": "💡 PER : les versements sont **déduits du revenu imposable** dans la limite du plafond défini dans les paramètres globaux.",
-    "fcpi": "💡 FCPI : **réduction d'impôt** sur les versements, capital bloqué pendant la durée définie.",
-    "other": "💡 Produit générique : rendement annuel capitalisé.",
-    "btc" : "💡 Bitcoin : les intérêts sont capitalisés chaque période.",
+    "cash": "Le cash reçoit les revenus et paie les dépenses. Aucun rendement applicable.",
+    "savings": "Compte d'épargne : les intérêts sont capitalisés chaque période.",
+    "scpi": "SCPI : le rendement est géré via le **taux de distribution** ci-dessous. Le rendement nominal est donc 0.",
+    "per": "PER : les versements sont **déduits du revenu imposable** dans la limite du plafond défini dans les paramètres globaux.",
+    "fcpi": "FCPI : **réduction d'impôt** sur les versements, capital bloqué pendant la durée définie.",
+    "other": "Produit générique : rendement annuel capitalisé.",
+    "btc" : "Bitcoin : les intérêts sont capitalisés chaque période.",
     }
 """Help text displayed for each product category in the form."""
 
@@ -214,7 +215,7 @@ _METRIC_LABELS: dict[str, str] = {
 _INFLATION_PROFILES: list[dict] = [
     {
         "key": "standard_cpi",
-        "label": "📊 Standard IPC — 2,0 %/an",
+        "label": "Standard IPC — 2,0 %/an",
         "rate": 2.0,
         "description": (
             "Utilise l'inflation officielle moyenne (IPC France). "
@@ -224,7 +225,7 @@ _INFLATION_PROFILES: list[dict] = [
     },
     {
         "key": "urban_tenant",
-        "label": "🏙️ Urbain locataire — 2,3 %/an",
+        "label": "Urbain locataire — 2,3 %/an",
         "rate": 2.3,
         "description": (
             "Recommandé si tu es locataire en ville et que ton loyer pèse lourd "
@@ -233,7 +234,7 @@ _INFLATION_PROFILES: list[dict] = [
     },
     {
         "key": "urban_owner",
-        "label": "🏠 Vie urbaine + projet immo — 3,0 %/an",
+        "label": "Vie urbaine + projet immo — 3,0 %/an",
         "rate": 3.0,
         "description": (
             "À choisir si ton objectif inclut l'accession à la propriété en ville. "
@@ -242,7 +243,7 @@ _INFLATION_PROFILES: list[dict] = [
     },
     {
         "key": "urban_sqm",
-        "label": "📐 Indexé m² de ville — 4,0 %/an",
+        "label": "Indexé m² de ville — 4,0 %/an",
         "rate": 4.0,
         "description": (
             "Profil patrimonial avancé : ton patrimoine financier suit le prix "
@@ -251,7 +252,7 @@ _INFLATION_PROFILES: list[dict] = [
     },
     {
         "key": "custom",
-        "label": "✏️ Personnalisé",
+        "label": "Personnalisé",
         "rate": None,
         "description": "Saisir manuellement le taux d'inflation annuel souhaité.",
     },
@@ -406,7 +407,7 @@ def _render_scpi_params(name: str) -> dict:
     st.markdown(
     "<div style='background:rgba(251, 140, 0, 0.15);border-left:4px solid #fb8c00;"
     "padding:8px 14px;border-radius:4px;margin:10px 0 6px 0'>"
-    "🏢 <strong>Paramètres SCPI</strong></div>",
+    "<strong>Paramètres SCPI</strong></div>",
     unsafe_allow_html=True,
     )
 
@@ -440,8 +441,8 @@ def _render_scpi_params(name: str) -> dict:
             "Fréquence des dividendes",
             ["monthly", "quarterly", "semiannual", "yearly"],
             format_func=lambda f: {
-                "monthly": "🗓️ Mensuelle", "quarterly": "🗓️ Trimestrielle",
-                "semiannual": "🗓️ Semestrielle", "yearly": "🗓️ Annuelle",
+                "monthly": "Mensuelle", "quarterly": "Trimestrielle",
+                "semiannual": "Semestrielle", "yearly": "Annuelle",
                 }[f],
             index=1,
             key=f"v3_scpi_freq_{name}",
@@ -499,7 +500,7 @@ def _render_fcpi_params(name: str) -> dict:
     st.markdown(
     "<div style='background:rgba(233, 30, 99, 0.15);border-left:4px solid #e91e63;"
     "padding:8px 14px;border-radius:4px;margin:10px 0 6px 0'>"
-    "📈 <strong>Paramètres FCPI</strong></div>",
+    "<strong>Paramètres FCPI</strong></div>",
     unsafe_allow_html=True,
     )
 
@@ -530,8 +531,8 @@ def _render_fcpi_params(name: str) -> dict:
             "Mode de sortie à échéance",
             ["principal", "full_value"],
             format_func=lambda m: (
-                "💰 Capital initial seulement" if m == "principal"
-                else "📊 Valeur totale du fonds"
+                "Capital initial seulement" if m == "principal"
+                else "Valeur totale du fonds"
                 ),
             index=0,
             key=f"v3_fcpi_exit_{name}",
@@ -569,7 +570,7 @@ def _render_inflation_selector() -> tuple[float, str]:
         - inflation_pct : float — the effective annual inflation rate (%)
         - profile_label : str — the label of the selected profile (for PDF)
     """
-    st.markdown("#### 📈 Profil d'inflation")
+    st.markdown(f"#### {t('simulation.section_inflation')}")
 
     profile_idx = st.selectbox(
         "Profil d'inflation",
@@ -597,7 +598,7 @@ def _render_inflation_selector() -> tuple[float, str]:
         inflation_pct = custom_rate
     else:
         inflation_pct = selected_profile["rate"]
-        st.caption(f"💡 {selected_profile['description']}")
+        st.caption(selected_profile["description"])
 
     return inflation_pct, selected_profile["label"]
 
@@ -625,7 +626,7 @@ def _render_kind_selectors(product_names: list[str]) -> None:
     the selected category across reruns. The default category is inferred
     from the product name (lowercase match).
     """
-    st.markdown("#### 🏷️ Catégories des produits")
+    st.markdown(f"#### {t('simulation.section_categories')}")
     st.caption(
         "Sélectionne la catégorie de chaque produit. "
         "Les paramètres spécifiques (SCPI, FCPI…) apparaissent automatiquement dans le formulaire ci-dessous."
@@ -710,7 +711,7 @@ def render(session: Session) -> None:
     >>> render(session)  # Renders the simulation page in Streamlit
     """
     _init_state()
-    st.header("🔮 Simulation Long Terme")
+    st.header(t("simulation.title"))
 
     # Load products from database
     product_repo = SQLModelProductRepository(session)
@@ -720,7 +721,7 @@ def render(session: Session) -> None:
     # Require at least one product
 
     if not product_names:
-        st.info("Ajoute au moins un produit dans '➕ Ajouter Produits' avant de simuler.")
+        st.info(t("simulation.no_product_warning"))
         st.stop()
 
     # Load current portfolio values as defaults
@@ -748,7 +749,7 @@ def render(session: Session) -> None:
         # ═══════════════════════════════════════════════════════════════════════
         # GLOBAL PARAMETERS
         # ═══════════════════════════════════════════════════════════════════════
-        st.markdown("### ⚙️ Paramètres globaux")
+        st.markdown(f"### {t('simulation.section_global_params')}")
         c1, c2, c3, c4 = st.columns(4)
 
         with c1:
@@ -799,7 +800,7 @@ def render(session: Session) -> None:
         # ═══════════════════════════════════════════════════════════════════════
         # TAX CONFIGURATION (Progressive Brackets)
         # ═══════════════════════════════════════════════════════════════════════
-        st.markdown("### 🧾 Fiscalité (barème progressif)")
+        st.markdown(f"### {t('simulation.section_tax')}")
         c1, c2 = st.columns(2)
         with c1:
             household_parts = st.number_input(
@@ -816,7 +817,7 @@ def render(session: Session) -> None:
             {"up_to": 177106, "rate_pct": 41.0},
             {"up_to": None, "rate_pct": 45.0},
             ]
-        st.caption("Tranches annuelles — laisse `up_to` vide pour la dernière tranche.")
+        st.caption(t("simulation.tax_caption"))
         df_brackets = st.data_editor(
             pd.DataFrame(default_brackets), width="stretch", num_rows="dynamic",
             )
@@ -832,7 +833,7 @@ def render(session: Session) -> None:
         # ═══════════════════════════════════════════════════════════════════════
         # PER DEDUCTION CAP
         # ═══════════════════════════════════════════════════════════════════════
-        st.markdown("### 📋 PER — Plafond déductible")
+        st.markdown(f"### {t('simulation.section_per')}")
         c1, c2, c3 = st.columns(3)
         with c1:
             per_rate_prev_income_pct = st.number_input("% du revenu N-1", 0.0, 50.0, 10.0, 0.5)
@@ -846,8 +847,8 @@ def render(session: Session) -> None:
         # ═══════════════════════════════════════════════════════════════════════
         # PER-PRODUCT PARAMETERS
         # ═══════════════════════════════════════════════════════════════════════
-        st.markdown("### 🗂️ Paramètres par produit")
-        st.caption("Seuls les paramètres pertinents s'affichent selon la catégorie définie ci-dessus.")
+        st.markdown(f"### {t('simulation.section_product_params')}")
+        st.caption(t("simulation.product_params_caption"))
 
         categories = list(_KIND_META.keys())
         sim_products: list[ProductSimConfig] = []
@@ -936,7 +937,7 @@ def render(session: Session) -> None:
                 else:
                     contrib_fixed = 0.0
                     contrib_pct_income = 0.0
-                    st.caption("ℹ️ Pour une SCPI, les apports sont définis via **'Parts achetées / an'** ci-dessous.")
+                    st.caption(t("simulation.scpi_caption"))
 
                 # ═══════════════════════════════════════════════════════════════
                 # TYPE-SPECIFIC PARAMETERS (SCPI, FCPI)
@@ -986,7 +987,7 @@ def render(session: Session) -> None:
         # Validation: require at least one cash product
 
         if not any(p.kind == "cash" for p in sim_products):
-            st.error("⚠️ Il faut au moins un produit de catégorie 'cash'.")
+            st.error(t("simulation.cash_required_error"))
 
         submitted = st.form_submit_button(
             "▶️ Lancer la simulation", type="primary", width="stretch",
@@ -1131,7 +1132,7 @@ def render(session: Session) -> None:
     # ── Persistent Results Display ─────────────────────────────────────────────
 
     if st.session_state.sim_df_long is None:
-        st.info("Soumets le formulaire pour lancer la simulation.")
+        st.info(t("simulation.submit_hint"))
 
         return
 
@@ -1143,14 +1144,14 @@ def render(session: Session) -> None:
     # SECTION 1: SUMMARY METRICS
     # ═══════════════════════════════════════════════════════════════════════════
     st.markdown("---")
-    st.subheader("📊 Résumé final")
+    st.subheader(t("simulation.section_summary"))
     c1, c2, c3, c4, c5 = st.columns(5)
     with c1:
-        st.metric("Valeur finale", f"{summary.get('final_value', 0):,.0f}€".replace(",", " "))
+        st.metric(t("simulation.metric_final_value"), f"{summary.get('final_value', 0):,.0f}€".replace(",", " "))
     with c2:
-        st.metric("Valeur réelle (inflation)", f"{summary.get('final_value_real', 0):,.0f}€".replace(",", " "))
+        st.metric(t("simulation.metric_real_value"), f"{summary.get('final_value_real', 0):,.0f}€".replace(",", " "))
     with c3:
-        st.metric("Investi cumulé (hors cash)", f"{summary.get('final_invested', 0):,.0f}€".replace(",", " "))
+        st.metric(t("simulation.metric_invested"), f"{summary.get('final_invested', 0):,.0f}€".replace(",", " "))
     with c4:
         st.metric(
             "Gains (hors cash)",
@@ -1158,13 +1159,13 @@ def render(session: Session) -> None:
             delta=f"{summary.get('gains_pct', 0):.1f}%",
             )
     with c5:
-        st.metric("Impôt dû N à payer N+1", f"{summary.get('tax_due_next_year', 0):,.0f}€".replace(",", " "))
+        st.metric(t("simulation.metric_tax_due"), f"{summary.get('tax_due_next_year', 0):,.0f}€".replace(",", " "))
 
     # ═══════════════════════════════════════════════════════════════════════════
     # SECTION 2: DATA TABLES
     # ═══════════════════════════════════════════════════════════════════════════
-    st.subheader("📋 Tableaux de données")
-    tab1, tab2 = st.tabs(["Par période", "Par produit (long)"])
+    st.subheader(t("simulation.section_tables"))
+    tab1, tab2 = st.tabs([t("simulation.tab_by_period"), t("simulation.tab_by_product")])
     with tab1:
         st.dataframe(df_period, width="stretch")
     with tab2:
@@ -1173,7 +1174,7 @@ def render(session: Session) -> None:
     # ═══════════════════════════════════════════════════════════════════════════
     # SECTION 3: CHARTS
     # ═══════════════════════════════════════════════════════════════════════════
-    st.subheader("📈 Graphiques")
+    st.subheader(t("simulation.section_charts"))
     selected_metrics = st.multiselect(
         "Métriques à afficher",
         options=list(_METRIC_LABELS.keys()),
@@ -1243,7 +1244,7 @@ def render(session: Session) -> None:
         # Check if PDF needs generation
 
         if pdf_cache_key not in st.session_state or st.session_state.get("sim_pdf_needs_update", True):
-            if st.button("⚙️ Préparer le rapport PDF", width="stretch"):
+            if st.button(t("simulation.prepare_pdf"), width="stretch"):
                 with st.spinner("⏳ Génération du rapport PDF avec graphiques en cours (cela peut prendre quelques secondes)..."):
                     try:
                         config_params = st.session_state.sim_config_params or {}
@@ -1259,12 +1260,12 @@ def render(session: Session) -> None:
                         st.session_state["sim_pdf_needs_update"] = False
                         st.rerun()  # Refresh to show download button
                     except Exception as e:
-                        st.error(f"Erreur lors de la génération du PDF : {e}")
+                        st.error(t("simulation.pdf_error").format(e=e))
 
         # PDF is ready for download
         else:
             st.download_button(
-                "⬇️ Télécharger le PDF",
+                "⬇️ Télécharger le PDF",  # intentional: download affordance
                 data=st.session_state[pdf_cache_key],
                 file_name=f"simulation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                 mime="application/pdf",

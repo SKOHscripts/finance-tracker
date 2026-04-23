@@ -12,6 +12,7 @@ import streamlit as st
 
 # Local imports (par ordre alphabétique)
 from finance_tracker.domain.models import Valuation
+from finance_tracker.i18n import t
 from finance_tracker.services.btc_price_service import BTCPriceService, BTCPriceServiceError
 from finance_tracker.services.dashboard_service import DashboardService
 from finance_tracker.services.pdf_report_service import PDFReportService
@@ -69,8 +70,8 @@ def _render_bitcoin_expander(details: dict, product_id: int, service: "Dashboard
 
     col_refresh, _ = st.columns([1, 3])
     with col_refresh:
-        if st.button("🔄 Actualiser le cours", key=f"btc_refresh_{product_id}", width="stretch"):
-            with st.spinner("Connexion aux APIs..."):
+        if st.button(t("dashboard.btc_refresh_btn"), key=f"btc_refresh_{product_id}", width="stretch"):
+            with st.spinner(t("dashboard.btc_connecting")):
                 try:
                     st.session_state.btc_price = float(BTCPriceService().get_btc_price_eur())
                     st.session_state.api_error = None
@@ -79,92 +80,94 @@ def _render_bitcoin_expander(details: dict, product_id: int, service: "Dashboard
                     st.session_state.api_error = True
 
     if st.session_state.get("api_error"):
-        st.warning("📡 **Hors ligne** — Réseau inaccessible. Saisissez le prix manuellement ci-dessous.")
+        st.warning(t("dashboard.btc_offline"))
 
     # ── Key indicators ───────────────────────────────────────────────────────────
     k1, k2, k3, k4 = st.columns(4)
     with k1:
-        st.metric("💼 Valeur actuelle", format_eur(latest_total) if latest_total else "—")
+        st.metric(t("dashboard.btc_metric_value"), format_eur(latest_total) if latest_total else "—")
     with k2:
-        st.metric("📦 Quantité", _fmt_sats(total_qty_sats) if total_qty_sats > 0 else "—")
+        st.metric(t("dashboard.btc_metric_qty"), _fmt_sats(total_qty_sats) if total_qty_sats > 0 else "—")
     with k3:
-        st.metric("📌 PRU", format_eur(pru) if pru else "—")
+        st.metric(t("dashboard.btc_metric_pru"), format_eur(pru) if pru else "—")
     with k4:
         if pnl_eur is not None and pnl_pct is not None:
-            st.metric("📈 P&L Latente", format_eur(pnl_eur), delta=f"{pnl_pct:+.2f}%", delta_color="normal")
+            st.metric(t("dashboard.btc_metric_pnl"), format_eur(pnl_eur), delta=f"{pnl_pct:+.2f}%", delta_color="normal")
         else:
-            st.metric("📈 P&L Latente", "—")
+            st.metric(t("dashboard.btc_metric_pnl"), "—")
 
     # ── Price history chart ──────────────────────────────────────────────────────
     if len(history) >= 2:
-        st.markdown("##### 📉 Historique des prix (snapshots)")
+        st.markdown(f"##### {t('dashboard.btc_price_history')}")
+        col_btc_price = t("dashboard.col_btc_price")
         price_rows = [
-            {"date": pd.Timestamp(v["date"]), "Prix BTC (€)": v["unit_price_eur"]}
+            {"date": pd.Timestamp(v["date"]), col_btc_price: v["unit_price_eur"]}
             for v in history if v["unit_price_eur"]
         ]
         if price_rows:
             chart_df = pd.DataFrame(price_rows)
             base = alt.Chart(chart_df).encode(
-                x=alt.X("date:T", title="Date", axis=alt.Axis(format="%b %Y")),
+                x=alt.X("date:T", title=t("dashboard.col_date"), axis=alt.Axis(format="%b %Y")),
             )
             line = base.mark_line(color="#F7931A", strokeWidth=2.5).encode(
-                y=alt.Y("Prix BTC (€):Q", title="Prix BTC (€)"),
+                y=alt.Y(f"{col_btc_price}:Q", title=col_btc_price),
                 tooltip=[
-                    alt.Tooltip("date:T", title="Date", format="%d/%m/%Y"),
-                    alt.Tooltip("Prix BTC (€):Q", title="Prix (€)", format=",.0f"),
+                    alt.Tooltip("date:T", title=t("dashboard.col_date"), format="%d/%m/%Y"),
+                    alt.Tooltip(f"{col_btc_price}:Q", title=col_btc_price, format=",.0f"),
                 ],
             )
-            pts = base.mark_circle(color="#F7931A", size=40).encode(y="Prix BTC (€):Q")
+            pts = base.mark_circle(color="#F7931A", size=40).encode(y=f"{col_btc_price}:Q")
             chart = (line + pts).properties(height=240)
             if pru:
+                pru_label = t("dashboard.btc_metric_pru")
                 pru_df = pd.DataFrame([
-                    {"date": chart_df["date"].min(), "PRU": pru},
-                    {"date": chart_df["date"].max(), "PRU": pru},
+                    {"date": chart_df["date"].min(), pru_label: pru},
+                    {"date": chart_df["date"].max(), pru_label: pru},
                 ])
                 pru_line = alt.Chart(pru_df).mark_line(
                     color="#6366f1", strokeDash=[6, 4], strokeWidth=1.8,
                 ).encode(
                     x="date:T",
-                    y=alt.Y("PRU:Q"),
-                    tooltip=[alt.Tooltip("PRU:Q", title="PRU (€)", format=",.0f")],
+                    y=alt.Y(f"{pru_label}:Q"),
+                    tooltip=[alt.Tooltip(f"{pru_label}:Q", title=f"{pru_label} (€)", format=",.0f")],
                 )
                 chart = (chart + pru_line).properties(height=240)
             st.altair_chart(chart, use_container_width=True)
-            legend_parts = ["<span style='color:#F7931A'>■</span> Prix BTC"]
+            legend_parts = [f"<span style='color:#F7931A'>■</span> {t('dashboard.col_btc_price')}"]
             if pru:
-                legend_parts.append("<span style='color:#6366f1'>- -</span> PRU")
+                legend_parts.append(f"<span style='color:#6366f1'>- -</span> {t('dashboard.btc_metric_pru')}")
             st.markdown(
                 "<span style='font-size:0.85em;color:gray'>" + " · ".join(legend_parts) + "</span>",
                 unsafe_allow_html=True,
             )
 
     # ── Snapshot form ────────────────────────────────────────────────────────────
-    st.markdown("##### 📸 Nouveau Snapshot")
+    st.markdown(f"##### {t('dashboard.btc_new_snapshot')}")
     default_price = live_price or (last_unit_price or 0.0)
     with st.form(f"btc_snapshot_{product_id}", clear_on_submit=True):
         fc1, fc2, fc3 = st.columns(3)
         with fc1:
-            val_date = st.date_input("Date", value=date.today())
+            val_date = st.date_input(t("dashboard.btc_date_label"), value=date.today())
         with fc2:
             btc_unit_price = st.number_input(
-                "Prix d'un BTC plein (EUR)",
+                t("dashboard.btc_full_price_label"),
                 value=float(default_price),
                 step=100.0,
             )
         with fc3:
             input_sats = st.number_input(
-                "Quantité (en Satoshis)",
+                t("dashboard.btc_qty_label"),
                 value=int(total_qty_sats),
                 step=100_000,
                 format="%d",
-                help="1 BTC = 100 000 000 Sats",
+                help=t("dashboard.btc_qty_help"),
             )
         if btc_unit_price > 0 and input_sats > 0:
             qty_btc_preview = input_sats / SATS_PER_BTC
-            st.info(f"💶 Valeur calculée : **{format_eur(btc_unit_price * qty_btc_preview)}**")
-        if st.form_submit_button("💾 Enregistrer le snapshot", type="primary", width="stretch"):
+            st.info(t("dashboard.btc_computed_value").format(v=format_eur(btc_unit_price * qty_btc_preview)))
+        if st.form_submit_button(t("dashboard.btc_save_snapshot"), type="primary", width="stretch"):
             if input_sats <= 0 or btc_unit_price <= 0:
-                st.error("La quantité (en sats) et le prix doivent être > 0.")
+                st.error(t("dashboard.btc_qty_error"))
             else:
                 try:
                     qty_btc_final = input_sats / SATS_PER_BTC
@@ -175,10 +178,10 @@ def _render_bitcoin_expander(details: dict, product_id: int, service: "Dashboard
                         total_value_eur=to_decimal(total_val),
                         unit_price_eur=to_decimal(btc_unit_price),
                     ))
-                    st.success(f"✅ Snapshot enregistré — Valeur : {format_eur(total_val)}")
+                    st.success(t("dashboard.btc_snapshot_saved").format(v=format_eur(total_val)))
                     st.rerun()
                 except Exception as e:
-                    st.error(f"❌ Erreur : {e}")
+                    st.error(t("dashboard.btc_error").format(e=e))
 
     # ── Recent snapshots table ───────────────────────────────────────────────────
     if history:
@@ -190,10 +193,10 @@ def _render_bitcoin_expander(details: dict, product_id: int, service: "Dashboard
             sats = int((val_eur / prix_unit) * SATS_PER_BTC) if prix_unit > 0 else 0
             d = v["date"]
             rows_btc.append({
-                "Date": d.strftime("%d/%m/%Y") if hasattr(d, "strftime") else str(d),
-                "Prix BTC (€)": f"{prix_unit:,.0f}".replace(",", " ") if prix_unit > 0 else "—",
-                "Satoshis": f"{sats:,}".replace(",", " ") if sats > 0 else "—",
-                "Valeur totale (€)": f"{val_eur:,.2f}".replace(",", " "),
+                t("dashboard.col_date"): d.strftime("%d/%m/%Y") if hasattr(d, "strftime") else str(d),
+                t("dashboard.col_btc_price"): f"{prix_unit:,.0f}".replace(",", " ") if prix_unit > 0 else "—",
+                t("dashboard.col_sats"): f"{sats:,}".replace(",", " ") if sats > 0 else "—",
+                t("dashboard.col_total_value"): f"{val_eur:,.2f}".replace(",", " "),
             })
         st.dataframe(pd.DataFrame(rows_btc), hide_index=True, use_container_width=True)
 
@@ -281,48 +284,9 @@ def _render_generic_expander(details: dict) -> None:
 
 
 def render(session: Session) -> None:
-    """
-    Render the main dashboard page in the Streamlit application.
-
-    This page provides a comprehensive overview of the investment portfolio,
-    including key performance indicators, allocation breakdown, and export
-    capabilities.
-
-    The page is organized into three main sections:
-
-    1. Overview KPIs - Total value, invested amount, gains, and cash
-    2. Portfolio Allocation - Horizontal bar chart and detailed table
-    3. Exports & Reports - PDF and JSON download functionality
-
-    Parameters
-    ----------
-    session : Session
-        SQLModel database session for repository operations.
-
-    Returns
-    -------
-    None
-        This function renders UI components directly to Streamlit.
-
-    Notes
-    -----
-    - Performance percentage is calculated as (gains / invested) * 100
-    - Allocation chart uses Altair with horizontal bars
-    - PDF and JSON exports are cached in st.session_state to avoid
-      regenerating on each page refresh
-    - A refresh button allows clearing the cache to force regeneration
-
-    The function gracefully handles empty portfolios by displaying
-    an informational message guiding users to add valuations.
-
-    Examples
-    --------
-    >>> from finance_tracker.web.db import get_session
-    >>> session = get_session()
-    >>> render(session)  # Renders the dashboard in Streamlit
-    """
-    st.title("📊 Tableau de bord")
-    st.caption("Aperçu global et performances de votre portefeuille d'investissement.")
+    """Render the main dashboard page in the Streamlit application."""
+    st.title(t("dashboard.title"))
+    st.caption(t("dashboard.caption"))
 
     # Initialize dashboard service and build portfolio data
     service = DashboardService(session)
@@ -330,15 +294,14 @@ def render(session: Session) -> None:
     try:
         portfolio = service.build_portfolio()
     except Exception as e:
-        st.error(f"Impossible de charger le portefeuille : {e}")
-
+        st.error(t("dashboard.load_error").format(e=e))
         return
 
     # ═══════════════════════════════════════════════════════════════════════════
     # SECTION 1: KEY PERFORMANCE INDICATORS
     # ═══════════════════════════════════════════════════════════════════════════
 
-    st.markdown("### 📈 Vue d'ensemble")
+    st.markdown(f"### {t('dashboard.section_overview')}")
 
     # Calculate performance percentage (handle division by zero)
     perf_pct = (
@@ -352,19 +315,19 @@ def render(session: Session) -> None:
     col1, col2, col3, col4 = st.columns(4)
 
     with col1:
-        st.metric(label="💼 Valeur Totale", value=format_eur(portfolio.total_value_eur))
+        st.metric(label=t("dashboard.metric_total_value"), value=format_eur(portfolio.total_value_eur))
     with col2:
-        st.metric(label="📥 Total Investi", value=format_eur(portfolio.total_invested_eur))
+        st.metric(label=t("dashboard.metric_total_invested"), value=format_eur(portfolio.total_invested_eur))
     with col3:
         st.metric(
-            label="📈 Plus-values",
+            label=t("dashboard.metric_gains"),
             value=format_eur(portfolio.total_gains_eur),
             delta=f"{perf_pct:.2f}%",
             delta_color="normal",
         )
 
     with col4:
-        st.metric(label="💶 Cash disponible", value=format_eur(portfolio.cash_available))
+        st.metric(label=t("dashboard.metric_cash"), value=format_eur(portfolio.cash_available))
 
     st.markdown("---")
 
@@ -372,7 +335,7 @@ def render(session: Session) -> None:
     # SECTION 2: PORTFOLIO ALLOCATION
     # ═══════════════════════════════════════════════════════════════════════════
 
-    st.markdown("### 🧩 Répartition du portefeuille")
+    st.markdown(f"### {t('dashboard.section_allocation')}")
 
     # Build rows for products with non-zero value or contributions
     rows = []
@@ -381,20 +344,22 @@ def render(session: Session) -> None:
         if p.get("current_value_eur", 0) > 0 or p.get("net_contributions_eur", 0) > 0:
             rows.append(
                 {
-                    "Produit": p["name"],
+                    t("dashboard.chart_product"): p["name"],
                     "Valeur_brute": float(p["current_value_eur"]),  # For sorting
                     "Valeur": f"{float(p['current_value_eur']):.2f} €",
                     "Investi": f"{float(p['net_contributions_eur']):.2f} €",
                     "Gains": f"{float(p['performance_eur']):.2f} €",
                     "Perf %": f"{float(p['performance_pct']):.2f} %",
-                    "Allocation": float(p["allocation_pct"]),
+                    t("dashboard.chart_weight_pct"): float(p["allocation_pct"]),
                 }
             )
 
     if rows:
         df = pd.DataFrame(rows)
+        product_col = t("dashboard.chart_product")
+        weight_col = t("dashboard.chart_weight_pct")
         # Sort by allocation ascending (for horizontal bar chart)
-        df_sorted = df.sort_values("Allocation", ascending=True)
+        df_sorted = df.sort_values(weight_col, ascending=True)
 
         c_chart, c_table = st.columns([1, 1.6])
 
@@ -407,24 +372,24 @@ def render(session: Session) -> None:
                 .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
                 .encode(
                     x=alt.X(
-                        "Allocation:Q",
-                        title="Poids (%)",
+                        f"{weight_col}:Q",
+                        title=weight_col,
                         scale=alt.Scale(domain=[0, 100]),
                     ),
                     y=alt.Y(
-                        "Produit:N",
+                        f"{product_col}:N",
                         sort=None,  # Preserve dataframe order
                         title="",
                         axis=alt.Axis(labelLimit=150),
                     ),
                     color=alt.Color(
-                        "Produit:N",
+                        f"{product_col}:N",
                         legend=None,  # Legend in table instead
                         scale=alt.Scale(scheme="tableau10"),
                     ),
                     tooltip=[
-                        alt.Tooltip("Produit:N", title="Produit"),
-                        alt.Tooltip("Allocation:Q", title="Poids (%)", format=".1f"),
+                        alt.Tooltip(f"{product_col}:N", title=product_col),
+                        alt.Tooltip(f"{weight_col}:Q", title=weight_col, format=".1f"),
                         alt.Tooltip("Valeur:N", title="Valeur"),
                     ],
                 )
@@ -444,16 +409,14 @@ def render(session: Session) -> None:
                 width="stretch",
                 hide_index=True,
                 column_config={
-                    "Allocation": st.column_config.ProgressColumn(
-                        "Poids (%)", min_value=0, max_value=100, format="%.1f%%"
+                    weight_col: st.column_config.ProgressColumn(
+                        weight_col, min_value=0, max_value=100, format="%.1f%%"
                     )
                 },
             )
     else:
         # Empty portfolio message
-        st.info(
-            "💡 Votre portefeuille est vide. Ajoutez des valorisations dans l'onglet correspondant."
-        )
+        st.info(t("dashboard.empty_portfolio"))
 
     st.markdown("---")
 
@@ -461,7 +424,7 @@ def render(session: Session) -> None:
     # SECTION 2b: PER-PRODUCT DETAIL SECTIONS
     # ═══════════════════════════════════════════════════════════════════════════
 
-    st.markdown("### 🔍 Détail par produit")
+    st.markdown(f"### {t('dashboard.section_detail')}")
 
     for p in portfolio.products:
         if p.get("current_value_eur", 0) <= 0:
@@ -484,7 +447,7 @@ def render(session: Session) -> None:
     # SECTION 3: EXPORTS & REPORTS
     # ═══════════════════════════════════════════════════════════════════════════
 
-    st.markdown("### 🖨️ Exports & Rapports")
+    st.markdown(f"### {t('dashboard.section_exports')}")
     c1, c2, _ = st.columns([1, 1, 2])
 
     # ═══════════════════════════════════════════════════════════════════════════
@@ -498,8 +461,8 @@ def render(session: Session) -> None:
         if pdf_cache_key not in st.session_state:
             # First state: show generate button
 
-            if st.button("⚙️ Préparer le rapport PDF", width="stretch"):
-                with st.spinner("⏳ Génération du rapport PDF..."):
+            if st.button(t("dashboard.prepare_pdf"), width="stretch"):
+                with st.spinner(t("dashboard.generating_pdf")):
                     try:
                         # Build per-product chart data for PDF
                         chart_details = []
@@ -518,13 +481,13 @@ def render(session: Session) -> None:
 
                         st.rerun()
                     except Exception as e:
-                        st.error(f"❌ Error: {e}")
+                        st.error(t("dashboard.error").format(e=e))
         else:
             # Cached state: show download button
             st.download_button(
-                "⬇️ Télécharger le PDF",
+                t("dashboard.download_pdf"),
                 data=st.session_state[pdf_cache_key],
-                file_name="rapport_portefeuille.pdf",
+                file_name=t("dashboard.pdf_filename"),
                 mime="application/pdf",
                 type="primary",
                 width="stretch",
@@ -541,20 +504,20 @@ def render(session: Session) -> None:
         if json_cache_key not in st.session_state:
             # First state: show generate button
 
-            if st.button("⚙️ Préparer l'export JSON", width="stretch"):
-                with st.spinner("⏳ Structuration des données..."):
+            if st.button(t("dashboard.prepare_json"), width="stretch"):
+                with st.spinner(t("dashboard.generating_json")):
                     try:
                         json_data = service.export_json(portfolio)
                         st.session_state[json_cache_key] = json_data
                         st.rerun()
                     except Exception as e:
-                        st.error(f"❌ Error: {e}")
+                        st.error(t("dashboard.error").format(e=e))
         else:
             # Cached state: show download button
             st.download_button(
-                "⬇️ Télécharger le JSON",
+                t("dashboard.download_json"),
                 data=st.session_state[json_cache_key],
-                file_name="dashboard_data.json",
+                file_name=t("dashboard.json_filename"),
                 mime="application/json",
                 type="primary",
                 width="stretch",
@@ -567,7 +530,7 @@ def render(session: Session) -> None:
     # Show refresh button only if there's cached data
 
     if pdf_cache_key in st.session_state or json_cache_key in st.session_state:
-        if st.button("🔄 Rafraîchir les données d'export", type="secondary"):
+        if st.button(t("dashboard.refresh_exports"), type="secondary"):
             # Clear cached exports to force regeneration
             st.session_state.pop(pdf_cache_key, None)
             st.session_state.pop(json_cache_key, None)

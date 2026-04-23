@@ -11,6 +11,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class Page:
     """Represents a navigation item that can be rendered with a database session."""
+    id: str
     label: str
     render: Callable[[Session], None]
 
@@ -24,20 +25,21 @@ def build_pages() -> list[Page]:
     from finance_tracker.web.views.transactions import render as transactions_render
     from finance_tracker.web.views.valuations import render as valuations_render
     from finance_tracker.web.views.documentation import render as documentation_render
+    from finance_tracker.i18n import t
 
     return [
         # Documentation section
-        Page("📖 Documentation", documentation_render),
+        Page("documentation", t("nav.documentation"), documentation_render),
 
         # Analysis tools
-        Page("📊 Tableau de Bord", dashboard_render),
-        Page("🔮 Simulation Long Terme", simulation_render),
+        Page("dashboard", t("nav.dashboard"), dashboard_render),
+        Page("simulation", t("nav.simulation"), simulation_render),
 
         # Data management
-        Page("🏷️ Mes Produits", products_render),
-        Page("💸 Mes Transactions", transactions_render),
-        Page("📈 Mes Valorisations", valuations_render),
+        Page("products", t("nav.products"), products_render),
+        Page("transactions", t("nav.transactions"), transactions_render),
+        Page("valuations", t("nav.valuations"), valuations_render),
 
         # Specialized tools
-        Page("₿ Espace Bitcoin", bitcoin_render),
+        Page("bitcoin", t("nav.bitcoin"), bitcoin_render),
         ]
