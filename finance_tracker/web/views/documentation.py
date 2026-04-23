@@ -10,6 +10,8 @@ import streamlit as st
 from sqlmodel import Session
 from pathlib import Path
 
+from finance_tracker.i18n import t
+
 
 # GitHub repository base URL for markdown files
 GITHUB_BASE_URL = "https://github.com/SKOHscripts/finance-tracker/blob/main"
@@ -19,53 +21,27 @@ DOCS_GITHUB_URL = f"{GITHUB_BASE_URL}/docs"
 def _get_docs_path() -> Path:
     """Get the absolute path to the docs directory."""
     current_dir = Path(__file__).parent.parent.parent.parent
-
     return current_dir / "docs"
 
 
 def _load_markdown_file(filename: str) -> str:
-    """
-    Load markdown content from a file in the docs directory.
-
-    Returns an error message if the file cannot be found or read.
-
-    Parameters
-    ----------
-    filename : str
-        Name of the markdown file to load (e.g., "CONCEPTS_FONDAMENTAUX.md").
-
-    Returns
-    -------
-    str
-        Content of the file as a string, or an error message if the file
-        was not found or could not be read.
-    """
+    """Load markdown content from a file in the docs directory."""
     try:
         docs_path = _get_docs_path()
         file_path = docs_path / filename
 
         if not file_path.exists():
-            return f"⚠️ Fichier {filename} introuvable."
+            return t("documentation.file_not_found").format(filename=filename)
 
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
     except Exception as e:
-        return f"❌ Erreur lors du chargement du fichier: {str(e)}"
-
-
-def _render_github_link(filename: str, label: str = "Voir sur GitHub") -> str:
-    """Generate a GitHub link for a documentation file."""
-
-    if filename.startswith("docs/"):
-        url = f"{GITHUB_BASE_URL}/{filename}"
-    else:
-        url = f"{DOCS_GITHUB_URL}/{filename}"
-
-    return f"🔗 [{label}]({url})"
+        return t("documentation.file_load_error").format(error=str(e))
 
 
 def _render_section_card(title: str, description: str, icon: str, link_url: str) -> None:
     """Render a clickable section card with icon and description."""
+    read_more = t("documentation.card_read_more")
     st.markdown(f"""
     <div style="background: linear-gradient(135deg, #1e3a5f 0%, #2d4a6f 100%);
                 padding: 1.2rem;
@@ -74,7 +50,7 @@ def _render_section_card(title: str, description: str, icon: str, link_url: str)
                 border-left: 4px solid #4da6ff;">
         <h4 style="margin: 0; color: #ffffff;">{icon} {title}</h4>
         <p style="margin: 0.5rem 0 0 0; color: #b8c9d9; font-size: 0.9rem;">{description}</p>
-        <a href="{link_url}" target="_blank" style="color: #4da6ff; font-size: 0.85rem;">📖 Lire la documentation complète →</a>
+        <a href="{link_url}" target="_blank" style="color: #4da6ff; font-size: 0.85rem;">{read_more}</a>
     </div>
     """, unsafe_allow_html=True)
 
@@ -82,12 +58,8 @@ def _render_section_card(title: str, description: str, icon: str, link_url: str)
 def _render_tab_home() -> None:
     """Render the home/welcome tab with project overview."""
 
-    st.markdown("""
-    ## 👋 Bienvenue dans Finance Tracker
-
-    **Finance Tracker** est une application complète de gestion de portefeuille d'investissement,
-    conçue pour les investisseurs francophones soucieux de leur vie privée.
-    """)
+    st.markdown(f"## {t('documentation.home_title')}")
+    st.markdown(t("documentation.home_intro"))
 
     # Badges
     st.markdown("""
@@ -98,76 +70,40 @@ def _render_tab_home() -> None:
 
     st.divider()
 
-    # Features overview
-    st.markdown("### ✨ Fonctionnalités Principales")
+    st.markdown(f"### {t('documentation.home_features_title')}")
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.markdown("""
-        **📊 Suivi Complet**
-        - Portefeuille multi-actifs
-        - SCPI, Bitcoin, Livrets
-        - Assurance-vie, PER
-        """)
+        st.markdown(t("documentation.home_feature_tracking"))
 
     with col2:
-        st.markdown("""
-        **📈 Analyses Avancées**
-        - Performance MWRR
-        - Intérêts composés
-        - Projections long terme
-        """)
+        st.markdown(t("documentation.home_feature_analysis"))
 
     with col3:
-        st.markdown("""
-        **🔒 Vie Privée**
-        - Données locales
-        - Aucun cloud requis
-        - Export/Import facile
-        """)
+        st.markdown(t("documentation.home_feature_privacy"))
 
     st.divider()
 
-    # Quick start
-    st.markdown("### 🚀 Démarrage Rapide")
-
-    st.markdown("""
-    | Étape | Action | Page |
-    |-------|--------|------|
-    | 1️⃣ | Créer vos produits | 🏷️ **Mes Produits** |
-    | 2️⃣ | Ajouter des transactions | 💸 **Mes Transactions** |
-    | 3️⃣ | Mettre à jour les valorisations | 📈 **Mes Valorisations** |
-    | 4️⃣ | Consulter le tableau de bord | 📊 **Tableau de Bord** |
-    """)
+    st.markdown(f"### {t('documentation.home_quickstart_title')}")
+    st.markdown(t("documentation.home_quickstart_table"))
 
     st.divider()
 
-    # Links to documentation
-    st.markdown("### 📚 Explorer la Documentation")
-
-    st.markdown("Utilisez les **onglets ci-dessus** pour accéder aux différentes sections de documentation.")
-
-    st.info("""
-    **💡 Astuce:** Commencez par l'onglet **📚 Concepts** pour comprendre les 3 piliers
-    du système (Produits, Transactions, Valorisations) avant d'utiliser l'application.
-    """)
+    st.markdown(f"### {t('documentation.home_explore_title')}")
+    st.markdown(t("documentation.home_explore_text"))
+    st.info(t("documentation.home_tip"))
 
 
 def _render_tab_concepts() -> None:
     """Render the fundamental concepts documentation tab."""
 
-    st.markdown("""
-    ## 📚 Concepts Fondamentaux
-
-    Finance Tracker repose sur **trois piliers** essentiels. Comprendre ces concepts
-    est la clé pour utiliser efficacement l'application.
-    """)
+    st.markdown(f"## {t('documentation.concepts_title')}")
+    st.markdown(t("documentation.concepts_intro"))
 
     st.divider()
 
-    # Pillar 1: Products
-    st.markdown("### 1️⃣ Produits (Products)")
+    st.markdown(f"### {t('documentation.concepts_products_title')}")
     st.markdown("""
     Un **Produit** représente le contenant de votre investissement. C'est l'objet stable
     créé une seule fois qui ne change jamais.
@@ -183,8 +119,7 @@ def _render_tab_concepts() -> None:
     | PER | Aucun | PER Retraite | Variable |
     """)
 
-    # Pillar 2: Transactions
-    st.markdown("### 2️⃣ Transactions (Mouvements)")
+    st.markdown(f"### {t('documentation.concepts_transactions_title')}")
     st.markdown("""
     Une **Transaction** enregistre un flux d'argent ou de quantité à un instant T.
 
@@ -199,8 +134,7 @@ def _render_tab_concepts() -> None:
     | FEE | ← Sortie | Frais payés |
     """)
 
-    # Pillar 3: Valuations
-    st.markdown("### 3️⃣ Valorisations (Snapshots)")
+    st.markdown(f"### {t('documentation.concepts_valuations_title')}")
     st.markdown("""
     Une **Valorisation** capture la valeur unitaire d'un produit à un instant donné.
     C'est une "photographie" qui permet de calculer les gains/pertes latents.
@@ -215,13 +149,12 @@ def _render_tab_concepts() -> None:
 
     st.divider()
 
-    # Link to full documentation
-    st.markdown(f"""
-    🔗 **[Lire la documentation complète: Concepts Fondamentaux]({DOCS_GITHUB_URL}/CONCEPTS_FONDAMENTAUX.md)**
-    """)
+    st.markdown(t("documentation.full_doc_link").format(
+        title="Concepts Fondamentaux",
+        url=f"{DOCS_GITHUB_URL}/CONCEPTS_FONDAMENTAUX.md",
+    ))
 
-    # Expandable full content
-    with st.expander("📄 Voir le document complet", expanded=False):
+    with st.expander(t("documentation.expand_full_doc"), expanded=False):
         content = _load_markdown_file("CONCEPTS_FONDAMENTAUX.md")
         st.markdown(content)
 
@@ -229,17 +162,12 @@ def _render_tab_concepts() -> None:
 def _render_tab_calculs() -> None:
     """Render the formulas and calculations documentation tab."""
 
-    st.markdown("""
-    ## 📐 Formules & Calculs
-
-    Toutes les formules mathématiques utilisées par Finance Tracker pour calculer
-    les performances, gains et projections.
-    """)
+    st.markdown(f"## {t('documentation.calculs_title')}")
+    st.markdown(t("documentation.calculs_intro"))
 
     st.divider()
 
-    # Key indicators
-    st.markdown("### 📊 Indicateurs Clés")
+    st.markdown(f"### {t('documentation.calculs_key_metrics')}")
 
     col1, col2 = st.columns(2)
 
@@ -283,8 +211,7 @@ def _render_tab_calculs() -> None:
 
     st.divider()
 
-    # Compound interest
-    st.markdown("### 📈 Intérêts Composés")
+    st.markdown(f"### {t('documentation.calculs_compound')}")
 
     st.markdown("""
     **Formule classique:**
@@ -303,8 +230,7 @@ def _render_tab_calculs() -> None:
 
     st.divider()
 
-    # Bitcoin specifics
-    st.markdown("### ₿ Cas Spécial: Bitcoin")
+    st.markdown(f"### {t('documentation.calculs_bitcoin_title')}")
 
     st.markdown("""
     **Conversion sans double passage:**
@@ -319,12 +245,12 @@ def _render_tab_calculs() -> None:
 
     st.divider()
 
-    # Link to full documentation
-    st.markdown(f"""
-    🔗 **[Lire la documentation complète: Formules & Calculs]({DOCS_GITHUB_URL}/FORMULES_CALCULS.md)**
-    """)
+    st.markdown(t("documentation.full_doc_link").format(
+        title="Formules & Calculs",
+        url=f"{DOCS_GITHUB_URL}/FORMULES_CALCULS.md",
+    ))
 
-    with st.expander("📄 Voir le document complet", expanded=False):
+    with st.expander(t("documentation.expand_full_doc"), expanded=False):
         content = _load_markdown_file("FORMULES_CALCULS.md")
         st.markdown(content)
 
@@ -332,16 +258,12 @@ def _render_tab_calculs() -> None:
 def _render_tab_interface() -> None:
     """Render the web interface documentation tab."""
 
-    st.markdown("""
-    ## 💻 Guide Interface Web
-
-    Guide complet page par page de l'interface Streamlit.
-    """)
+    st.markdown(f"## {t('documentation.interface_title')}")
+    st.markdown(t("documentation.interface_intro"))
 
     st.divider()
 
-    # Pages overview
-    st.markdown("### 📑 Architecture de l'Application")
+    st.markdown(f"### {t('documentation.interface_architecture')}")
 
     pages_data = {
         "📊 Tableau de Bord": "Vue globale du portefeuille, répartition, graphiques temporels",
@@ -359,8 +281,7 @@ def _render_tab_interface() -> None:
 
     st.divider()
 
-    # Key workflows
-    st.markdown("### 🔄 Flux de Travail Recommandé")
+    st.markdown(f"### {t('documentation.interface_workflow')}")
 
     st.markdown("""
     ```
@@ -381,8 +302,7 @@ def _render_tab_interface() -> None:
 
     st.divider()
 
-    # Transaction types detail
-    st.markdown("### 💰 Types de Transactions")
+    st.markdown(f"### {t('documentation.interface_tx_types')}")
 
     st.markdown("""
     | Type | Quand l'utiliser | Impact sur Cash | Impact Investissement Net |
@@ -397,12 +317,12 @@ def _render_tab_interface() -> None:
 
     st.divider()
 
-    # Link to full documentation
-    st.markdown(f"""
-    🔗 **[Lire la documentation complète: Interface Web]({DOCS_GITHUB_URL}/INTERFACE_WEB.md)**
-    """)
+    st.markdown(t("documentation.full_doc_link").format(
+        title="Interface Web",
+        url=f"{DOCS_GITHUB_URL}/INTERFACE_WEB.md",
+    ))
 
-    with st.expander("📄 Voir le document complet", expanded=False):
+    with st.expander(t("documentation.expand_full_doc"), expanded=False):
         content = _load_markdown_file("INTERFACE_WEB.md")
         st.markdown(content)
 
@@ -410,16 +330,12 @@ def _render_tab_interface() -> None:
 def _render_tab_installation() -> None:
     """Render the installation and developer documentation tab."""
 
-    st.markdown("""
-    ## 🛠️ Installation & Développement
-
-    Guides pour installer, configurer et contribuer au projet.
-    """)
+    st.markdown(f"## {t('documentation.install_title')}")
+    st.markdown(t("documentation.install_intro"))
 
     st.divider()
 
-    # Quick start
-    st.markdown("### ⚡ Démarrage Rapide (Développeur)")
+    st.markdown(f"### {t('documentation.install_quickstart')}")
 
     st.code("""
 # Cloner le dépôt
@@ -444,8 +360,7 @@ streamlit run app.py
 
     st.divider()
 
-    # Architecture
-    st.markdown("### 🧱 Architecture du Projet")
+    st.markdown(f"### {t('documentation.install_architecture')}")
 
     st.markdown("""
     ```
@@ -465,43 +380,38 @@ streamlit run app.py
 
     st.divider()
 
-    # Links to full documentation
-    st.markdown("### 🔗 Documentation Développeur")
+    st.markdown(f"### {t('documentation.install_dev_docs')}")
 
     col1, col2 = st.columns(2)
 
     with col1:
         st.markdown(f"""
         **Installation complète:**
-        🔗 [INSTALLATION_SETUP.md]({DOCS_GITHUB_URL}/INSTALLATION_SETUP.md)
+        [{DOCS_GITHUB_URL}/INSTALLATION_SETUP.md]({DOCS_GITHUB_URL}/INSTALLATION_SETUP.md)
 
         **Guide CLI:**
-        🔗 [CLI_GUIDE.md]({DOCS_GITHUB_URL}/CLI_GUIDE.md)
+        [{DOCS_GITHUB_URL}/CLI_GUIDE.md]({DOCS_GITHUB_URL}/CLI_GUIDE.md)
         """)
 
     with col2:
         st.markdown(f"""
         **Base de données:**
-        🔗 [BASE_DONNEES.md]({DOCS_GITHUB_URL}/BASE_DONNEES.md)
+        [{DOCS_GITHUB_URL}/BASE_DONNEES.md]({DOCS_GITHUB_URL}/BASE_DONNEES.md)
 
         **Documentation technique:**
-        🔗 [DOCUMENTATION_TECHNIQUE.md]({DOCS_GITHUB_URL}/DOCUMENTATION_TECHNIQUE.md)
+        [{DOCS_GITHUB_URL}/DOCUMENTATION_TECHNIQUE.md]({DOCS_GITHUB_URL}/DOCUMENTATION_TECHNIQUE.md)
         """)
 
 
 def _render_tab_database() -> None:
     """Render the database documentation tab."""
 
-    st.markdown("""
-    ## 🗄️ Structure de la Base de Données
-
-    Finance Tracker utilise **SQLite** avec **SQLModel** pour la persistance des données.
-    """)
+    st.markdown(f"## {t('documentation.database_title')}")
+    st.markdown(t("documentation.database_intro"))
 
     st.divider()
 
-    # Main tables
-    st.markdown("### 📊 Tables Principales")
+    st.markdown(f"### {t('documentation.database_tables')}")
 
     st.markdown("""
     **PRODUCTS (Produits)**
@@ -541,8 +451,7 @@ def _render_tab_database() -> None:
 
     st.divider()
 
-    # Relations
-    st.markdown("### 🔗 Relations")
+    st.markdown(f"### {t('documentation.database_relations')}")
 
     st.markdown("""
     ```
@@ -558,12 +467,12 @@ def _render_tab_database() -> None:
 
     st.divider()
 
-    # Link to full documentation
-    st.markdown(f"""
-    🔗 **[Lire la documentation complète: Base de Données]({DOCS_GITHUB_URL}/BASE_DONNEES.md)**
-    """)
+    st.markdown(t("documentation.full_doc_link").format(
+        title="Base de Données",
+        url=f"{DOCS_GITHUB_URL}/BASE_DONNEES.md",
+    ))
 
-    with st.expander("📄 Voir le document complet", expanded=False):
+    with st.expander(t("documentation.expand_full_doc"), expanded=False):
         content = _load_markdown_file("BASE_DONNEES.md")
         st.markdown(content)
 
@@ -571,14 +480,11 @@ def _render_tab_database() -> None:
 def _render_tab_help() -> None:
     """Render the help and support tab."""
 
-    st.markdown("""
-    ## 🆘 Aide & Support
-    """)
+    st.markdown(f"## {t('documentation.help_title')}")
 
     st.divider()
 
-    # FAQ
-    st.markdown("### ❓ FAQ Rapide")
+    st.markdown(f"### {t('documentation.help_faq_title')}")
 
     faq_items = [
         ("Comment créer mon premier portefeuille?", """
@@ -601,7 +507,7 @@ Les gains latents seront calculés automatiquement!
         """),
 
         ("Comment sauvegarder mes données?", """
-1. Dans la **sidebar gauche**, section "💾 Gestion des Données"
+1. Dans la **sidebar gauche**, section "Gestion des Données"
 2. Cliquez "📥 Sauvegarder la base (PC)"
 3. Fichier `.db` téléchargé sur votre ordinateur
 
@@ -615,86 +521,52 @@ le prix en temps réel. Les mises à jour sont automatiques.
         ]
 
     for question, answer in faq_items:
-        with st.expander(f"❓ {question}"):
+        with st.expander(question):
             st.markdown(answer)
 
     st.divider()
 
-    # Resources
-    st.markdown("### 🌐 Ressources")
+    st.markdown(f"### {t('documentation.help_resources_title')}")
 
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.markdown("""
-        **📱 Liens Officiels**
-
-        [🌐 Application Web](https://finance-tracker-skohscripts.streamlit.app/)
-
-        [💻 GitHub](https://github.com/SKOHscripts/finance-tracker)
-        """)
+        st.markdown(t("documentation.help_resources_official"))
+        st.markdown(t("documentation.help_resources_web"))
+        st.markdown(t("documentation.help_resources_github"))
 
     with col2:
-        st.markdown("""
-        **💬 Support**
-
-        [🐛 Signaler un bug](https://github.com/SKOHscripts/finance-tracker/issues)
-
-        [💡 Proposer une fonctionnalité](https://github.com/SKOHscripts/finance-tracker/discussions)
-        """)
+        st.markdown(t("documentation.help_resources_support"))
+        st.markdown(t("documentation.help_resources_bug"))
+        st.markdown(t("documentation.help_resources_feature"))
 
     with col3:
-        st.markdown("""
-        **📚 Documentation**
-
-        [📖 README complet]({github}/README.md)
-
-        [🗺️ Roadmap]({docs}/ROADMAP.md)
-        """.format(github=GITHUB_BASE_URL, docs=DOCS_GITHUB_URL))
+        st.markdown(t("documentation.help_resources_docs"))
+        st.markdown(t("documentation.help_resources_readme").format(url=GITHUB_BASE_URL))
+        st.markdown(t("documentation.help_resources_roadmap").format(url=DOCS_GITHUB_URL))
 
     st.divider()
 
-    # Tips
-    st.markdown("### 💡 Conseils d'Utilisation")
-
-    st.info("""
-    **Conseil #1:** Commencez par lire les **📚 Concepts** pour comprendre les 3 piliers du système.
-
-    **Conseil #2:** Mettez à jour vos **📈 Valorisations** régulièrement (mensuellement minimum).
-
-    **Conseil #3:** Utilisez le **🔮 Simulateur** pour planifier vos investissements futurs.
-
-    **Conseil #4:** Sauvegardez régulièrement votre base de données via la sidebar.
-    """)
+    st.markdown(f"### {t('documentation.help_tips_title')}")
+    st.info(t("documentation.help_tips"))
 
 
 def render(session: Session) -> None:
-    """
-    Render the documentation page.
+    """Render the documentation page."""
 
-    Main entry point called from navigation.py.
-    Displays documentation in multiple tabs for better organization.
-
-    Parameters
-    ----------
-        session: SQLModel database session (required by navigation pattern)
-    """
-
-    # Page title
-    st.title("📖 Documentation")
-    st.markdown("Guide complet pour utiliser et comprendre Finance Tracker")
+    st.title(t("documentation.title"))
+    st.markdown(t("documentation.subtitle"))
 
     st.divider()
 
-    # Create tabs
     tabs = st.tabs([
-        "👋 Accueil",
-        "📚 Concepts",
-        "📐 Calculs",
-        "💻 Interface Web",
-        "🗄️ Base de Données",
-        "🛠️ Installation",
-        "🆘 Aide"
+        t("documentation.tab_home"),
+        t("documentation.tab_concepts"),
+        t("documentation.tab_calculs"),
+        t("documentation.tab_interface"),
+        t("documentation.tab_database"),
+        t("documentation.tab_install"),
+        t("documentation.tab_help"),
         ])
 
     tab_home, tab_concepts, tab_calculs, tab_interface, tab_database, tab_install, tab_help = tabs
