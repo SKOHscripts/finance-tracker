@@ -255,6 +255,43 @@ def _render_tab_calculs() -> None:
         st.markdown(content)
 
 
+def _render_tab_inflation() -> None:
+    """Render the inflation profiles documentation tab."""
+
+    st.markdown(f"## {t('documentation.inflation_title')}")
+    st.markdown(t("documentation.inflation_intro"))
+
+    st.divider()
+
+    st.markdown(f"### {t('documentation.inflation_profiles_title')}")
+
+    st.markdown("""
+| Profil | Taux | Plage indicative | Cas d'usage |
+|---|---|---|---|
+| **Standard IPC** (défaut) | 2,0 %/an | 1,7–2,0 % | Neutraliser l'inflation officielle sur les dépenses courantes |
+| **Urbain locataire** | 2,3 %/an | 2,2–2,5 % | Locataire en ville avec un loyer significatif |
+| **Vie urbaine + projet immo** | 3,0 %/an | 2,7–3,2 % | Utilisateur visant l'accession à la propriété en ville |
+| **Indexé m² de ville** | 4,0 %/an | 3,5–5,0 % | Suivi du patrimoine au prix du m² immobilier urbain |
+| **Personnalisé** | libre | — | Saisir manuellement tout autre taux |
+""")
+
+    st.divider()
+
+    st.markdown(f"### {t('documentation.inflation_how_title')}")
+    st.markdown(t("documentation.inflation_how"))
+
+    st.divider()
+
+    st.markdown(t("documentation.inflation_sources"))
+
+    st.divider()
+
+    st.markdown(t("documentation.full_doc_link").format(
+        title="Inflation Paramétrable",
+        url=f"{GITHUB_BASE_URL}/README.md#-inflation-param%C3%A9trable",
+    ))
+
+
 def _render_tab_interface() -> None:
     """Render the web interface documentation tab."""
 
@@ -563,13 +600,14 @@ def render(session: Session) -> None:
         t("documentation.tab_home"),
         t("documentation.tab_concepts"),
         t("documentation.tab_calculs"),
+        t("documentation.tab_inflation"),
         t("documentation.tab_interface"),
         t("documentation.tab_database"),
         t("documentation.tab_install"),
         t("documentation.tab_help"),
         ])
 
-    tab_home, tab_concepts, tab_calculs, tab_interface, tab_database, tab_install, tab_help = tabs
+    tab_home, tab_concepts, tab_calculs, tab_inflation, tab_interface, tab_database, tab_install, tab_help = tabs
 
     with tab_home:
         _render_tab_home()
@@ -579,6 +617,9 @@ def render(session: Session) -> None:
 
     with tab_calculs:
         _render_tab_calculs()
+
+    with tab_inflation:
+        _render_tab_inflation()
 
     with tab_interface:
         _render_tab_interface()

@@ -149,17 +149,25 @@ selected_id = st.sidebar.radio(
     options=[p.id for p in pages],
     format_func=lambda pid: next(p.label for p in pages if p.id == pid),
 )
-st.sidebar.link_button(
-    t("app.doc_link_btn"),
-    f"{GITHUB_BASE_URL}/README.md",
-    )
-st.sidebar.markdown("---")
-
 # donation button
-st.sidebar.link_button(
-    t("app.donate_btn"),
-    "https://html-preview.github.io/?url=https://github.com/SKOHscripts/donate.github.io/blob/main/donate%2Fredirect.html"
-    )
+donate_url = "https://html-preview.github.io/?url=https://github.com/SKOHscripts/donate.github.io/blob/main/donate%2Fredirect.html"
+st.sidebar.markdown(f"""
+<div style="margin: 0.5rem 0;">
+  <a href="{donate_url}" target="_blank" style="
+    display: block;
+    background: linear-gradient(135deg, #c67c2d 0%, #e8943a 100%);
+    color: white;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.9rem;
+    border: 1px solid #f0a545;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  ">{t("app.donate_btn")}</a>
+</div>
+""", unsafe_allow_html=True)
 st.sidebar.markdown("---")
 
 st.sidebar.info(f"**{t('app.sidebar_version')}**\n\n{t('app.sidebar_description')}")

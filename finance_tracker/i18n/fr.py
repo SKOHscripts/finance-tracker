@@ -293,6 +293,25 @@ STRINGS: dict[str, str] = {
     "documentation.calculs_key_metrics": "Indicateurs Clés",
     "documentation.calculs_compound": "Intérêts Composés",
     "documentation.calculs_bitcoin_title": "₿ Cas Spécial : Bitcoin",
+    # Inflation tab
+    "documentation.tab_inflation": "Inflation",
+    "documentation.inflation_title": "📊 Inflation Paramétrable",
+    "documentation.inflation_intro": (
+        "Le simulateur long terme propose quatre profils d'inflation prédéfinis, "
+        "plus une option personnalisée."
+    ),
+    "documentation.inflation_profiles_title": "Profils d'Inflation",
+    "documentation.inflation_how_title": "Comment ça marche ?",
+    "documentation.inflation_how": (
+        "Dans le simulateur, remplace le simple champ *Inflation annuelle (%)* par un sélecteur "
+        "de profil. Le taux correspondant est appliqué automatiquement à toutes les projections "
+        "et apparaît dans le rapport PDF exporté."
+    ),
+    "documentation.inflation_sources": (
+        "**Sources :** séries longues [INSEE IPC](https://www.insee.fr/fr/statistiques/4268033), "
+        "indices de référence des loyers ([IRL — ANIL](https://www.anil.org/outils/indices-et-plafonds/tableau-de-lirl/)) "
+        "et travaux [IGEDD/Friggit](https://www.cgedd.fr/prix-immobilier-friggit.pdf) sur l'évolution des prix immobiliers."
+    ),
     # Interface tab
     "documentation.interface_title": "Guide Interface Web",
     "documentation.interface_intro": "Guide complet page par page de l'interface Streamlit.",
