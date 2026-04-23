@@ -41,9 +41,9 @@ with col2:
     st.context.theme.type = "dark"
 
     if theme_type == "light":
-        LOGO_URL = "https://raw.githubusercontent.com/SKOHscripts/finance-tracker/main/images/logo_color_horizontal_white.png"
+        LOGO_URL = "https://raw.githubusercontent.com/SKOHscripts/finance-tracker/main/images/logo_horizontal_light.svg"
     else:
-        LOGO_URL = "https://raw.githubusercontent.com/SKOHscripts/finance-tracker/main/images/logo_color_horizontal.png"
+        LOGO_URL = "https://raw.githubusercontent.com/SKOHscripts/finance-tracker/main/images/logo_horizontal_dark.svg"
 
     st.markdown(
         f'<a href="{GITHUB_BASE_URL}/README.md" target="_blank" '
