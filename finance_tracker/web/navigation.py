@@ -20,10 +20,8 @@ def build_pages() -> list[Page]:
     # Lazy imports avoid circular dependencies since views may import navigation
     from finance_tracker.web.views.dashboard import render as dashboard_render
     from finance_tracker.web.views.simulation import render as simulation_render
-    from finance_tracker.web.views.bitcoin import render as bitcoin_render
     from finance_tracker.web.views.products import render as products_render
     from finance_tracker.web.views.transactions import render as transactions_render
-    from finance_tracker.web.views.valuations import render as valuations_render
     from finance_tracker.web.views.documentation import render as documentation_render
     from finance_tracker.i18n import t
 
@@ -38,8 +36,4 @@ def build_pages() -> list[Page]:
         # Data management
         Page("products", t("nav.products"), products_render),
         Page("transactions", t("nav.transactions"), transactions_render),
-        Page("valuations", t("nav.valuations"), valuations_render),
-
-        # Specialized tools
-        Page("bitcoin", t("nav.bitcoin"), bitcoin_render),
         ]

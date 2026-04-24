@@ -143,7 +143,7 @@ STRINGS: dict[str, str] = {
     "products.col_delete": "🗑️ Delete",
     "products.advanced_delete_expander": "Deletion tools (advanced)",
     "products.advanced_delete_help": "If product deletion fails, delete associated transactions/valuations first.",
-    "products.advanced_delete_tip": "Tip: use the Transactions / Valuations page, filter by product, check 🗑️ and apply.",
+    "products.advanced_delete_tip": "Tip: use the Transactions page or the Dashboard (product detail) to delete associated valuations.",
     "products.apply_btn": "Apply changes",
     "products.name_empty_error": "All products (not deleted) must have a name.",
     "products.name_unique_error": "Product names must be unique (at least among non-deleted rows).",
@@ -264,8 +264,7 @@ STRINGS: dict[str, str] = {
         "|------|--------|------|\n"
         "| 1 | Create your products | 🏷️ **My Products** |\n"
         "| 2 | Add transactions | 💸 **My Transactions** |\n"
-        "| 3 | Update valuations | 📈 **My Valuations** |\n"
-        "| 4 | View the dashboard | 📊 **Dashboard** |"
+        "| 3 | Update valuations & view performance | 📊 **Dashboard** |"
     ),
     "documentation.home_explore_title": "Explore the Documentation",
     "documentation.home_explore_text": "Use the **tabs above** to access the different documentation sections.",
@@ -347,7 +346,7 @@ STRINGS: dict[str, str] = {
     "documentation.help_tips_title": "Usage Tips",
     "documentation.help_tips": (
         "**Tip #1:** Start by reading **Concepts** to understand the 3 pillars of the system.\n\n"
-        "**Tip #2:** Update your **📈 Valuations** regularly (monthly minimum).\n\n"
+        "**Tip #2:** Update your valuations regularly from the **📊 Dashboard** (monthly minimum).\n\n"
         "**Tip #3:** Use the **🔮 Simulator** to plan your future investments.\n\n"
         "**Tip #4:** Back up your database regularly via the sidebar."
     ),

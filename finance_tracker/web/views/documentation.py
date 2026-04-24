@@ -90,6 +90,11 @@ def _render_tab_home() -> None:
 
     st.divider()
 
+    st.markdown(f"### {t('documentation.help_tips_title')}")
+    st.info(t("documentation.help_tips"))
+
+    st.divider()
+
     st.markdown(f"### {t('documentation.home_explore_title')}")
     st.markdown(t("documentation.home_explore_text"))
     st.info(t("documentation.home_tip"))
@@ -303,12 +308,10 @@ def _render_tab_interface() -> None:
     st.markdown(f"### {t('documentation.interface_architecture')}")
 
     pages_data = {
-        "📊 Tableau de Bord": "Vue globale du portefeuille, répartition, graphiques temporels",
+        "📊 Tableau de Bord": "Vue globale, répartition, graphiques et gestion des valorisations par produit",
         "🔮 Simulation Long Terme": "Projections avec intérêts composés, scénarios multi-hypothèses",
         "🏷️ Mes Produits": "CRUD des produits financiers (création, édition, suppression)",
         "💸 Mes Transactions": "Historique et saisie des mouvements (DEPOSIT, BUY, SELL, etc.)",
-        "📈 Mes Valorisations": "Mise à jour des prix unitaires par produit",
-        "₿ Espace Bitcoin": "Prix temps réel (CoinGecko), historique, conversions",
         }
 
     for page, desc in pages_data.items():
@@ -329,10 +332,8 @@ def _render_tab_interface() -> None:
        └─ DEPOSIT (versement initial)
        └─ BUY (achat de parts)
 
-    3. 📈 Mes Valorisations
-       └─ Mettre à jour le prix unitaire
-
-    4. 📊 Tableau de Bord
+    3. 📊 Tableau de Bord
+       └─ Ajouter / modifier les valorisations par produit
        └─ Consulter la performance
     ```
     """)
@@ -534,10 +535,10 @@ def _render_tab_help() -> None:
         """),
 
         ("Comment mettre à jour la valeur de mon portefeuille?", """
-1. Allez à **📈 Mes Valorisations**
-2. Cliquez "Ajouter une valorisation"
-3. Sélectionnez le produit
-4. Entrez la nouvelle valeur unitaire
+1. Allez au **📊 Tableau de Bord**
+2. Ouvrez le détail du produit concerné
+3. Cliquez "Ajouter une valorisation"
+4. Entrez la valeur totale et le prix unitaire
 5. Validez
 
 Les gains latents seront calculés automatiquement!
@@ -552,8 +553,8 @@ Pour restaurer: utilisez "Importer votre sauvegarde"
         """),
 
         ("Le prix Bitcoin se met-il à jour automatiquement?", """
-Oui! L'**₿ Espace Bitcoin** utilise l'API CoinGecko pour récupérer
-le prix en temps réel. Les mises à jour sont automatiques.
+Oui! Le **📊 Tableau de Bord** (section Bitcoin) utilise l'API CoinGecko
+pour récupérer le prix en temps réel via le bouton "Actualiser le cours".
         """),
         ]
 
@@ -582,10 +583,6 @@ le prix en temps réel. Les mises à jour sont automatiques.
         st.markdown(t("documentation.help_resources_readme").format(url=GITHUB_BASE_URL))
         st.markdown(t("documentation.help_resources_roadmap").format(url=DOCS_GITHUB_URL))
 
-    st.divider()
-
-    st.markdown(f"### {t('documentation.help_tips_title')}")
-    st.info(t("documentation.help_tips"))
 
 
 def render(session: Session) -> None:

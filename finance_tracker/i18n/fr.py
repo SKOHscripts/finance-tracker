@@ -143,7 +143,7 @@ STRINGS: dict[str, str] = {
     "products.col_delete": "🗑️ Supprimer",
     "products.advanced_delete_expander": "Outils suppression (avancé)",
     "products.advanced_delete_help": "Si une suppression de produit échoue, supprimez d'abord les transactions/valorisations associées.",
-    "products.advanced_delete_tip": "Astuce : utilisez la page Transactions / Valorisations, filtrez par produit, cochez 🗑️ puis appliquez.",
+    "products.advanced_delete_tip": "Astuce : utilisez la page Transactions ou le Tableau de Bord (détail du produit) pour supprimer les valorisations associées.",
     "products.apply_btn": "Appliquer les changements",
     "products.name_empty_error": "Tous les produits (non supprimés) doivent avoir un nom.",
     "products.name_unique_error": "Les noms de produits doivent être uniques (au moins parmi les lignes non supprimées).",
@@ -264,8 +264,7 @@ STRINGS: dict[str, str] = {
         "|-------|--------|------|\n"
         "| 1 | Créer vos produits | 🏷️ **Mes Produits** |\n"
         "| 2 | Ajouter des transactions | 💸 **Mes Transactions** |\n"
-        "| 3 | Mettre à jour les valorisations | 📈 **Mes Valorisations** |\n"
-        "| 4 | Consulter le tableau de bord | 📊 **Tableau de Bord** |"
+        "| 3 | Mettre à jour les valorisations & consulter les performances | 📊 **Tableau de Bord** |"
     ),
     "documentation.home_explore_title": "Explorer la Documentation",
     "documentation.home_explore_text": "Utilisez les **onglets ci-dessus** pour accéder aux différentes sections de documentation.",
@@ -347,7 +346,7 @@ STRINGS: dict[str, str] = {
     "documentation.help_tips_title": "Conseils d'Utilisation",
     "documentation.help_tips": (
         "**Conseil #1 :** Commencez par lire les **Concepts** pour comprendre les 3 piliers du système.\n\n"
-        "**Conseil #2 :** Mettez à jour vos **📈 Valorisations** régulièrement (mensuellement minimum).\n\n"
+        "**Conseil #2 :** Mettez à jour vos valorisations régulièrement depuis le **📊 Tableau de Bord** (mensuellement minimum).\n\n"
         "**Conseil #3 :** Utilisez le **🔮 Simulateur** pour planifier vos investissements futurs.\n\n"
         "**Conseil #4 :** Sauvegardez régulièrement votre base de données via la sidebar."
     ),
