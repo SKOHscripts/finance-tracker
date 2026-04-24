@@ -201,7 +201,7 @@ def _render_bitcoin_expander(details: dict, product_id: int, service: "Dashboard
         st.dataframe(pd.DataFrame(rows_btc), hide_index=True, use_container_width=True)
 
 
-def _render_generic_expander(details: dict) -> None:
+def _render_generic_expander(details: dict, product_id: int, service: "DashboardService") -> None:
     """Render the generic product detail section inside an expander."""
     # Mini KPI row
     k1, k2, k3, k4 = st.columns(4)
@@ -268,19 +268,95 @@ def _render_generic_expander(details: dict) -> None:
             unsafe_allow_html=True,
         )
 
-    # Recent valuations table
-    recent = list(reversed(details["history"]))[:8]
-    if recent:
-        table_rows = []
-        for v in recent:
-            row = {
-                "Date": v["date"].strftime("%d/%m/%Y") if hasattr(v["date"], "strftime") else str(v["date"]),
-                "Valeur (€)": f"{v['total_value_eur']:,.2f}".replace(",", " "),
-            }
-            if v.get("unit_price_eur"):
-                row["Prix unitaire (€)"] = f"{v['unit_price_eur']:,.2f}".replace(",", " ")
-            table_rows.append(row)
-        st.dataframe(pd.DataFrame(table_rows), hide_index=True, use_container_width=True)
+    st.markdown("---")
+
+    # ── Add valuation form ──────────────────────────────────────────────────────
+    st.markdown(f"##### ➕ {t('valuations.add_expander')}")
+    with st.form(f"val_add_{product_id}", clear_on_submit=True):
+        fc1, fc2, fc3 = st.columns(3)
+        with fc1:
+            add_date = st.date_input(t("valuations.field_date"), value=date.today())
+        with fc2:
+            add_total = st.number_input(t("valuations.field_total"), value=0.0, step=0.01, format="%.2f")
+        with fc3:
+            add_unit = st.number_input(t("valuations.field_unit_price"), value=0.0, step=0.01, format="%.2f")
+        if st.form_submit_button(t("valuations.add_btn"), type="primary", width="stretch"):
+            if add_total <= 0:
+                st.error(t("valuations.total_positive_error"))
+            else:
+                try:
+                    val = Valuation(
+                        product_id=product_id,
+                        date=datetime.combine(add_date, datetime.min.time()),
+                        total_value_eur=to_decimal(add_total),
+                        unit_price_eur=to_decimal(add_unit) if add_unit > 0 else None,
+                    )
+                    service.valuation_repo.create(val)
+                    st.success(t("valuations.added_success"))
+                    st.rerun()
+                except Exception as e:
+                    st.error(t("valuations.error").format(e=e))
+
+    # ── Editable valuations table ───────────────────────────────────────────────
+    product_vals = sorted(
+        service.valuation_repo.get_by_product_id(product_id),
+        key=lambda v: v.date, reverse=True,
+    )
+    if product_vals:
+        delete_col = t("valuations.col_delete")
+        rows = []
+        for v in product_vals:
+            rows.append({
+                "id": v.id,
+                "date": v.date.date() if hasattr(v.date, "date") else v.date,
+                "valeur_totale_eur": float(v.total_value_eur),
+                "prix_unitaire_eur": float(v.unit_price_eur) if v.unit_price_eur is not None else 0.0,
+                delete_col: False,
+            })
+        df_vals = pd.DataFrame(rows)
+        edited = st.data_editor(
+            df_vals,
+            key=f"val_editor_{product_id}",
+            hide_index=True,
+            width="stretch",
+            num_rows="fixed",
+            column_config={
+                "id": st.column_config.NumberColumn(t("valuations.col_id"), disabled=True),
+                "date": st.column_config.DateColumn(t("valuations.col_date"), format="YYYY-MM-DD"),
+                "valeur_totale_eur": st.column_config.NumberColumn(t("valuations.col_total"), min_value=0.0, step=0.01, format="%.2f"),
+                "prix_unitaire_eur": st.column_config.NumberColumn(t("valuations.col_unit_price"), min_value=0.0, step=0.01, format="%.2f"),
+                delete_col: st.column_config.CheckboxColumn(delete_col),
+            },
+        )
+        ca, cb = st.columns([2, 1])
+        with ca:
+            if st.button(t("valuations.apply_btn"), key=f"val_apply_{product_id}", width="stretch"):
+                try:
+                    for r in edited.to_dict(orient="records"):
+                        val_id = r.get("id")
+                        if val_id is None or (isinstance(val_id, float) and pd.isna(val_id)):
+                            continue
+                        if bool(r.get(delete_col, False)):
+                            service.valuation_repo.delete(int(val_id))
+                            continue
+                        v = service.valuation_repo.get_by_id(int(val_id))
+                        if not v:
+                            continue
+                        total = float(r.get("valeur_totale_eur") or 0.0)
+                        unit = float(r.get("prix_unitaire_eur") or 0.0)
+                        if total <= 0:
+                            raise ValueError(t("valuations.total_positive_update_error"))
+                        v.date = datetime.combine(r["date"], datetime.min.time())
+                        v.total_value_eur = to_decimal(total)
+                        v.unit_price_eur = to_decimal(unit) if unit > 0 else None
+                        service.valuation_repo.update(v)
+                    st.success(t("valuations.applied_success"))
+                    st.rerun()
+                except Exception as e:
+                    st.error(t("valuations.error").format(e=e))
+        with cb:
+            if st.button(t("valuations.reload_btn"), key=f"val_reload_{product_id}", width="stretch"):
+                st.rerun()
 
 
 def render(session: Session) -> None:
@@ -439,7 +515,7 @@ def render(session: Session) -> None:
             if details["type"] == "BITCOIN":
                 _render_bitcoin_expander(details, product_id, service)
             else:
-                _render_generic_expander(details)
+                _render_generic_expander(details, product_id, service)
 
     st.markdown("---")
 
