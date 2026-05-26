@@ -12,6 +12,7 @@ financial assets.
 """
 import json
 import streamlit as st
+import streamlit.components.v1 as st_components
 import os
 from finance_tracker.web.db import get_session, get_db_path, get_engine
 from finance_tracker.web.navigation import build_pages
@@ -118,14 +119,18 @@ def render_db_manager():
             st.rerun()
 
         # Animated arrow hinting at the sidebar toggle after 20 s of inactivity.
-        # Injected into document.body via JS so it survives Streamlit re-renders.
+        # Uses st_components.html (iframe) so the script actually executes —
+        # st.markdown strips <script> tags. window.parent gives access to the
+        # main Streamlit page DOM and sessionStorage.
         hint_label = json.dumps(t("app.sidebar_hint"))
-        st.markdown(f"""<script>
+        st_components.html(f"""<script>
 (function(){{
-    if(window._sbHintInit)return;
-    window._sbHintInit=true;
-    if(sessionStorage.getItem('sbVisited'))return;
-    var s=document.createElement('style');
+    var doc=window.parent.document;
+    var ss=window.parent.sessionStorage;
+    if(window.parent._sbHintInit)return;
+    window.parent._sbHintInit=true;
+    if(ss.getItem('sbVisited'))return;
+    var s=doc.createElement('style');
     s.textContent='@keyframes sb-bounce{{0%,100%{{transform:translate(0,0);opacity:1}}'
         +'50%{{transform:translate(-9px,-9px);opacity:.75}}}}'
         +'#_sb_hint{{display:none;position:fixed;top:68px;left:44px;z-index:99999;'
@@ -136,19 +141,19 @@ def render_db_manager():
         +'border-radius:10px;font-size:11px;white-space:nowrap;'
         +'font-family:sans-serif;font-weight:600;'
         +'box-shadow:0 2px 6px rgba(0,136,255,.4)}}';
-    document.head.appendChild(s);
-    var h=document.createElement('div');
+    doc.head.appendChild(s);
+    var h=doc.createElement('div');
     h.id='_sb_hint';
     h.innerHTML='<div class="_a">&#x2196;</div><div class="_t">'+{hint_label}+'</div>';
-    document.body.appendChild(h);
+    doc.body.appendChild(h);
     var timer=setTimeout(function(){{
-        if(!sessionStorage.getItem('sbVisited'))h.style.display='flex';
+        if(!ss.getItem('sbVisited'))h.style.display='flex';
     }},20000);
     function watch(){{
-        var btn=document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+        var btn=doc.querySelector('[data-testid="stSidebarCollapsedControl"]');
         if(btn){{
             btn.addEventListener('click',function(){{
-                sessionStorage.setItem('sbVisited','1');
+                ss.setItem('sbVisited','1');
                 clearTimeout(timer);
                 h.style.display='none';
             }},{{once:true}});
@@ -158,7 +163,7 @@ def render_db_manager():
     }}
     watch();
 }})();
-</script>""", unsafe_allow_html=True)
+</script>""", height=0)
 
         # Show documentation (needs no DB) so users aren't stranded on a blank page
         from finance_tracker.web.views.documentation import render as doc_render
