@@ -9,7 +9,7 @@ from pathlib import Path
 # Third-party
 import matplotlib.pyplot as plt
 import pandas as pd
-from weasyprint import HTML
+from weasyprint import HTML  # pylint: disable=import-error
 
 # Local application
 from finance_tracker.config import REPORTS_DIR, TEMPLATES_DIR
