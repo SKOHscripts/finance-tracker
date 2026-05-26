@@ -13,7 +13,6 @@ financial assets.
 import html as _html
 import json
 import streamlit as st
-import streamlit.components.v1 as st_components
 import os
 from finance_tracker.web.db import get_session, get_db_path, get_engine
 from finance_tracker.web.navigation import build_pages
@@ -120,25 +119,21 @@ def render_db_manager():
             st.rerun()
 
         # Animated arrow hinting at the sidebar toggle after 20 s of inactivity.
-        # Uses st_components.html (iframe) so the script actually executes —
-        # st.markdown strips <script> tags. window.parent gives access to the
-        # main Streamlit page DOM and sessionStorage.
-        # The full innerHTML is built in Python (translation guaranteed) and
-        # passed as a single JSON string to avoid JS concatenation bugs.
-        # Timers are stored on window.parent so they survive Streamlit re-renders.
+        # st.html() (Streamlit ≥1.36) renders inline and executes <script> tags
+        # directly in the main window — no iframe, no window.parent needed.
+        # The full innerHTML is built in Python so translation is guaranteed.
+        # _sbShowing guards the poll so it only dismisses after the hint is visible,
+        # preventing the poll from firing sbVisited before the hint ever appears.
         _hint_inner = json.dumps(
             '<div class="_a">&#x2196;</div>'
             f'<div class="_t">{_html.escape(t("app.sidebar_hint"))}</div>'
         )
-        st_components.html(f"""<script>
+        st.html(f"""<script>
 (function(){{
-    var doc=window.parent.document;
-    var win=window.parent;
-    var ss=win.sessionStorage;
-    if(win._sbHintInit)return;
-    win._sbHintInit=true;
-    if(ss.getItem('sbVisited'))return;
-    var s=doc.createElement('style');
+    if(window._sbHintInit)return;
+    window._sbHintInit=true;
+    if(sessionStorage.getItem('sbVisited'))return;
+    var s=document.createElement('style');
     s.textContent='@keyframes sb-bounce{{0%,100%{{transform:translate(0,0);opacity:1}}'
         +'50%{{transform:translate(-9px,-9px);opacity:.75}}}}'
         +'#_sb_hint{{display:none;position:fixed;top:68px;left:44px;z-index:99999;'
@@ -149,30 +144,34 @@ def render_db_manager():
         +'border-radius:10px;font-size:11px;white-space:nowrap;'
         +'font-family:sans-serif;font-weight:600;'
         +'box-shadow:0 2px 6px rgba(0,136,255,.4)}}';
-    doc.head.appendChild(s);
-    var h=doc.createElement('div');
+    document.head.appendChild(s);
+    var h=document.createElement('div');
     h.id='_sb_hint';
     h.innerHTML={_hint_inner};
-    doc.body.appendChild(h);
-    function sidebarIsOpen(){{
-        var btn=doc.querySelector('[data-testid="stSidebarCollapsedControl"]');
-        return !btn||getComputedStyle(btn).display==='none';
+    document.body.appendChild(h);
+    function sidebarIsClosed(){{
+        var btn=document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+        return !!btn&&getComputedStyle(btn).display!=='none';
     }}
     function dismiss(){{
-        ss.setItem('sbVisited','1');
+        sessionStorage.setItem('sbVisited','1');
+        window._sbShowing=false;
         h.style.display='none';
-        if(win._sbTimer){{clearTimeout(win._sbTimer);win._sbTimer=null;}}
-        if(win._sbPoll){{clearInterval(win._sbPoll);win._sbPoll=null;}}
+        if(window._sbTimer){{clearTimeout(window._sbTimer);window._sbTimer=null;}}
+        if(window._sbPoll){{clearInterval(window._sbPoll);window._sbPoll=null;}}
     }}
-    win._sbPoll=setInterval(function(){{
-        if(ss.getItem('sbVisited')){{clearInterval(win._sbPoll);return;}}
-        if(sidebarIsOpen())dismiss();
+    window._sbPoll=setInterval(function(){{
+        if(sessionStorage.getItem('sbVisited')){{clearInterval(window._sbPoll);return;}}
+        if(window._sbShowing&&!sidebarIsClosed())dismiss();
     }},400);
-    win._sbTimer=setTimeout(function(){{
-        if(!ss.getItem('sbVisited')&&!sidebarIsOpen())h.style.display='flex';
+    window._sbTimer=setTimeout(function(){{
+        if(!sessionStorage.getItem('sbVisited')&&sidebarIsClosed()){{
+            h.style.display='flex';
+            window._sbShowing=true;
+        }}
     }},20000);
 }})();
-</script>""", height=0)
+</script>""")
 
         # Show documentation (needs no DB) so users aren't stranded on a blank page
         from finance_tracker.web.views.documentation import render as doc_render
