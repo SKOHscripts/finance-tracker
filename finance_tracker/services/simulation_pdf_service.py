@@ -495,8 +495,8 @@ class SimulationPDFService:
                     display_df[col] = display_df[col].apply(
                         lambda x: f"{float(x):,.0f}".replace(",", " ") if pd.notna(x) else ""
                         )
-                except Exception:  # pylint: disable=broad-exception-caught
-                    pass  # leave column as-is if formatting fails
+                except Exception as fmt_err:  # pylint: disable=broad-exception-caught
+                    print(f"Erreur formatage colonne {col}: {fmt_err}")
 
         html = display_df.to_html(
             index=False,
