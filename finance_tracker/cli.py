@@ -97,16 +97,14 @@ from decimal import Decimal
 
 import typer
 from sqlmodel import Session, create_engine
-from sqlmodel import SQLModel
 
 from finance_tracker.config import DATABASE_URL, DOCS_DIR
-from finance_tracker.domain.enums import ProductType, QuantityUnit, TransactionType
-from finance_tracker.domain.models import Product, RateSchedule, Transaction, Valuation
+from finance_tracker.domain.enums import TransactionType
+from finance_tracker.domain.models import Transaction, Valuation
 from finance_tracker.repositories.sqlmodel_repo import (
     SQLModelProductRepository,
     SQLModelTransactionRepository,
     SQLModelValuationRepository,
-    SQLModelRateScheduleRepository,
     init_db,
     )
 from finance_tracker.services.btc_price_service import BTCPriceService, BTCPriceServiceError
