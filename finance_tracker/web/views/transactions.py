@@ -89,7 +89,7 @@ def render(session: Session) -> None:
                     tx_repo.create(tx)
                     st.success(t("transactions.added_success"))
                     st.rerun()
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     st.error(t("transactions.error").format(e=e))
 
     st.markdown("---")
@@ -219,7 +219,7 @@ def render(session: Session) -> None:
 
                 st.success(t("transactions.applied_success"))
                 st.rerun()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 st.error(t("transactions.error").format(e=e))
 
     with c2:

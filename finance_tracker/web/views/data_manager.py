@@ -106,20 +106,18 @@ def _render_edit_tab(session: Session) -> None:
     st.markdown("---")
 
     # Import here to avoid circular dependencies with Streamlit's module loading
-    from finance_tracker.web.views.products import (
-        _edit_transactions,
-        _edit_valuations,
-        _edit_products
-        )
+    from finance_tracker.web.views import transactions as tx_view
+    from finance_tracker.web.views import valuations as val_view
+    from finance_tracker.web.views import products as prod_view
 
     # Route to the appropriate edit function based on user selection
 
     if entity_to_edit == "Transactions":
-        _edit_transactions(session)
+        tx_view.render(session)
     elif entity_to_edit == "Valorisations":
-        _edit_valuations(session)
+        val_view.render(session)
     else:
-        _edit_products(session)
+        prod_view.render(session)
 
 
 def _add_transaction_form(session: Session) -> None:
@@ -183,7 +181,7 @@ def _add_transaction_form(session: Session) -> None:
                     )
                 tx_repo.create(tx)
                 st.success(f"✅ Transaction ajoutée avec succès sur {product_name} !")
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 # Display user-friendly error instead of crashing
                 st.error(f"❌ Erreur : {e}")
 
@@ -248,7 +246,7 @@ def _add_valuation_form(session: Session) -> None:
                     )
                 val_repo.create(val)
                 st.success(f"✅ Valorisation de {total_value}€ ajoutée pour {product_name} !")
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 st.error(f"❌ Erreur : {e}")
 
 
@@ -311,5 +309,5 @@ def _add_product_form(session: Session) -> None:
                         )
                     product_repo.create(product)
                     st.success(f"✅ Produit '{name}' créé avec succès !")
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     st.error(f"❌ Erreur lors de la création : {e}")

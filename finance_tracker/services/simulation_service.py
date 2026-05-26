@@ -123,7 +123,7 @@ class PERConfig:
 
     Currently empty placeholder for future PER-specific configuration.
     """
-    pass
+    ...
 
 
 @dataclass

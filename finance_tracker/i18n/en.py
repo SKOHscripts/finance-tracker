@@ -19,7 +19,7 @@ STRINGS: dict[str, str] = {
     "app.db_init_with_products": "✅ Database initialised with {n} default products",
     "app.db_init": "✅ Database initialised",
     "app.export_btn": "📥 Save database (PC)",
-    "app.no_db_warning": "Please import or create a database to get started.",
+    "app.sidebar_hint": "Open menu",
     "app.nav_label": "Navigation",
     "app.doc_link_btn": "📖 Documentation (README)",
     "app.donate_btn": "☕ Buy me a Bitcoffee",

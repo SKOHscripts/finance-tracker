@@ -1,0 +1,61 @@
+[MASTER]
+# Use multiple processes to speed up Pylint.
+jobs=1
+
+[MESSAGES CONTROL]
+disable=
+    # Style — already enforced by flake8/ruff
+    line-too-long,
+    wrong-import-order,
+    # Docstrings — not enforced in this project
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    # Design thresholds — adjusted below
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-positional-arguments,
+    too-many-return-statements,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    # Duplicate code — false positives in UI/template code
+    duplicate-code,
+    # Dict literal — cosmetic
+    use-dict-literal,
+    # Abstract method bodies — both pass and ... are fine
+    unnecessary-pass,
+    unnecessary-ellipsis,
+    # Broad exception catch is intentional in UI error handlers
+    broad-exception-caught,
+    # Lazy imports are an established pattern in this project (navigation, pdf services)
+    import-outside-toplevel,
+    # Design rules that are too strict for this codebase
+    too-many-instance-attributes,
+    too-many-lines,
+    too-many-nested-blocks,
+    # Cosmetic refactor suggestions
+    unnecessary-comprehension,
+    simplifiable-condition,
+    superfluous-parens,
+    # Naming conventions not followed in this project (D(), N_MAX, donate_url)
+    invalid-name,
+    disallowed-name,
+
+[DESIGN]
+max-args = 10
+max-returns = 10
+max-locals = 25
+max-branches = 15
+max-statements = 60
+
+[FORMAT]
+max-line-length = 127
+
+[BASIC]
+# Allow single-letter variable names in short scopes
+good-names = i,j,k,n,e,f,s,t,x,y,_
+
+[SIMILARITIES]
+# Minimum lines number of a similarity.
+min-similarity-lines = 10

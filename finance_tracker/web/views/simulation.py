@@ -1259,7 +1259,7 @@ def render(session: Session) -> None:
                         st.session_state[pdf_cache_key] = pdf_bytes
                         st.session_state["sim_pdf_needs_update"] = False
                         st.rerun()  # Refresh to show download button
-                    except Exception as e:
+                    except Exception as e:  # pylint: disable=broad-exception-caught
                         st.error(t("simulation.pdf_error").format(e=e))
 
         # PDF is ready for download

@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from sqlmodel import Column, DateTime, Field, ForeignKey, Numeric, SQLModel
+from sqlmodel import Column, DateTime, Field, Numeric, SQLModel
 
 from .enums import ProductType, QuantityUnit, TransactionType
 

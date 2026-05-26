@@ -97,16 +97,14 @@ from decimal import Decimal
 
 import typer
 from sqlmodel import Session, create_engine
-from sqlmodel import SQLModel
 
 from finance_tracker.config import DATABASE_URL, DOCS_DIR
-from finance_tracker.domain.enums import ProductType, QuantityUnit, TransactionType
-from finance_tracker.domain.models import Product, RateSchedule, Transaction, Valuation
+from finance_tracker.domain.enums import TransactionType
+from finance_tracker.domain.models import Transaction, Valuation
 from finance_tracker.repositories.sqlmodel_repo import (
     SQLModelProductRepository,
     SQLModelTransactionRepository,
     SQLModelValuationRepository,
-    SQLModelRateScheduleRepository,
     init_db,
     )
 from finance_tracker.services.btc_price_service import BTCPriceService, BTCPriceServiceError
@@ -173,7 +171,8 @@ def init_db_cmd() -> None:
     $ finance-tracker init-db
     ✅ Base de données initialisée
     """
-    init_db()
+    engine = create_engine(DATABASE_URL, echo=False)
+    init_db(engine)
     typer.echo("✅ Base de données initialisée")
 
 
@@ -432,9 +431,9 @@ def add_transaction(product_name: str = typer.Option(..., help="Nom du produit")
     if date:
         try:
             date_obj = datetime.fromisoformat(date)
-        except ValueError:
+        except ValueError as exc:
             typer.echo("❌ Date invalide (format: YYYY-MM-DD)", err=True)
-            raise typer.Exit(1)
+            raise typer.Exit(1) from exc
     else:
         date_obj = datetime.utcnow()
 
@@ -518,9 +517,9 @@ def add_valuation(product_name: str = typer.Option(..., help="Nom du produit"),
     if date:
         try:
             date_obj = datetime.fromisoformat(date)
-        except ValueError:
+        except ValueError as exc:
             typer.echo("❌ Date invalide (format: YYYY-MM-DD)", err=True)
-            raise typer.Exit(1)
+            raise typer.Exit(1) from exc
     else:
         date_obj = datetime.utcnow()
 
@@ -736,9 +735,9 @@ def project(initial_amount: str = typer.Option(10000, help="Montant initial EUR"
     # Validate frequency
     try:
         freq = ProjectionFrequency[frequency]
-    except KeyError:
+    except KeyError as exc:
         typer.echo(f"❌ Fréquence invalide: {frequency}", err=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from exc
 
     # Create projection and calculate
     projection = ProjectionResult(

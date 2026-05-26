@@ -82,7 +82,7 @@ class ProjectionResult:
             year_contributions = Decimal(0)
             year_gains = Decimal(0)
 
-            for period in range(periods_per_year):
+            for _period in range(periods_per_year):
                 # Add contribution before applying return to capture full period growth
                 current_value += self.monthly_contribution
                 year_contributions += self.monthly_contribution

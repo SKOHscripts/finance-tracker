@@ -28,8 +28,8 @@ def render(session: Session) -> None:
 
     # Initialize repositories for database operations
     product_repo = SQLModelProductRepository(session)
-    tx_repo = SQLModelTransactionRepository(session)
-    val_repo = SQLModelValuationRepository(session)
+    _tx_repo = SQLModelTransactionRepository(session)
+    _val_repo = SQLModelValuationRepository(session)
 
     # ═══════════════════════════════════════════════════════════════════════════
     # SECTION 1: ADD PRODUCT FORM
@@ -76,7 +76,7 @@ def render(session: Session) -> None:
                     product_repo.create(p)
                     st.success(t("products.created_success"))
                     st.rerun()
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     st.error(t("products.error").format(e=e))
 
     st.markdown("---")
@@ -199,7 +199,7 @@ def render(session: Session) -> None:
 
                 st.success(t("products.applied_success"))
                 st.rerun()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 st.error(t("products.error").format(e=e))
 
     with c2:

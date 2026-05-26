@@ -17,7 +17,7 @@ def detect_language() -> str:
     try:
         accept_lang: str = st.context.headers.get("Accept-Language", "fr")
         return "en" if accept_lang.lower().startswith("en") else "fr"
-    except Exception:
+    except (AttributeError, KeyError):
         return "fr"
 
 

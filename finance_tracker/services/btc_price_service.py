@@ -7,7 +7,7 @@ from finance_tracker.config import COINGECKO_API_URL, COINGECKO_TIMEOUT
 
 class BTCPriceServiceError(Exception):
     """Exception service BTC."""
-    pass
+    ...
 
 
 class BTCPriceService:
@@ -61,19 +61,19 @@ class BTCPriceService:
         # CoinGecko frequently blocks cloud requests without an API key
         try:
             return self._fetch_from_coingecko()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             errors.append(f"CoinGecko: {str(e)}")
 
         # Kraken is lenient with datacenter IPs and has no aggressive Cloudflare protection
         try:
             return self._fetch_from_kraken()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             errors.append(f"Kraken: {str(e)}")
 
         # Binance is reliable but may block entire AWS ranges
         try:
             return self._fetch_from_binance()
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             errors.append(f"Binance: {str(e)}")
 
         # All providers blocked the request - aggregate errors for debugging
@@ -108,8 +108,8 @@ class BTCPriceService:
             # Use Decimal for precise monetary calculations, avoiding float rounding issues
 
             return Decimal(str(price))
-        except (KeyError, IndexError):
-            raise ValueError("Structure de réponse Kraken inattendue")
+        except (KeyError, IndexError) as exc:
+            raise ValueError("Structure de réponse Kraken inattendue") from exc
 
     def _fetch_from_binance(self) -> Decimal:
         """Fallback 2: Binance API.
