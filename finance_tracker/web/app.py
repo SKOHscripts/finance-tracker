@@ -10,6 +10,7 @@ The application allows for complete management of an investment portfolio includ
 support for SCPIs, cryptocurrencies like Bitcoin, savings accounts, and other
 financial assets.
 """
+import json
 import streamlit as st
 import os
 from finance_tracker.web.db import get_session, get_db_path, get_engine
@@ -116,8 +117,52 @@ def render_db_manager():
 
             st.rerun()
 
-        st.warning(t("app.no_db_warning"))
-        # Stop execution here - no point loading the rest of the app without a database
+        # Animated arrow hinting at the sidebar toggle after 20 s of inactivity.
+        # Injected into document.body via JS so it survives Streamlit re-renders.
+        hint_label = json.dumps(t("app.sidebar_hint"))
+        st.markdown(f"""<script>
+(function(){{
+    if(window._sbHintInit)return;
+    window._sbHintInit=true;
+    if(sessionStorage.getItem('sbVisited'))return;
+    var s=document.createElement('style');
+    s.textContent='@keyframes sb-bounce{{0%,100%{{transform:translate(0,0);opacity:1}}'
+        +'50%{{transform:translate(-9px,-9px);opacity:.75}}}}'
+        +'#_sb_hint{{display:none;position:fixed;top:68px;left:44px;z-index:99999;'
+        +'flex-direction:column;align-items:flex-start;gap:3px;pointer-events:none}}'
+        +'#_sb_hint ._a{{font-size:22px;color:#0088ff;'
+        +'animation:sb-bounce 1.1s ease-in-out infinite;line-height:1}}'
+        +'#_sb_hint ._t{{background:#0088ff;color:#fff;padding:3px 9px;'
+        +'border-radius:10px;font-size:11px;white-space:nowrap;'
+        +'font-family:sans-serif;font-weight:600;'
+        +'box-shadow:0 2px 6px rgba(0,136,255,.4)}}';
+    document.head.appendChild(s);
+    var h=document.createElement('div');
+    h.id='_sb_hint';
+    h.innerHTML='<div class="_a">&#x2196;</div><div class="_t">'+{hint_label}+'</div>';
+    document.body.appendChild(h);
+    var timer=setTimeout(function(){{
+        if(!sessionStorage.getItem('sbVisited'))h.style.display='flex';
+    }},20000);
+    function watch(){{
+        var btn=document.querySelector('[data-testid="stSidebarCollapsedControl"]');
+        if(btn){{
+            btn.addEventListener('click',function(){{
+                sessionStorage.setItem('sbVisited','1');
+                clearTimeout(timer);
+                h.style.display='none';
+            }},{{once:true}});
+        }}else{{
+            setTimeout(watch,400);
+        }}
+    }}
+    watch();
+}})();
+</script>""", unsafe_allow_html=True)
+
+        # Show documentation (needs no DB) so users aren't stranded on a blank page
+        from finance_tracker.web.views.documentation import render as doc_render
+        doc_render(None)
         st.stop()
 
     # EXPORT

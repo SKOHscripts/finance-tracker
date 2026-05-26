@@ -19,7 +19,7 @@ STRINGS: dict[str, str] = {
     "app.db_init_with_products": "✅ Base initialisée avec {n} produits par défaut",
     "app.db_init": "✅ Base initialisée",
     "app.export_btn": "📥 Sauvegarder la base (PC)",
-    "app.no_db_warning": "Aucune base de données chargée. Dans le panneau latéral (à gauche), importez un fichier `.db` existant ou cliquez sur **Créer un nouveau portefeuille** pour démarrer.",
+    "app.sidebar_hint": "Ouvrir le menu",
     "app.nav_label": "Navigation",
     "app.doc_link_btn": "📖 Documentation (README)",
     "app.donate_btn": "☕ Buy me a Bitcoffee",
