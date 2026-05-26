@@ -10,6 +10,7 @@ The application allows for complete management of an investment portfolio includ
 support for SCPIs, cryptocurrencies like Bitcoin, savings accounts, and other
 financial assets.
 """
+import html as _html
 import json
 import streamlit as st
 import streamlit.components.v1 as st_components
@@ -122,13 +123,20 @@ def render_db_manager():
         # Uses st_components.html (iframe) so the script actually executes —
         # st.markdown strips <script> tags. window.parent gives access to the
         # main Streamlit page DOM and sessionStorage.
-        hint_label = json.dumps(t("app.sidebar_hint"))
+        # The full innerHTML is built in Python (translation guaranteed) and
+        # passed as a single JSON string to avoid JS concatenation bugs.
+        # Timers are stored on window.parent so they survive Streamlit re-renders.
+        _hint_inner = json.dumps(
+            '<div class="_a">&#x2196;</div>'
+            f'<div class="_t">{_html.escape(t("app.sidebar_hint"))}</div>'
+        )
         st_components.html(f"""<script>
 (function(){{
     var doc=window.parent.document;
-    var ss=window.parent.sessionStorage;
-    if(window.parent._sbHintInit)return;
-    window.parent._sbHintInit=true;
+    var win=window.parent;
+    var ss=win.sessionStorage;
+    if(win._sbHintInit)return;
+    win._sbHintInit=true;
     if(ss.getItem('sbVisited'))return;
     var s=doc.createElement('style');
     s.textContent='@keyframes sb-bounce{{0%,100%{{transform:translate(0,0);opacity:1}}'
@@ -144,24 +152,25 @@ def render_db_manager():
     doc.head.appendChild(s);
     var h=doc.createElement('div');
     h.id='_sb_hint';
-    h.innerHTML='<div class="_a">&#x2196;</div><div class="_t">'+{hint_label}+'</div>';
+    h.innerHTML={_hint_inner};
     doc.body.appendChild(h);
-    var timer=setTimeout(function(){{
-        if(!ss.getItem('sbVisited'))h.style.display='flex';
-    }},20000);
-    function watch(){{
+    function sidebarIsOpen(){{
         var btn=doc.querySelector('[data-testid="stSidebarCollapsedControl"]');
-        if(btn){{
-            btn.addEventListener('click',function(){{
-                ss.setItem('sbVisited','1');
-                clearTimeout(timer);
-                h.style.display='none';
-            }},{{once:true}});
-        }}else{{
-            setTimeout(watch,400);
-        }}
+        return !btn||getComputedStyle(btn).display==='none';
     }}
-    watch();
+    function dismiss(){{
+        ss.setItem('sbVisited','1');
+        h.style.display='none';
+        if(win._sbTimer){{clearTimeout(win._sbTimer);win._sbTimer=null;}}
+        if(win._sbPoll){{clearInterval(win._sbPoll);win._sbPoll=null;}}
+    }}
+    win._sbPoll=setInterval(function(){{
+        if(ss.getItem('sbVisited')){{clearInterval(win._sbPoll);return;}}
+        if(sidebarIsOpen())dismiss();
+    }},400);
+    win._sbTimer=setTimeout(function(){{
+        if(!ss.getItem('sbVisited')&&!sidebarIsOpen())h.style.display='flex';
+    }},20000);
 }})();
 </script>""", height=0)
 
