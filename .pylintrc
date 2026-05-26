@@ -23,6 +23,24 @@ disable=
     duplicate-code,
     # Dict literal — cosmetic
     use-dict-literal,
+    # Abstract method bodies — both pass and ... are fine
+    unnecessary-pass,
+    unnecessary-ellipsis,
+    # Broad exception catch is intentional in UI error handlers
+    broad-exception-caught,
+    # Lazy imports are an established pattern in this project (navigation, pdf services)
+    import-outside-toplevel,
+    # Design rules that are too strict for this codebase
+    too-many-instance-attributes,
+    too-many-lines,
+    too-many-nested-blocks,
+    # Cosmetic refactor suggestions
+    unnecessary-comprehension,
+    simplifiable-condition,
+    superfluous-parens,
+    # Naming conventions not followed in this project (D(), N_MAX, donate_url)
+    invalid-name,
+    disallowed-name,
 
 [DESIGN]
 max-args = 10

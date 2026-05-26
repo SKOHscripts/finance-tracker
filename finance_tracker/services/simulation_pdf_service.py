@@ -9,7 +9,7 @@ from pathlib import Path
 # Third-party
 import matplotlib.pyplot as plt
 import pandas as pd
-from weasyprint import HTML, CSS
+from weasyprint import HTML
 
 # Local application
 from finance_tracker.config import REPORTS_DIR, TEMPLATES_DIR
@@ -106,7 +106,6 @@ class SimulationPDFService:
             If the template contains invalid syntax.
         """
         from jinja2 import Environment, FileSystemLoader
-        from finance_tracker.utils.money import format_eur
 
         # Template directory must be set at instance level for Jinja2 to locate files
         env = Environment(loader=FileSystemLoader(self.templates_dir))
@@ -197,10 +196,9 @@ class SimulationPDFService:
         """
         try:
             import matplotlib
-            matplotlib.use("Agg")
-            import matplotlib.pyplot as plt
             import matplotlib.ticker as mtick
             import numpy as np
+            matplotlib.use("Agg")
 
             # Palette: tab20 supports up to 20 distinct colors for multiple product lines
             N_MAX = 20
@@ -239,7 +237,7 @@ class SimulationPDFService:
                 else:
                     scale, unit = 1, ""
 
-            def fmt_val(v: float, short: bool = False) -> str:
+            def fmt_val(v: float, short: bool = False) -> str:  # pylint: disable=unused-argument
                 """Format a raw numeric value for display.
 
                 Converts a raw value to a human-readable string representation,
@@ -291,7 +289,7 @@ class SimulationPDFService:
 
                     if n_per_year not in (1, 4, 12):
                         n_per_year = int(df_long.groupby("year")["period"].nunique().mode().iloc[0])
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
                     pass
 
             max_period = int(df_long["period"].max()) if not df_long.empty else 0
@@ -454,11 +452,11 @@ class SimulationPDFService:
 
             return f"data:image/png;base64,{img_b64}"
 
-        except Exception as e:
+        except Exception as e:  # pylint: disable=broad-exception-caught
             print(f"Erreur génération graphique {metric}: {e}")
             try:
                 plt.close("all")
-            except Exception:
+            except Exception:  # pylint: disable=broad-exception-caught
                 pass
 
             return None
@@ -497,7 +495,7 @@ class SimulationPDFService:
                     display_df[col] = display_df[col].apply(
                         lambda x: f"{float(x):,.0f}".replace(",", " ") if pd.notna(x) else ""
                         )
-                except:
+                except Exception:  # pylint: disable=broad-exception-caught
                     pass
 
         html = display_df.to_html(

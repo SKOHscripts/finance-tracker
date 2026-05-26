@@ -104,9 +104,9 @@ def render_db_manager():
             init_db(engine)
 
             # Seed default products for new databases
-            session = get_session()
-            created_count = seed_default_products(session)
-            session.close()
+            _session = get_session()
+            created_count = seed_default_products(_session)
+            _session.close()
 
             st.session_state.db_loaded = True
 

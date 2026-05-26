@@ -35,7 +35,7 @@ def _load_markdown_file(filename: str) -> str:
 
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         return t("documentation.file_load_error").format(error=str(e))
 
 
@@ -585,7 +585,7 @@ pour récupérer le prix en temps réel via le bouton "Actualiser le cours".
 
 
 
-def render(session: Session) -> None:
+def render(_session: Session) -> None:
     """Render the documentation page."""
 
     st.title(t("documentation.title"))

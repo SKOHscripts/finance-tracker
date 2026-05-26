@@ -9,13 +9,13 @@ from tabulate import tabulate
 
 # Local application
 from finance_tracker.domain.enums import ProductType, TransactionType
-from finance_tracker.domain.models import Product, Transaction, Valuation
+from finance_tracker.domain.models import Transaction
 from finance_tracker.repositories.sqlmodel_repo import (
     SQLModelProductRepository,
     SQLModelTransactionRepository,
     SQLModelValuationRepository,
     )
-from finance_tracker.utils.money import format_eur, round_decimal, safe_divide
+from finance_tracker.utils.money import format_eur, safe_divide
 
 
 PRODUCT_COLORS = {

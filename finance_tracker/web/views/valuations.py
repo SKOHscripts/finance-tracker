@@ -75,7 +75,7 @@ def render(session: Session) -> None:
                     val_repo.create(val)
                     st.success(t("valuations.added_success"))
                     st.rerun()
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     st.error(t("valuations.error").format(e=e))
 
     st.markdown("---")
@@ -194,7 +194,7 @@ def render(session: Session) -> None:
 
                 st.success(t("valuations.applied_success"))
                 st.rerun()
-            except Exception as e:
+            except Exception as e:  # pylint: disable=broad-exception-caught
                 st.error(t("valuations.error").format(e=e))
 
     with c2:

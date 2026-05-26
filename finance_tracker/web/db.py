@@ -14,8 +14,6 @@ import uuid
 import streamlit as st
 from sqlmodel import create_engine, Session
 
-from finance_tracker.config import DATABASE_URL
-
 
 def get_db_path():
     """Generate and return session-specific database file path.

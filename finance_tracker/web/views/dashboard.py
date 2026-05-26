@@ -180,7 +180,7 @@ def _render_bitcoin_expander(details: dict, product_id: int, service: "Dashboard
                     ))
                     st.success(t("dashboard.btc_snapshot_saved").format(v=format_eur(total_val)))
                     st.rerun()
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     st.error(t("dashboard.btc_error").format(e=e))
 
     # ── Recent snapshots table ───────────────────────────────────────────────────
@@ -294,7 +294,7 @@ def _render_generic_expander(details: dict, product_id: int, service: "Dashboard
                     service.valuation_repo.create(val)
                     st.success(t("valuations.added_success"))
                     st.rerun()
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     st.error(t("valuations.error").format(e=e))
 
     # ── Editable valuations table ───────────────────────────────────────────────
@@ -352,7 +352,7 @@ def _render_generic_expander(details: dict, product_id: int, service: "Dashboard
                         service.valuation_repo.update(v)
                     st.success(t("valuations.applied_success"))
                     st.rerun()
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     st.error(t("valuations.error").format(e=e))
         with cb:
             if st.button(t("valuations.reload_btn"), key=f"val_reload_{product_id}", width="stretch"):
@@ -369,7 +369,7 @@ def render(session: Session) -> None:
 
     try:
         portfolio = service.build_portfolio()
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-exception-caught
         st.error(t("dashboard.load_error").format(e=e))
         return
 
@@ -556,7 +556,7 @@ def render(session: Session) -> None:
                             st.session_state[pdf_cache_key] = f.read()
 
                         st.rerun()
-                    except Exception as e:
+                    except Exception as e:  # pylint: disable=broad-exception-caught
                         st.error(t("dashboard.error").format(e=e))
         else:
             # Cached state: show download button
@@ -586,7 +586,7 @@ def render(session: Session) -> None:
                         json_data = service.export_json(portfolio)
                         st.session_state[json_cache_key] = json_data
                         st.rerun()
-                    except Exception as e:
+                    except Exception as e:  # pylint: disable=broad-exception-caught
                         st.error(t("dashboard.error").format(e=e))
         else:
             # Cached state: show download button

@@ -8,12 +8,11 @@ from pathlib import Path
 
 # Third-party
 import matplotlib.pyplot as plt
-from weasyprint import HTML, CSS
+from weasyprint import HTML
 
 # Local application
 from finance_tracker.config import REPORTS_DIR, TEMPLATES_DIR
-from finance_tracker.services.dashboard_service import PRODUCT_COLORS, PortfolioData
-from finance_tracker.utils.money import format_eur
+from finance_tracker.services.dashboard_service import PortfolioData
 
 
 class PDFReportService:
@@ -188,14 +187,14 @@ class PDFReportService:
         ax.set_facecolor("white")
 
         # Generate blue gradient from light to dark
-        colors = plt.cm.Blues([0.35, 0.45, 0.55, 0.62, 0.70, 0.78, 0.86, 0.92, 0.97])[:len(labels)]
+        colors = plt.cm.Blues([0.35, 0.45, 0.55, 0.62, 0.70, 0.78, 0.86, 0.92, 0.97])[:len(labels)]  # pylint: disable=no-member
 
         def autopct(pct):
             # Only show percentage if significant (>3%) to avoid visual clutter
 
             return f"{pct:.0f}%" if pct >= 3 else ""
 
-        wedges, texts, autotexts = ax.pie(
+        wedges, _texts, _autotexts = ax.pie(
             sizes,
             startangle=90,
             counterclock=False,

@@ -8,7 +8,7 @@ from sqlmodel import Session
 from finance_tracker.i18n import t
 
 
-def render(session: Session) -> None:
+def render(session: Session) -> None:  # pylint: disable=unused-argument
     """Render the Bitcoin transition page."""
     st.title(t("bitcoin.title"))
     st.info(t("bitcoin.redirect_info"))

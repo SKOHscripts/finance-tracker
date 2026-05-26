@@ -5,8 +5,7 @@ from typing import Optional, List
 from sqlalchemy import desc, select
 from sqlmodel import Session, SQLModel
 
-from finance_tracker.config import DATABASE_URL
-from finance_tracker.domain.enums import ProductType, TransactionType
+from finance_tracker.domain.enums import TransactionType
 from finance_tracker.domain.models import Product, RateSchedule, Transaction, Valuation
 
 from .base import IProductRepository, ITransactionRepository, IValuationRepository

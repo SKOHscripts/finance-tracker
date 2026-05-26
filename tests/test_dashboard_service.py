@@ -1,4 +1,5 @@
 """Tests for DashboardService per-product methods."""
+# pylint: disable=redefined-outer-name  # pytest fixture pattern
 from datetime import datetime
 from decimal import Decimal
 

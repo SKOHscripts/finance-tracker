@@ -28,7 +28,7 @@ class IProductRepository(ABC):
         DuplicateProductError
             If a product with the same name already exists.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_by_id(self, product_id: int) -> Optional[Product]:
@@ -44,7 +44,7 @@ class IProductRepository(ABC):
         Product or None
             Product instance if found, None otherwise.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_by_name(self, name: str) -> Optional[Product]:
@@ -60,7 +60,7 @@ class IProductRepository(ABC):
         Product or None
             Product instance if found, None otherwise.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_all(self) -> list[Product]:
@@ -71,7 +71,7 @@ class IProductRepository(ABC):
         list[Product]
             List of all product instances.
         """
-        pass
+        ...
 
     @abstractmethod
     def update(self, product: Product) -> Product:
@@ -92,7 +92,7 @@ class IProductRepository(ABC):
         ProductNotFoundError
             If the product does not exist in the repository.
         """
-        pass
+        ...
 
     @abstractmethod
     def delete(self, product_id: int) -> bool:
@@ -108,7 +108,7 @@ class IProductRepository(ABC):
         bool
             True if deletion was successful, False otherwise.
         """
-        pass
+        ...
 
 
 class ITransactionRepository(ABC):
@@ -129,7 +129,7 @@ class ITransactionRepository(ABC):
         Transaction
             The created transaction.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_by_id(self, transaction_id: int) -> Optional[Transaction]:
@@ -146,7 +146,7 @@ class ITransactionRepository(ABC):
         Optional[Transaction]
             The transaction if found, None otherwise.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_by_product_id(self, product_id: int) -> list[Transaction]:
@@ -163,7 +163,7 @@ class ITransactionRepository(ABC):
         list[Transaction]
             List of transactions associated with the product.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_all(self) -> list[Transaction]:
@@ -175,7 +175,7 @@ class ITransactionRepository(ABC):
         list[Transaction]
             List of all transactions in the repository.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_all_by_type(self, transaction_type: TransactionType) -> list[Transaction]:
@@ -192,7 +192,7 @@ class ITransactionRepository(ABC):
         list[Transaction]
             List of transactions matching the specified type.
         """
-        pass
+        ...
 
     @abstractmethod
     def update(self, transaction: Transaction) -> Transaction:
@@ -209,7 +209,7 @@ class ITransactionRepository(ABC):
         Transaction
             The updated transaction.
         """
-        pass
+        ...
 
     @abstractmethod
     def delete(self, transaction_id: int) -> bool:
@@ -226,7 +226,7 @@ class ITransactionRepository(ABC):
         bool
             True if the transaction was deleted, False otherwise.
         """
-        pass
+        ...
 
 
 class IValuationRepository(ABC):
@@ -254,7 +254,7 @@ class IValuationRepository(ABC):
         ValidationError
             If the valuation data is invalid.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_by_id(self, valuation_id: int) -> Optional[Valuation]:
@@ -270,7 +270,7 @@ class IValuationRepository(ABC):
         Optional[Valuation]
             The valuation if found, None otherwise.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_latest_by_product_id(self, product_id: int) -> Optional[Valuation]:
@@ -286,7 +286,7 @@ class IValuationRepository(ABC):
         Optional[Valuation]
             The latest valuation for the product, None if none exists.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_by_product_id(self, product_id: int) -> list[Valuation]:
@@ -302,7 +302,7 @@ class IValuationRepository(ABC):
         list[Valuation]
             List of all valuations for the product, empty list if none found.
         """
-        pass
+        ...
 
     @abstractmethod
     def get_all(self) -> list[Valuation]:
@@ -313,7 +313,7 @@ class IValuationRepository(ABC):
         list[Valuation]
             Complete list of all stored valuations.
         """
-        pass
+        ...
 
     @abstractmethod
     def update(self, valuation: Valuation) -> Valuation:
@@ -334,7 +334,7 @@ class IValuationRepository(ABC):
         ValidationError
             If the updated data is invalid.
         """
-        pass
+        ...
 
     @abstractmethod
     def delete(self, valuation_id: int) -> bool:
@@ -350,4 +350,4 @@ class IValuationRepository(ABC):
         bool
             True if deletion succeeded, False if valuation not found.
         """
-        pass
+        ...
