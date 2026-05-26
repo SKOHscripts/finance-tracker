@@ -290,7 +290,7 @@ class SimulationPDFService:
                     if n_per_year not in (1, 4, 12):
                         n_per_year = int(df_long.groupby("year")["period"].nunique().mode().iloc[0])
                 except Exception:  # pylint: disable=broad-exception-caught
-                    pass
+                    n_per_year = 12  # keep default if inference fails
 
             max_period = int(df_long["period"].max()) if not df_long.empty else 0
 
@@ -496,7 +496,7 @@ class SimulationPDFService:
                         lambda x: f"{float(x):,.0f}".replace(",", " ") if pd.notna(x) else ""
                         )
                 except Exception:  # pylint: disable=broad-exception-caught
-                    pass
+                    pass  # leave column as-is if formatting fails
 
         html = display_df.to_html(
             index=False,
