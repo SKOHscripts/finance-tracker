@@ -456,8 +456,8 @@ class SimulationPDFService:
             print(f"Erreur génération graphique {metric}: {e}")
             try:
                 plt.close("all")
-            except Exception:  # pylint: disable=broad-exception-caught
-                pass
+            except Exception as close_err:  # pylint: disable=broad-exception-caught
+                print(f"Erreur nettoyage matplotlib: {close_err}")
 
             return None
 
