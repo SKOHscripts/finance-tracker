@@ -30,26 +30,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
     )
 
-# On mobile Streamlit ignores initial_sidebar_state and collapses the sidebar.
-# This script clicks the expand button once per browser session to work around it.
-st.markdown("""
-<script>
-(function() {
-    if (sessionStorage.getItem('sidebarInitialized')) return;
-    sessionStorage.setItem('sidebarInitialized', '1');
-    function tryExpand() {
-        var btn = document.querySelector('[data-testid="stSidebarCollapsedControl"]');
-        if (btn && btn.offsetParent !== null) {
-            btn.click();
-        } else if (!btn) {
-            setTimeout(tryExpand, 100);
-        }
-    }
-    setTimeout(tryExpand, 300);
-})();
-</script>
-""", unsafe_allow_html=True)
-
 # ── Language selection ─────────────────────────────────────────────────────────
 # Detect browser preference on first load; allow manual override afterwards.
 if "lang" not in st.session_state:
