@@ -11,9 +11,7 @@ support for SCPIs, cryptocurrencies like Bitcoin, savings accounts, and other
 financial assets.
 """
 import html as _html
-import json
 import streamlit as st
-import streamlit.components.v1 as st_components
 import os
 from finance_tracker.web.db import get_session, get_db_path, get_engine
 from finance_tracker.web.navigation import build_pages
@@ -119,71 +117,34 @@ def render_db_manager():
 
             st.rerun()
 
-        # Animated ↖ arrow hinting at the sidebar toggle after 20 s of inactivity.
+        # Animated ↖ arrow pointing at the sidebar toggle, shown only while the
+        # sidebar is collapsed and after 20 s of inactivity. Pure CSS — no JS, no
+        # iframe (st.components.v1.html is deprecated and its timers die on every
+        # Streamlit re-render, which is why earlier JS versions never appeared).
         #
-        # Architecture note: both st.html() and st.components.v1.html() render
-        # inside an iframe. Code in an iframe cannot reliably set long-lived timers
-        # because the iframe may be destroyed on Streamlit re-renders. The solution
-        # is to inject a <script> element into window.parent.document.head: inline
-        # scripts execute immediately and synchronously in the MAIN window context,
-        # so their timers survive re-renders. The iframe script runs once (guarded
-        # by window.parent._sbHintInit) and delegates everything else to the
-        # main-context script.
-        _hint_inner = json.dumps(
-            '<div class="_a">&#x2196;</div>'
-            f'<div class="_t">{_html.escape(t("app.sidebar_hint"))}</div>'
+        # In Streamlit 1.57 the sidebar <section data-testid="stSidebar"> carries
+        # aria-expanded="false" when collapsed and "true" when open. The :has()
+        # selector below shows the hint only when collapsed, so it disappears the
+        # instant the user opens the sidebar. animation-delay handles the 20 s wait.
+        hint_label = _html.escape(t("app.sidebar_hint"))
+        st.markdown(
+            "<style>"
+            "#_sb_hint{position:fixed;top:68px;left:44px;z-index:99999;display:none;"
+            "flex-direction:column;align-items:flex-start;gap:3px;pointer-events:none;opacity:0}"
+            'body:has(section[data-testid="stSidebar"][aria-expanded="false"]) #_sb_hint{'
+            "display:flex;animation:sb-reveal .4s ease-out 20s forwards}"
+            "@keyframes sb-reveal{to{opacity:1}}"
+            "#_sb_hint ._a{font-size:22px;color:#0088ff;line-height:1;"
+            "animation:sb-bounce 1.1s ease-in-out infinite}"
+            "@keyframes sb-bounce{0%,100%{transform:translate(0,0)}50%{transform:translate(-9px,-9px)}}"
+            "#_sb_hint ._t{background:#0088ff;color:#fff;padding:3px 9px;border-radius:10px;"
+            "font-size:11px;white-space:nowrap;font-family:sans-serif;font-weight:600;"
+            "box-shadow:0 2px 6px rgba(0,136,255,.4)}"
+            "</style>"
+            '<div id="_sb_hint"><div class="_a">&#x2196;</div>'
+            f'<div class="_t">{hint_label}</div></div>',
+            unsafe_allow_html=True,
         )
-        # Plain Python string — no f-string, so { } are JS literals, no escaping.
-        _main_script = (
-            "(function(){"
-            "if(window._sbRunInit)return;"
-            "window._sbRunInit=true;"
-            "if(sessionStorage.getItem('sbVisited'))return;"
-            "var s=document.createElement('style');"
-            "s.textContent='@keyframes sb-bounce{0%,100%{transform:translate(0,0);opacity:1}"
-            "50%{transform:translate(-9px,-9px);opacity:.75}}"
-            "#_sb_hint{display:none;position:fixed;top:68px;left:44px;z-index:99999;"
-            "flex-direction:column;align-items:flex-start;gap:3px;pointer-events:none}"
-            "#_sb_hint ._a{font-size:22px;color:#0088ff;"
-            "animation:sb-bounce 1.1s ease-in-out infinite;line-height:1}"
-            "#_sb_hint ._t{background:#0088ff;color:#fff;padding:3px 9px;"
-            "border-radius:10px;font-size:11px;white-space:nowrap;"
-            "font-family:sans-serif;font-weight:600;"
-            "box-shadow:0 2px 6px rgba(0,136,255,.4)}';"
-            "document.head.appendChild(s);"
-            "var h=document.createElement('div');"
-            "h.id='_sb_hint';"
-            f"h.innerHTML={_hint_inner};"
-            "document.body.appendChild(h);"
-            "function closed(){"
-            "var b=document.querySelector('[data-testid=\"stSidebarCollapsedControl\"]');"
-            "return !!b&&getComputedStyle(b).display!=='none';}"
-            "function dismiss(){"
-            "sessionStorage.setItem('sbVisited','1');"
-            "window._sbShowing=false;"
-            "h.style.display='none';"
-            "if(window._sbTimer){clearTimeout(window._sbTimer);window._sbTimer=null;}"
-            "if(window._sbPoll){clearInterval(window._sbPoll);window._sbPoll=null;}}"
-            "window._sbPoll=setInterval(function(){"
-            "if(sessionStorage.getItem('sbVisited')){clearInterval(window._sbPoll);return;}"
-            "if(window._sbShowing&&!closed())dismiss();},400);"
-            "window._sbTimer=setTimeout(function(){"
-            "if(!sessionStorage.getItem('sbVisited')&&closed()){"
-            "h.style.display='flex';window._sbShowing=true;}},20000);"
-            "})()"
-        )
-        _main_script_json = json.dumps(_main_script)
-        st_components.html(f"""<script>
-(function(){{
-    var p=window.parent;
-    if(!p||p._sbHintInit)return;
-    p._sbHintInit=true;
-    var ps=p.document.createElement('script');
-    ps.textContent={_main_script_json};
-    p.document.head.appendChild(ps);
-    ps.remove();
-}})();
-</script>""", height=0)
 
         # Show documentation (needs no DB) so users aren't stranded on a blank page
         from finance_tracker.web.views.documentation import render as doc_render
