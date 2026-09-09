@@ -21,7 +21,6 @@ import json
 import os
 import sys
 import time
-import urllib.error
 from datetime import date, datetime, timedelta, timezone
 
 import requests
