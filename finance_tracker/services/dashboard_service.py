@@ -26,6 +26,9 @@ PRODUCT_COLORS = {
     "INSURANCE": "#EC4899",
     "PER": "#F59E0B",
     "FCPI": "#06B6D4",
+    # Non-Bitcoin crypto: a distinct hue, so a rotation between two crypto
+    # lines is legible on the allocation chart.
+    "CRYPTO": "#7C3AED",
     }
 
 DEPOSIT_BASED_TYPES = {ProductType.CASH, ProductType.SAVINGS, ProductType.INSURANCE, ProductType.PER}
@@ -254,7 +257,8 @@ class DashboardService:
                 )
             return total if total > 0 else None
 
-        # BUY-based products (BITCOIN, SCPI, FCPI)
+        # BUY-based products (BITCOIN, CRYPTO, SCPI, FCPI): capital enters
+        # through a purchase, not a deposit.
         buy_total = sum(
             float(t.amount_eur)
             for t in transactions

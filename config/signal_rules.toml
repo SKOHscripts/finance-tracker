@@ -1,0 +1,142 @@
+# Seuils du signal de rotation crypto.
+#
+# Ce fichier ne contient que des règles. Aucune position, aucun montant, aucune
+# adresse : le portefeuille vit dans ta base de données, qui ne quitte pas ta
+# machine. C'est ce qui permet à ce fichier d'être public.
+#
+# Modifier un seuil change le comportement du moteur sans toucher au code. Fais-le
+# dans un commit dédié qui explique pourquoi : dans six mois, le chiffre seul ne
+# dira plus rien.
+#
+# Tout est libellé dans la devise du tracker, l'euro.
+#
+# ⚠️ Ceci n'est pas un conseil en investissement. Voir docs/DISCLAIMER.md.
+
+[universe]
+top_n = 10                     # top 10 par capitalisation, stables et wrappers exclus
+quote_currency = "eur"
+request_delay_seconds = 2.5    # respecte la limite du plan gratuit CoinGecko
+
+[signal]
+# Score composite : deux fenêtres de momentum, moins une pénalité de volatilité.
+# Les trois termes sont des z-scores calculés sur le classement du jour, donc un
+# choc macro qui déplace tout le marché dans le même sens s'annule de lui-même.
+fast_window_days = 30
+slow_window_days = 90
+weight_slow_momentum = 0.5
+weight_fast_momentum = 0.3
+weight_volatility = 0.2        # soustrait : pénalise les actifs les plus volatils
+
+[costs]
+# Calibré sur des routes de swap depuis un wallet auto-hébergé. Un relevé sur
+# huit fournisseurs donne un écart médian de 2,55 % entre la meilleure et la pire
+# offre : comparer les fournisseurs change plus le résultat que choisir la bonne
+# crypto.
+swap_spread_pct = 1.5          # spread constaté par jambe
+provider_fee_pct = 0.5         # commission affichée par jambe
+network_fees_total = 11        # frais de chaîne aller + retour, en euros
+max_extra_slippage_pct = 1.0   # marge acceptée entre le devis et l'exécution
+
+# Les frais de chaîne sont fixes en euros : ils pèsent proportionnellement plus
+# lourd sur une petite ligne. C'est voulu, et c'est ce que traduit la barrière
+# avantage_momentum_vs_cout.
+#
+#   Notionnel | Aller-retour | Aller simple
+#   1 000 EUR |      5,10 %  |      2,55 %
+#     400 EUR |      6,75 %  |      3,38 %
+#     100 EUR |     15,00 %  |      7,50 %
+
+[gates]
+# Les six barrières doivent toutes passer pour déclencher une rotation.
+min_score_delta = 1.5             # en écarts-type, candidat contre actif détenu
+cost_margin_multiple = 2.0        # l'avantage doit valoir 2x le coût aller-retour
+max_candidate_vol_pct = 110       # volatilité annualisée 30j maximale
+max_candidate_drawdown_pct = 45   # drawdown 90j maximal toléré
+min_volume_24h = 275_000_000      # volume 24h minimal du candidat, en euros
+required_consecutive_weeks = 3    # le même candidat doit tenir 3 scans
+
+# Repli du candidat. À true, le moteur descend le classement jusqu'au premier
+# actif qui passe volatilité, drawdown et volume. À false, il prend le mieux
+# classé non détenu quoi qu'il arrive — et un leader trop volatil bloque alors
+# toute rotation semaine après semaine.
+use_fallback_candidate = true
+
+[regime]
+# Détection bull / bear, en deux mesures indépendantes. Un régime ne prédit rien :
+# il décrit l'état constaté du marché à la date du scan.
+#
+#   BULL  : les deux mesures sont favorables
+#   MIXTE : une seule des deux
+#   BEAR  : aucune des deux
+#
+# En BEAR, les rotations sont suspendues : acheter le meilleur d'un marché qui
+# baisse revient à payer deux jambes pour changer de descente.
+enabled = true
+reference_id = "bitcoin"
+long_average_days = 200        # l'actif de référence au-dessus ou sous sa moyenne longue
+min_breadth_pct = 50           # part du classement en momentum 90j positif
+
+[temporisation]
+# Troisième verdict possible : sortir vers un stablecoin pour attendre. Ce n'est
+# pas une rotation, c'est un aller simple vers un refuge, évalué seulement quand
+# aucune rotation ne passe et que le régime est dégradé.
+enabled = true
+
+# Refuges par ordre de préférence, identifiants CoinGecko. Le premier qui passe
+# la barrière de liquidité est retenu. Mettre l'or tokenisé en dernier recours
+# pour sortir du dollar : "pax-gold", "tether-gold".
+refuges = ["usd-coin", "tether", "dai"]
+
+# Barrières dédiées. Les cinq premières doivent passer ensemble, puis la
+# persistance. Elles décrivent une dégradation constatée, pas une prévision.
+max_held_slow_momentum_pct = -12   # momentum lent de l'actif détenu sous ce seuil
+min_held_drawdown_pct = 30         # drawdown 90j de l'actif détenu au-delà de ce seuil
+min_bearish_share_pct = 60         # part du classement en momentum lent négatif
+cost_margin_multiple = 1.5         # la baisse constatée doit valoir 1,5x l'aller simple
+required_consecutive_weeks = 2     # deux scans consécutifs avant de bouger
+
+# Sortie du refuge : aucune règle spéciale. On n'en sort que par les six
+# barrières de rotation habituelles. Un stablecoin a un momentum nul, c'est donc
+# la barrière avantage_momentum_vs_cout qui fait le tri, pas l'écart de score.
+
+[profit_taking]
+# Récupérer la mise, puis laisser courir. Répond au risque de ne jamais vendre.
+enabled = true
+trigger_gain_pct = 100         # déclenchement : plus-value latente au-delà de ce seuil
+
+# La fraction vendue est celle qui rend le capital investi net de frais, et rien
+# de plus. Le reste continue de rouler, protégé par le stop suiveur. Plafonnée
+# pour ne jamais liquider une position entière par ce mécanisme.
+max_fraction = 0.60
+
+min_notional = 250             # sous ce montant, une vente partielle ne vaut pas ses frais
+once_only = true               # une seule récupération par position
+
+[trailing_stop]
+# Sortie complète vers le refuge quand le prix décroche de son plus haut.
+# Ne se déclenche que sur une position en gain : sur une position en perte, c'est
+# la temporisation de régime qui décide, pas ce mécanisme.
+enabled = true
+max_drawdown_pct = 30          # repli toléré depuis le plus haut de la fenêtre
+window_days = 180              # plus haut mesuré sur cette fenêtre
+min_gain_pct = 0               # n'agit qu'au-dessus du prix de revient
+
+[routes]
+# Depuis un wallet auto-hébergé, pas de carnet d'ordres : ce sont des swaps à
+# comparer. Le moteur ne demande aucun devis, il rappelle lesquels comparer.
+providers_to_quote = [
+    "Atomic swap (sans dépositaire)",
+    "Place P2P en multisig",
+    "Agrégateur non-custodial A",
+    "Agrégateur non-custodial B",
+]
+atomic_swap_note = "Deux jambes via BTC en atomic swap, puis BTC vers la cible. Deux jambes, deux coûts."
+
+[routes.stable]
+providers_to_quote = [
+    "Atomic swap vers BTC, puis BTC vers le stable",
+    "Place P2P en multisig",
+    "Agrégateur non-custodial A",
+    "Agrégateur non-custodial B",
+]
+note = "Peu de routes vers un stablecoin sont atomiques de bout en bout. Soit deux jambes via BTC, soit un agrégateur qui voit l'adresse et le montant. Choisir la chaîne cible selon les frais : un stablecoin sur une chaîne chère annule l'économie du devis."

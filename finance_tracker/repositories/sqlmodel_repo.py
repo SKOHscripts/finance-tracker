@@ -9,6 +9,7 @@ from finance_tracker.domain.enums import TransactionType
 from finance_tracker.domain.models import Product, RateSchedule, Transaction, Valuation
 
 from .base import IProductRepository, ITransactionRepository, IValuationRepository
+from .migrations import run_migrations
 
 
 class SQLModelProductRepository(IProductRepository):
@@ -534,24 +535,34 @@ class SQLModelRateScheduleRepository:
 
 
 def init_db(engine):
-    """Initialize database by creating all missing tables.
+    """Bring a database to the current schema, creating it if needed.
 
-    This function uses SQLModel metadata to create tables in the provided
-    database engine.
+    Two steps, and both matter. ``create_all()`` adds every missing table,
+    which is enough for a fresh file and for any release that only added
+    tables. ``run_migrations()`` then applies the numbered changes that
+    ``create_all()`` cannot make — a column added to a table that already
+    exists, a backfill — so a ``.db`` exported by an older release keeps
+    working instead of failing on the first query that mentions a new column.
+
+    Safe to call on every start: both steps skip work that is already done.
 
     Parameters
     ----------
     engine : sqlalchemy.engine.Engine
-        Database engine used to create the tables.
+        Database engine used to create and migrate the tables.
 
     Returns
     -------
-    None
+    list
+        The migrations that ran, in order. Empty when the database was
+        already current.
 
     Raises
     ------
     Exception
-        Any exception raised by SQLModel.metadata.create_all() during table
-        creation.
+        Any exception raised while creating tables or applying a migration.
+        Migrations applied before the failure stay applied and recorded.
     """
     SQLModel.metadata.create_all(engine)
+
+    return run_migrations(engine)

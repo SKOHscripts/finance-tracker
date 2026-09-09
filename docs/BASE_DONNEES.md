@@ -16,11 +16,85 @@ Finance Tracker utilise **SQLite** comme base de données locale. C'est une base
 
 ```
 FINANCE_TRACKER.DB
-├── products (Produits)
-├── transactions (Mouvements)
-├── valuations (Valorisations)
+├── schema_version (Migrations appliquées)
+│
+├── Patrimoine
+│   ├── products (Produits)
+│   ├── transactions (Mouvements)
+│   ├── valuations (Valorisations)
+│   └── rateschedule (Barèmes de taux)
+│
+├── Signal crypto
+│   ├── cryptoasset (Identité de marché d'un produit)
+│   ├── scanrun (Un scan, et son état de marché)
+│   ├── positionverdict (Le verdict d'une position sur un scan)
+│   ├── profittaken (Mise déjà récupérée sur une ligne)
+│   └── swapexecution (Un swap réellement exécuté)
+│
+├── Portefeuilles suivis
+│   ├── wallet (Adresse publique surveillée)
+│   ├── walletholding (Solde découvert à une adresse)
+│   ├── wallettransfer (Mouvement lu sur la chaîne)
+│   ├── costbasisestimate (Prix de revient reconstitué)
+│   └── providercredential (Clés d'API de l'utilisateur)
+│
 └── [Indices & Contraintes]
 ```
+
+> ⚠️ Les tables du signal crypto alimentent un outil **éducatif**. Voir
+> [DISCLAIMER.md](./DISCLAIMER.md).
+
+---
+
+## 🔄 Migrations de schéma
+
+Jusqu'à la v1.0.0, le schéma était créé par `SQLModel.metadata.create_all()`
+seul. Cet appel ajoute les **tables manquantes**, ce qui suffit tant qu'une
+version n'ajoute que des tables — mais il ne touche jamais à une table existante.
+Dès qu'une version ajoute une **colonne**, tout fichier `.db` exporté avant elle
+s'ouvrirait normalement puis échouerait à la première requête mentionnant cette
+colonne.
+
+Chaque changement de schéma porte donc désormais un numéro, un nom et une
+fonction, dans `finance_tracker/repositories/migrations.py`. Les versions
+appliquées sont consignées dans `schema_version`.
+
+### Ce qui se passe à l'ouverture d'une base
+
+1. `create_all()` crée les tables manquantes.
+2. `run_migrations()` applique, dans l'ordre, les migrations numérotées au-dessus
+   de la version enregistrée.
+
+Les deux étapes ignorent ce qui est déjà fait, donc l'opération est sûre à chaque
+démarrage. Elle se déclenche aussi **à l'import d'une sauvegarde** : c'est
+précisément le cas où le fichier peut venir d'une version antérieure.
+
+### Migrations existantes
+
+| Version | Nom | Effet |
+|---|---|---|
+| 1 | `crypto_and_wallet_tables` | Crée les dix tables du signal et des portefeuilles. Aucune table existante n'est touchée. |
+| 2 | `valuation_source` | Ajoute `valuation.source`, rétro-rempli à `MANUAL`. |
+
+`MANUAL` est la valeur **juste** pour les lignes antérieures, pas seulement la
+plus commode : elles ont toutes été saisies à la main. Cette colonne est ce qui
+empêche une actualisation automatique des cours d'écraser une valeur corrigée.
+
+### Vérifier l'état d'une base
+
+```python
+from sqlmodel import create_engine
+from finance_tracker.repositories.migrations import applied_migrations, current_version
+
+engine = create_engine("sqlite:///data/finance.db")
+print(current_version(engine))
+print(applied_migrations(engine))
+```
+
+Une base créée de zéro et une base migrée depuis la v1.0.0 aboutissent au **même
+schéma**, table pour table et colonne pour colonne. C'est vérifié par
+`tests/test_migrations.py::test_fresh_and_migrated_schemas_match`, et c'est ce
+qui garantit qu'une sauvegarde ancienne reste utilisable.
 
 ---
 
@@ -71,8 +145,12 @@ INSERT INTO products VALUES
 ### Types Supportés
 
 ```
-SCPI, Cash, Crypto, Insurance, PER, Bonds, Stocks, ETF, Mutual Fund, Other
+CASH, SCPI, BITCOIN, SAVINGS, INSURANCE, PER, FCPI, CRYPTO
 ```
+
+`CRYPTO` couvre tout crypto-actif autre que le bitcoin. Un produit rejoint
+l'arbitrage du signal en recevant une ligne dans `cryptoasset` : c'est tout
+l'opt-in, et un produit qui n'en a pas est totalement ignoré par le moteur.
 
 ---
 

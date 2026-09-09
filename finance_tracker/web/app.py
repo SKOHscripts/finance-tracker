@@ -16,6 +16,7 @@ import os
 from finance_tracker.web.db import get_session, get_db_path, get_engine
 from finance_tracker.web.navigation import build_pages
 from finance_tracker.repositories.sqlmodel_repo import init_db
+from finance_tracker.repositories.migrations import LATEST_VERSION, current_version
 from finance_tracker.services.seed_service import seed_default_products
 from finance_tracker.i18n import t, detect_language, SUPPORTED_LANGS
 
@@ -164,8 +165,41 @@ def render_db_manager():
                 )
 
 
+def ensure_schema_current():
+    """Migrate the active database once per session, before anything reads it.
+
+    Reached with a database that may have been written by any earlier release:
+    a file the user just imported, or one left over in this session. Running
+    the migrations here rather than only at creation is what keeps an old
+    backup usable — otherwise the first page touching a newer column fails on
+    a file that opened perfectly.
+    """
+    if st.session_state.get("schema_checked"):
+        return
+    st.session_state.schema_checked = True
+
+    engine = get_engine()
+    before = current_version(engine)
+    try:
+        applied = init_db(engine)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        # A failed migration must not blank the app: say so and let the user
+        # export the file before deciding what to do with it.
+        st.sidebar.error(t("app.db_migrate_error").format(e=exc))
+        return
+
+    if applied:
+        st.sidebar.success(
+            t("app.db_migrated").format(n=len(applied), old=before, new=LATEST_VERSION)
+            )
+
+
 # 1. Validate and setup database before any page logic runs
 render_db_manager()
+
+# 1b. An imported backup may predate the current schema. Migrate it before any
+# page queries a column its release did not have.
+ensure_schema_current()
 
 # 2. At this point, database is guaranteed to exist (st.stop() would have blocked otherwise)
 # Safe to create a session for database queries

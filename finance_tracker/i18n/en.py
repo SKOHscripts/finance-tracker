@@ -23,8 +23,8 @@ STRINGS: dict[str, str] = {
     "app.nav_label": "Navigation",
     "app.doc_link_btn": "📖 Documentation (README)",
     "app.donate_btn": "☕ Buy me a Bitcoffee",
-    "app.sidebar_version": "Finance Tracker v1.0.0",
-    "app.sidebar_description": "Portfolio tracking tool with support for SCPI, Bitcoin, savings and more.",
+    "app.sidebar_version": "Finance Tracker v1.1.0",
+    "app.sidebar_description": "Portfolio tracking tool: SCPI, Bitcoin, savings, crypto and a rotation signal. Educational tool, not investment advice.",
 
     # ── Dashboard ───────────────────────────────────────────────────────────────
     "dashboard.title": "Dashboard",
@@ -353,4 +353,305 @@ STRINGS: dict[str, str] = {
     "documentation.card_read_more": "Read full documentation →",
     "documentation.file_not_found": "⚠️ File {filename} not found.",
     "documentation.file_load_error": "❌ Error loading file: {error}",
+
+    # ── Disclaimer ──────────────────────────────────────────────────────────────
+    "disclaimer.title": "⚠️ This is not investment advice",
+    "disclaimer.body": (
+        "This tool is educational. It is not an investment adviser, not a financial "
+        "intermediary, and is not registered with any market authority. What it shows "
+        "describes what has already happened in the market: nothing here predicts a price. "
+        "Crypto-assets are extremely volatile and you can lose everything you put in. "
+        "The tool executes nothing: deciding and acting remain entirely yours."
+    ),
+    "disclaimer.compact": (
+        "Parameters to carry out by hand, not a recommendation. Educational tool, "
+        "no investment advice."
+    ),
+    "disclaimer.more_title": "📄 Scope and limits of this tool",
+    "disclaimer.long": (
+        "**What it does.** It applies rules written in advance to retrospective metrics — "
+        "past returns, observed volatility, decline from a peak. When every barrier of a "
+        "mechanism passes, it proposes a move and works out its parameters.\n\n"
+        "**What it does not.** It predicts no price, and knows nothing of your situation, "
+        "goals, horizon or risk tolerance. It executes nothing, holds no key, signs no "
+        "transaction.\n\n"
+        "**Limits you need to know.**\n\n"
+        "- The metrics describe the past. An asset that held up well can collapse the day "
+        "after the scan.\n"
+        "- The thresholds are choices, not truths. They live in `config/signal_rules.toml` "
+        "and you can change them.\n"
+        "- A cost basis reconstructed from a blockchain is an estimate. A chain records "
+        "movements, never a purchase price.\n"
+        "- Swap costs are estimated from averages. Your actual quote may differ "
+        "substantially.\n\n"
+        "**Tax.** A swap is generally a taxable event. This tool computes no tax and produces "
+        "no tax document.\n\n"
+        "**Plainly:** if you follow a proposal from this tool, it is your decision and your "
+        "risk."
+    ),
+
+    # ── Verdicts ────────────────────────────────────────────────────────────────
+    "verdict.conserver": "Hold",
+    "verdict.temporiser": "Wait it out",
+    "verdict.rotation": "Rotate",
+    "verdict.alleger": "Take profit",
+    "verdict.sortie_stop": "Stop exit",
+
+    # ── Gates ───────────────────────────────────────────────────────────────────
+    "gate.ecart_de_score": "Score gap",
+    "gate.avantage_momentum_vs_cout": "Momentum edge vs cost",
+    "gate.volatilite_candidat": "Candidate volatility",
+    "gate.drawdown_candidat": "Candidate drawdown",
+    "gate.liquidite_candidat": "Candidate liquidity",
+    "gate.regime_favorable": "Market regime",
+    "gate.persistance": "Persistence",
+    "gate.position_en_gain": "Position in profit",
+    "gate.repli_depuis_le_haut": "Pullback from the high",
+    "gate.plus_value": "Latent gain",
+    "gate.montant_vendu_suffisant": "Proceeds large enough",
+    "gate.jamais_pris": "Stake never recovered",
+    "gate.momentum_actif_detenu": "Held asset momentum",
+    "gate.drawdown_actif_detenu": "Held asset drawdown",
+    "gate.regime_marche": "Market degraded",
+    "gate.baisse_vs_cout": "Decline vs exit cost",
+    "gate.liquidite_refuge": "Refuge liquidity",
+
+    # ── Cost basis confidence ───────────────────────────────────────────────────
+    "confidence.high": "high",
+    "confidence.medium": "medium",
+    "confidence.low": "low",
+    "confidence.none": "none",
+
+    # ── Crypto signal ───────────────────────────────────────────────────────────
+    "signal.title": "📡 Crypto Signal",
+    "signal.caption": (
+        "Arbitrates your crypto positions against the market ranking, one position at a "
+        "time, on rules written in advance."
+    ),
+    "signal.rules_error": "❌ Invalid rules configuration: {e}",
+    "signal.section_inputs": "What will be arbitrated",
+    "signal.inputs_help": (
+        "Check these figures before running a scan: a verdict is only worth as much as its "
+        "inputs."
+    ),
+    "signal.no_positions": (
+        "No crypto position. Add a wallet to watch, or map an existing product to a market "
+        "identifier from the Wallets page."
+    ),
+    "signal.col_asset": "Asset",
+    "signal.col_units": "Units",
+    "signal.col_units_source": "Units from",
+    "signal.col_cost_basis": "Invested capital",
+    "signal.col_cost_source": "Basis from",
+    "signal.col_reserve": "Fee reserve",
+    "signal.col_arbitrated": "Arbitrated",
+    "signal.col_value": "Value",
+    "signal.col_gain": "Gain",
+    "signal.col_cost_of_move": "Round-trip cost",
+    "signal.cost_of_move_help": (
+        "Two spreads, two commissions and chain fees, against the size of the line. "
+        "A small line carries them less well."
+    ),
+    "signal.missing_cost_basis": (
+        "Invested capital unknown on: {assets}. The trailing stop and profit taking stay "
+        "inactive on those lines."
+    ),
+    "signal.source_wallet": "chain",
+    "signal.source_transactions": "transactions",
+    "signal.source_manual": "typed",
+    "signal.source_onchain": "estimated (chain)",
+    "signal.source_valuation": "valuation",
+    "signal.source_none": "—",
+    "signal.run_btn": "🔍 Run a scan",
+    "signal.persist_opt": "Record this scan in the history",
+    "signal.persist_help": (
+        "The persistence gates count consecutive scans. An unrecorded scan advances no "
+        "streak."
+    ),
+    "signal.scanning": "Scanning…",
+    "signal.scan_error": "❌ Scan failed: {e}",
+    "signal.scan_done": "✅ Scan complete — overall verdict: {verdict}",
+    "signal.section_market": "Market state",
+    "signal.regime": "Regime",
+    "signal.regime_reference": "{symbol} > {days}d average",
+    "signal.regime_breadth": "Ranking breadth",
+    "signal.candidate_line": "**Candidate:** {symbol} — {name} (score {score})",
+    "signal.no_candidate": "No candidate: every ranked asset is already held.",
+    "signal.discarded_title": "Higher-ranked candidates skipped",
+    "signal.discarded_help": (
+        "The engine walks down the ranking to the first asset clearing volatility, drawdown "
+        "and volume. These are the ones it skipped, and why."
+    ),
+    "signal.insufficient_history": "History too short to score reliably: {assets}.",
+    "signal.section_positions": "Verdict per position",
+    "signal.not_arbitrated": "This line was not arbitrated.",
+    "signal.not_evaluated": "Mechanism not evaluated in this scan.",
+    "signal.mech_rotation": "Rotation",
+    "signal.mech_stop": "Trailing stop",
+    "signal.mech_profit": "Profit taking",
+    "signal.mech_temporisation": "Wait it out",
+    "signal.gate": "Barrier",
+    "signal.gate_status": "State",
+    "signal.gate_value": "Measured",
+    "signal.gate_threshold": "Threshold",
+    "signal.gate_unit": "Unit",
+    "signal.plan_title": "Swap plan",
+    "signal.plan_from": "From",
+    "signal.plan_to": "To",
+    "signal.plan_amount": "Amount",
+    "signal.plan_units": "Units at reference price",
+    "signal.plan_min_units": "Minimum acceptable",
+    "signal.plan_min_units_help": (
+        "Below this many units the quote no longer matches what the scan measured: that is "
+        "the point to call it off. Margin used: {pct} %."
+    ),
+    "signal.plan_quotes": "Providers to compare:",
+    "signal.ranking_title": "Full ranking",
+    "signal.col_score": "Score",
+    "signal.col_mom_slow": "Slow momentum",
+    "signal.col_mom_fast": "Fast momentum",
+    "signal.col_vol": "30d volatility",
+    "signal.col_dd": "90d drawdown",
+    "signal.section_last": "Last recorded scan",
+    "signal.last_scan": "Scan of {date} — overall verdict: {verdict}",
+    "signal.col_verdict": "Verdict",
+    "signal.col_streak": "Streak",
+    "signal.col_date": "Date",
+    "signal.col_candidate": "Candidate",
+    "signal.history_title": "Scan history",
+    "signal.history_help": (
+        "This series feeds the persistence gates: a move only fires if the conditions hold "
+        "for several consecutive scans."
+    ),
+    "signal.never_scanned": "No scan recorded yet. Run one to get a first verdict.",
+
+    # ── Watched wallets ─────────────────────────────────────────────────────────
+    "wallets.title": "👛 Crypto Wallets",
+    "wallets.caption": (
+        "Add a public address: the tool reads balances, reconstructs a cost basis where the "
+        "chain allows it, and feeds the signal."
+    ),
+    "wallets.settings_title": "⚙️ API keys and endpoints",
+    "wallets.settings_help": (
+        "All optional except for EVM chains. Nothing ships with the app: everyone brings "
+        "their own quota."
+    ),
+    "wallets.key_storage_warning": (
+        "These keys are stored in your database. They travel with the file when you export "
+        "it: do not share a backup that contains them."
+    ),
+    "wallets.etherscan_key": "EVM explorer key",
+    "wallets.etherscan_help": (
+        "Free from etherscan.io. One key covers Ethereum, Base, Arbitrum, Optimism, Polygon "
+        "and BSC."
+    ),
+    "wallets.coingecko_key": "CoinGecko key (optional)",
+    "wallets.coingecko_help": "Without a key, the free tier is enough for a weekly scan.",
+    "wallets.mempool_url": "Bitcoin indexer",
+    "wallets.mempool_help": (
+        "Leave blank for mempool.space. Point it at your own node if you would rather not "
+        "expose your addresses to a third party."
+    ),
+    "wallets.solana_url": "Solana RPC node",
+    "wallets.solana_help": "Leave blank for the public endpoint, which rate-limits heavily.",
+    "wallets.save_settings": "Save",
+    "wallets.settings_saved": "✅ Settings saved",
+    "wallets.add_title": "Add a wallet",
+    "wallets.privacy_notice": (
+        "Querying an indexer reveals this address to whoever runs it. Syncing can be turned "
+        "on and off per wallet, and an address saved without syncing is never sent "
+        "anywhere.\n\n"
+        "**Monero cannot be read** from an address alone: that is the point of the protocol. "
+        "Those positions are entered by hand."
+    ),
+    "wallets.field_label": "Name",
+    "wallets.field_chain": "Chain",
+    "wallets.field_address": "Public address",
+    "wallets.field_derive": "Reconstruct the cost basis",
+    "wallets.derive_help": (
+        "Fetches transfer history and prices it at the rate on the day of each movement. "
+        "Slower, and impossible on Solana."
+    ),
+    "wallets.field_autosync": "Allow syncing",
+    "wallets.autosync_help": (
+        "Unchecked, the address is kept but never sent to an indexer."
+    ),
+    "wallets.add_btn": "Add",
+    "wallets.address_required": "The address is required.",
+    "wallets.duplicate": "This address is already watched on this chain.",
+    "wallets.added": "✅ Wallet added",
+    "wallets.empty": (
+        "No wallet watched. Add one, or keep entering positions by hand from the Products "
+        "page."
+    ),
+    "wallets.section_wallets": "Watched wallets",
+    "wallets.col_label": "Name",
+    "wallets.col_chain": "Chain",
+    "wallets.col_address": "Address",
+    "wallets.col_sync": "Sync",
+    "wallets.col_last": "Last sync",
+    "wallets.col_error": "Last issue",
+    "wallets.manage_title": "Manage wallets",
+    "wallets.toggle_sync": "Sync",
+    "wallets.delete": "Delete",
+    "wallets.sync_btn": "🔄 Sync",
+    "wallets.basis_btn": "💶 Recompute cost bases",
+    "wallets.sync_ok": "✅ {label}: {balances} balance(s), {transfers} movement(s) added",
+    "wallets.sync_failed": "❌ {label}: {error}",
+    "wallets.basis_done": "✅ {n} cost basis recomputed",
+    "wallets.basis_nothing": "No product is fed by a watched wallet.",
+    "wallets.section_holdings": "Discovered balances",
+    "wallets.no_holdings": "Nothing discovered yet. Run a sync.",
+    "wallets.col_asset": "Asset",
+    "wallets.col_units": "Units",
+    "wallets.col_listing": "Listing",
+    "wallets.col_product": "Product",
+    "wallets.unlisted_note": (
+        "Unlisted, so neither priceable nor arbitrable: {assets}. That is the normal case "
+        "for an airdropped token that trades nowhere."
+    ),
+    "wallets.map_title": "Map balances to products",
+    "wallets.map_help": (
+        "A balance mapped to a product feeds its units and its cost basis. A mapping "
+        "survives later syncs."
+    ),
+    "wallets.map_to": "Map to",
+    "wallets.map_none": "— unmapped —",
+    "wallets.create_product": "Create",
+    "wallets.product_created": "✅ Product “{name}” created and mapped",
+    "wallets.ignore": "Ignore",
+    "wallets.section_basis": "Cost basis",
+    "wallets.no_basis": (
+        "No cost basis reconstructed. Map a balance to a product, then recompute."
+    ),
+    "wallets.basis_estimate_warning": (
+        "These amounts are **estimates**. A blockchain records movements, never a purchase "
+        "price: a token received from a swap is priced at the rate on the day, and a transfer "
+        "from one of your own unwatched wallets counts as a purchase. Correct them by hand as "
+        "soon as you know your real price."
+    ),
+    "wallets.col_unit_cost": "Unit cost",
+    "wallets.col_total": "Total capital",
+    "wallets.col_confidence": "Confidence",
+    "wallets.col_uncovered": "Unexplained units",
+    "wallets.override_title": "Correct a cost basis",
+    "wallets.override_help": (
+        "Your figure replaces the estimate everywhere, including in the signal engine. "
+        "Clear the field to fall back to the reconstructed value."
+    ),
+    "wallets.override_field": "Unit price",
+    "wallets.override_placeholder": "e.g. 1250.50",
+    "wallets.override_save": "Save",
+    "wallets.override_invalid": "Amount could not be read.",
+    "wallets.override_saved": "✅ Cost basis of “{name}” updated",
+
+    # ── Navigation and database ─────────────────────────────────────────────────
+    "nav.crypto_signal": "📡 Crypto Signal",
+    "nav.crypto_wallets": "👛 Crypto Wallets",
+    "app.db_migrated": (
+        "🔄 Database updated: {n} migration(s) applied (schema v{old} → v{new})"
+    ),
+    "app.db_migrate_error": (
+        "❌ Migration failed: {e}. Export your database before doing anything else."
+    ),
 }

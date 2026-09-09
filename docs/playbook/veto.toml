@@ -1,0 +1,96 @@
+# Regles de veto. Ce fichier t'appartient : l'agente le lit, ne le modifie pas.
+#
+# Un veto ne declenche jamais un mouvement. Il ne fait que le suspendre.
+# L'asymetrie est le principe : une information peut retenir la main, jamais
+# la forcer.
+#
+# scripts/apply_news_veto.py applique ces regles telles quelles. Il ne juge
+# rien : le jugement est en amont, quand l'agente classe une observation dans
+# une categorie.
+
+[veto]
+enabled = true
+
+# Un drapeau ne compte que si sa fiche de reference est approuvee, ou s'il
+# porte lui-meme le statut approuve. Mettre a false pour laisser les drapeaux
+# a_mesurer produire un veto : plus reactif, beaucoup plus bruyant.
+require_approved = true
+
+# Portees possibles d'une regle, c'est-a-dire le role que doit jouer l'actif
+# touche pour que la regle s'applique :
+#   "cible"  : l'actif vers lequel la rotation irait
+#   "detenu" : l'actif actuellement detenu
+#   "refuge" : le stablecoin retenu pour la temporisation
+#   "marche" : le drapeau porte sur l'ensemble du classement
+
+# --- Contrepartie ---------------------------------------------------------
+# Un refuge qui a rompu son peg n'est plus un refuge.
+[[regle]]
+categorie = "contrepartie.depeg"
+portee = "refuge"
+suspend = ["TEMPORISER"]
+duree_jours = 30
+motif = "Le refuge retenu a rompu son peg. Temporiser vers lui remplacerait un risque de prix par un risque d'emetteur actif."
+
+[[regle]]
+categorie = "contrepartie.gel_adresses"
+portee = "refuge"
+suspend = ["TEMPORISER"]
+duree_jours = 90
+motif = "Gel d'adresses constate sur le refuge. Un solde gele ne se debloque pas, et la duree est volontairement longue."
+
+[[regle]]
+categorie = "contrepartie.hack"
+portee = "cible"
+suspend = ["ROTATION"]
+duree_jours = 21
+motif = "Vol en cours de digestion sur la cible. Le prix n'a pas fini d'integrer l'ampleur."
+
+[[regle]]
+categorie = "contrepartie.faillite_plateforme"
+portee = "marche"
+suspend = ["ROTATION", "TEMPORISER"]
+duree_jours = 14
+motif = "Defaillance d'une plateforme majeure. Les routes de swap se degradent avant les prix, et un devis pris pendant la contagion ne vaut rien."
+
+# --- Reglementaire --------------------------------------------------------
+[[regle]]
+categorie = "reglementaire.delistage"
+portee = "cible"
+suspend = ["ROTATION"]
+duree_jours = 30
+motif = "Delistage annonce sur la cible. Entrer sur un actif dont l'acces se ferme, c'est acheter une sortie plus chere."
+
+[[regle]]
+categorie = "reglementaire.restriction_juridiction"
+portee = "cible"
+suspend = ["ROTATION"]
+duree_jours = 60
+motif = "Restriction de juridiction sur la cible. Duree plus longue qu'un delistage : une restriction s'etend rarement une seule fois."
+
+[[regle]]
+categorie = "reglementaire.enquete"
+portee = "cible"
+suspend = ["ROTATION"]
+duree_jours = 30
+motif = "Enquete ouverte visant la cible ou son emetteur."
+
+# --- Protocole ------------------------------------------------------------
+[[regle]]
+categorie = "protocole.incident_reseau"
+portee = "cible"
+suspend = ["ROTATION"]
+duree_jours = 14
+motif = "Incident reseau sur la cible. Un swap qui arrive pendant un arret de chaine reste bloque."
+
+[[regle]]
+categorie = "protocole.fork"
+portee = "cible"
+suspend = ["ROTATION"]
+duree_jours = 14
+motif = "Fork sur la cible. L'actif recu peut ne pas etre celui qui a ete cote."
+
+# --- Macro ----------------------------------------------------------------
+# Aucune regle, deliberement. Un choc macro deplace tout le classement dans le
+# meme sens, et le score du script est construit sur des z-scores : le
+# mouvement commun s'annule deja dans l'ecart de score. Voir playbook/macro.md.
