@@ -246,3 +246,53 @@ class TestIdentifierGuards:
         """The guard would be theatre if the module's own constant failed it."""
         from finance_tracker.repositories.migrations import SCHEMA_VERSION_TABLE
         assert _safe_identifier(SCHEMA_VERSION_TABLE)
+
+
+class TestVersionTableCompatibility:
+    """The bookkeeping table survives how it was created.
+
+    Early builds created `schema_version` with a raw CREATE TABLE; it is now
+    declared as a SQLAlchemy Table so every read and write goes through Core.
+    A database written by either has to stay readable by the other — otherwise
+    the migration runner would fail on exactly the databases it exists to
+    rescue.
+    """
+
+    @staticmethod
+    def _raw_version_table(engine, version, name):
+        """Create and stamp the table the way the raw-SQL version did."""
+        with engine.begin() as conn:
+            conn.execute(text(
+                "CREATE TABLE IF NOT EXISTS schema_version ("
+                "  version INTEGER PRIMARY KEY,"
+                "  name VARCHAR(100) NOT NULL,"
+                "  applied_at VARCHAR(40) NOT NULL)"
+                ))
+            conn.execute(text(
+                "INSERT INTO schema_version (version, name, applied_at) "
+                "VALUES (:v, :n, :t)"
+                ), {"v": version, "n": name, "t": "2026-01-01T00:00:00+00:00"})
+
+    def test_a_raw_created_table_is_read_by_core(self, legacy_engine):
+        self._raw_version_table(legacy_engine, 1, MIGRATIONS[0].name)
+        assert current_version(legacy_engine) == 1
+
+    def test_only_the_missing_migrations_are_applied(self, legacy_engine):
+        """Version 1 already stamped: only what comes after it should run."""
+        self._raw_version_table(legacy_engine, 1, MIGRATIONS[0].name)
+
+        applied = init_db(legacy_engine)
+
+        assert [m.version for m in applied] == [
+            m.version for m in MIGRATIONS if m.version > 1
+            ]
+        assert current_version(legacy_engine) == LATEST_VERSION
+
+    def test_the_earlier_stamp_survives(self, legacy_engine):
+        """The pre-existing row keeps its own timestamp, unrewritten."""
+        self._raw_version_table(legacy_engine, 1, MIGRATIONS[0].name)
+        init_db(legacy_engine)
+
+        log = applied_migrations(legacy_engine)
+        assert log[0]["applied_at"] == "2026-01-01T00:00:00+00:00"
+        assert len(log) == len(MIGRATIONS)

@@ -30,13 +30,35 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable
 
-from sqlalchemy import inspect, text
+from sqlalchemy import (
+    Column,
+    Integer,
+    MetaData,
+    String,
+    Table,
+    func,
+    inspect,
+    select,
+    text,
+    )
 from sqlalchemy.engine import Connection, Engine
 from sqlmodel import SQLModel
 
 # Bare table name, no ORM model: this table must be readable before any model
 # is known to be valid, including on a database written by an older release.
 SCHEMA_VERSION_TABLE = "schema_version"
+
+# Its own MetaData, deliberately separate from SQLModel's: this table is
+# bookkeeping about the schema, not part of it, and `create_all()` has no
+# business creating or dropping it alongside the domain tables.
+_VERSION_METADATA = MetaData()
+SCHEMA_VERSION = Table(
+    SCHEMA_VERSION_TABLE,
+    _VERSION_METADATA,
+    Column("version", Integer, primary_key=True),
+    Column("name", String(100), nullable=False),
+    Column("applied_at", String(40), nullable=False),
+    )
 
 # SQL cannot bind a table or column name as a parameter, so identifiers have to
 # be interpolated into the statement. Every identifier used here is a literal
@@ -216,7 +238,12 @@ def _add_column(conn: Connection, table: str, column: str, ddl: str) -> bool:
     column = _safe_identifier(column, "nom de colonne")
     ddl = _safe_column_ddl(ddl)
 
-    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))  # nosec B608
+    # The only raw SQL left in this module, and the only one that has to be:
+    # SQLAlchemy Core has no construct for ALTER TABLE, which is what Alembic
+    # exists to provide. Both interpolated values passed through the guards
+    # above, so nothing reaches this line unvalidated.
+    statement = f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"  # nosec B608
+    conn.execute(text(statement))  # nosemgrep: avoid-sqlalchemy-text
     return True
 
 
@@ -277,14 +304,7 @@ LATEST_VERSION = max(m.version for m in MIGRATIONS)
 
 def _ensure_version_table(conn: Connection) -> None:
     """Create ``schema_version`` if the database does not have it yet."""
-    table = _safe_identifier(SCHEMA_VERSION_TABLE, "nom de table")
-    conn.execute(text(
-        f"CREATE TABLE IF NOT EXISTS {table} ("
-        "  version INTEGER PRIMARY KEY,"
-        "  name VARCHAR(100) NOT NULL,"
-        "  applied_at VARCHAR(40) NOT NULL"
-        ")"
-        ))
+    SCHEMA_VERSION.create(conn, checkfirst=True)
 
 
 def current_version(engine: Engine) -> int:
@@ -305,9 +325,8 @@ def current_version(engine: Engine) -> int:
     with engine.connect() as conn:
         if not _table_exists(conn, SCHEMA_VERSION_TABLE):
             return 0
-        table = _safe_identifier(SCHEMA_VERSION_TABLE, "nom de table")
         row = conn.execute(
-            text(f"SELECT MAX(version) FROM {table}")  # nosec B608
+            select(func.max(SCHEMA_VERSION.c.version))  # pylint: disable=not-callable
             ).scalar()
         return int(row or 0)
 
@@ -354,19 +373,11 @@ def run_migrations(engine: Engine) -> list[Migration]:
         # earlier success, and the recorded version stays truthful.
         with engine.begin() as conn:
             migration.apply(conn)
-            table = _safe_identifier(SCHEMA_VERSION_TABLE, "nom de table")
-            conn.execute(
-                text(
-                    # Values are bound; only the validated table name is interpolated.
-                    f"INSERT INTO {table} (version, name, applied_at) "  # nosec B608
-                    "VALUES (:v, :n, :t)"
-                    ),
-                {
-                    "v": migration.version,
-                    "n": migration.name,
-                    "t": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-                    },
-                )
+            conn.execute(SCHEMA_VERSION.insert().values(
+                version=migration.version,
+                name=migration.name,
+                applied_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                ))
         applied.append(migration)
 
     return applied
@@ -389,8 +400,11 @@ def applied_migrations(engine: Engine) -> list[dict]:
     with engine.connect() as conn:
         if not _table_exists(conn, SCHEMA_VERSION_TABLE):
             return []
-        table = _safe_identifier(SCHEMA_VERSION_TABLE, "nom de table")
-        rows = conn.execute(text(
-            f"SELECT version, name, applied_at FROM {table} ORDER BY version"  # nosec B608
-            )).all()
+        rows = conn.execute(
+            select(
+                SCHEMA_VERSION.c.version,
+                SCHEMA_VERSION.c.name,
+                SCHEMA_VERSION.c.applied_at,
+                ).order_by(SCHEMA_VERSION.c.version)
+            ).all()
     return [{"version": r[0], "name": r[1], "applied_at": r[2]} for r in rows]
