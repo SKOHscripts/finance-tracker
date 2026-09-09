@@ -11,6 +11,8 @@ from sqlmodel import create_engine
 
 from finance_tracker.repositories.migrations import (
     LATEST_VERSION,
+    _safe_column_ddl,
+    _safe_identifier,
     MIGRATIONS,
     applied_migrations,
     current_version,
@@ -198,3 +200,49 @@ def test_fresh_and_migrated_schemas_match(fresh_engine, legacy_engine):
                 }
 
     assert shape(fresh_engine) == shape(legacy_engine)
+
+
+class TestIdentifierGuards:
+    """SQL identifiers are validated before interpolation.
+
+    A table or column name cannot be a bound parameter, so it has to be
+    interpolated. Every name used here is a literal written in this module —
+    but "written by a developer" is a convention, and these guards are what
+    turn it into a guarantee for the migrations nobody has written yet.
+    """
+
+    def test_a_plain_identifier_passes_through(self):
+        assert _safe_identifier("schema_version") == "schema_version"
+        assert _safe_identifier("valuation") == "valuation"
+
+    @pytest.mark.parametrize("bad", [
+        "",
+        "1abc",                       # cannot start with a digit
+        "drop table",                 # a space is not part of a name
+        "users; DROP TABLE product",  # a second statement
+        "col--comment",               # a comment marker
+        "tab'le",                     # a quote
+        "a" * 64,                     # implausibly long
+        ])
+    def test_anything_else_is_refused(self, bad):
+        with pytest.raises(ValueError, match="invalide"):
+            _safe_identifier(bad)
+
+    def test_a_column_definition_passes_through(self):
+        assert _safe_column_ddl("VARCHAR(20) NOT NULL DEFAULT 'MANUAL'")
+        assert _safe_column_ddl("NUMERIC(12, 2)")
+
+    @pytest.mark.parametrize("bad", [
+        "",
+        "VARCHAR(20); DROP TABLE product",
+        "TEXT /* comment */",
+        "TEXT DEFAULT (SELECT name FROM product)",
+        ])
+    def test_a_smuggled_statement_is_refused(self, bad):
+        with pytest.raises(ValueError, match="invalide"):
+            _safe_column_ddl(bad)
+
+    def test_the_version_table_name_is_itself_a_valid_identifier(self):
+        """The guard would be theatre if the module's own constant failed it."""
+        from finance_tracker.repositories.migrations import SCHEMA_VERSION_TABLE
+        assert _safe_identifier(SCHEMA_VERSION_TABLE)

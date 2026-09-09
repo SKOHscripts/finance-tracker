@@ -25,6 +25,7 @@ legacy?" guesswork.
 A future migration that cannot be made idempotent (a data backfill, say) may
 rely on the recorded version instead: it will not be re-run once stamped.
 """
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Callable
@@ -36,6 +37,26 @@ from sqlmodel import SQLModel
 # Bare table name, no ORM model: this table must be readable before any model
 # is known to be valid, including on a database written by an older release.
 SCHEMA_VERSION_TABLE = "schema_version"
+
+# SQL cannot bind a table or column name as a parameter, so identifiers have to
+# be interpolated into the statement. Every identifier used here is a literal
+# written in this module — but "written by a developer" is a convention, and a
+# convention is not a guarantee. These patterns turn it into one: anything that
+# is not a plain identifier, or not a plain type-and-constraints fragment, is
+# refused before it can reach a statement.
+_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]{0,62}$")
+_COLUMN_DDL_RE = re.compile(r"^[A-Za-z0-9_ ()',.\-]{1,120}$")
+
+# The character class above is not enough on its own: `TEXT DEFAULT (SELECT
+# name FROM product)` is made entirely of letters, spaces and parentheses. A
+# column definition is a type and its constraints, so any word that starts or
+# joins a statement has no business in one. SQLite would refuse a subquery in
+# ADD COLUMN anyway; this refuses it one layer earlier, where the message is
+# useful.
+_FORBIDDEN_IN_DDL = frozenset({
+    "select", "insert", "update", "delete", "drop", "alter", "create",
+    "attach", "detach", "pragma", "union", "from", "join", "where", "exec",
+    })
 
 # Tables introduced by migration 001. Named explicitly rather than derived from
 # metadata so that adding a model later does not silently change what an old
@@ -82,6 +103,72 @@ class Migration:
 # ── Introspection helpers ──────────────────────────────────────────────────────
 
 
+def _safe_identifier(name: str, kind: str = "identifiant") -> str:
+    """Return *name* if it is a plain SQL identifier, else raise.
+
+    Parameters
+    ----------
+    name : str
+        Table or column name destined for a statement.
+    kind : str, optional
+        What is being named, for the error message.
+
+    Returns
+    -------
+    str
+        The unchanged name.
+
+    Raises
+    ------
+    ValueError
+        When the name is not a bare identifier. Refusing is the point: a
+        migration cannot be written that interpolates something arbitrary,
+        even by accident.
+    """
+    if not _IDENTIFIER_RE.match(name or ""):
+        raise ValueError(
+            f"{kind.capitalize()} SQL invalide : {name!r}. "
+            "Seules les lettres, chiffres et underscores sont acceptés."
+            )
+    return name
+
+
+def _safe_column_ddl(ddl: str) -> str:
+    """Return *ddl* if it is a plain type-and-constraints fragment, else raise.
+
+    Parameters
+    ----------
+    ddl : str
+        Fragment such as ``VARCHAR(20) NOT NULL DEFAULT 'MANUAL'``.
+
+    Returns
+    -------
+    str
+        The unchanged fragment.
+
+    Raises
+    ------
+    ValueError
+        When the fragment contains anything a column definition has no reason
+        to contain — a semicolon, a comment marker, a nested statement.
+    """
+    if not _COLUMN_DDL_RE.match(ddl or ""):
+        raise ValueError(
+            f"Définition de colonne invalide : {ddl!r}. "
+            "Un type et ses contraintes, rien de plus."
+            )
+
+    words = set(re.findall(r"[A-Za-z_]+", ddl.lower()))
+    smuggled = words & _FORBIDDEN_IN_DDL
+    if smuggled:
+        raise ValueError(
+            f"Définition de colonne invalide : {ddl!r}. "
+            f"Mot-clé de requête interdit dans une définition de colonne : "
+            f"{', '.join(sorted(smuggled))}."
+            )
+    return ddl
+
+
 def _table_exists(conn: Connection, table: str) -> bool:
     """Return whether *table* exists in the database behind *conn*."""
     return inspect(conn).has_table(table)
@@ -123,7 +210,13 @@ def _add_column(conn: Connection, table: str, column: str, ddl: str) -> bool:
     """
     if not _table_exists(conn, table) or _column_exists(conn, table, column):
         return False
-    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))
+
+    # Validated, not merely trusted: see _safe_identifier.
+    table = _safe_identifier(table, "nom de table")
+    column = _safe_identifier(column, "nom de colonne")
+    ddl = _safe_column_ddl(ddl)
+
+    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))  # nosec B608
     return True
 
 
@@ -184,8 +277,9 @@ LATEST_VERSION = max(m.version for m in MIGRATIONS)
 
 def _ensure_version_table(conn: Connection) -> None:
     """Create ``schema_version`` if the database does not have it yet."""
+    table = _safe_identifier(SCHEMA_VERSION_TABLE, "nom de table")
     conn.execute(text(
-        f"CREATE TABLE IF NOT EXISTS {SCHEMA_VERSION_TABLE} ("
+        f"CREATE TABLE IF NOT EXISTS {table} ("
         "  version INTEGER PRIMARY KEY,"
         "  name VARCHAR(100) NOT NULL,"
         "  applied_at VARCHAR(40) NOT NULL"
@@ -211,8 +305,9 @@ def current_version(engine: Engine) -> int:
     with engine.connect() as conn:
         if not _table_exists(conn, SCHEMA_VERSION_TABLE):
             return 0
+        table = _safe_identifier(SCHEMA_VERSION_TABLE, "nom de table")
         row = conn.execute(
-            text(f"SELECT MAX(version) FROM {SCHEMA_VERSION_TABLE}")
+            text(f"SELECT MAX(version) FROM {table}")  # nosec B608
             ).scalar()
         return int(row or 0)
 
@@ -259,9 +354,11 @@ def run_migrations(engine: Engine) -> list[Migration]:
         # earlier success, and the recorded version stays truthful.
         with engine.begin() as conn:
             migration.apply(conn)
+            table = _safe_identifier(SCHEMA_VERSION_TABLE, "nom de table")
             conn.execute(
                 text(
-                    f"INSERT INTO {SCHEMA_VERSION_TABLE} (version, name, applied_at) "
+                    # Values are bound; only the validated table name is interpolated.
+                    f"INSERT INTO {table} (version, name, applied_at) "  # nosec B608
                     "VALUES (:v, :n, :t)"
                     ),
                 {
@@ -292,7 +389,8 @@ def applied_migrations(engine: Engine) -> list[dict]:
     with engine.connect() as conn:
         if not _table_exists(conn, SCHEMA_VERSION_TABLE):
             return []
+        table = _safe_identifier(SCHEMA_VERSION_TABLE, "nom de table")
         rows = conn.execute(text(
-            f"SELECT version, name, applied_at FROM {SCHEMA_VERSION_TABLE} ORDER BY version"
+            f"SELECT version, name, applied_at FROM {table} ORDER BY version"  # nosec B608
             )).all()
     return [{"version": r[0], "name": r[1], "applied_at": r[2]} for r in rows]

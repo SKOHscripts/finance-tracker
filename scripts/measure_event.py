@@ -22,9 +22,9 @@ import os
 import sys
 import time
 import urllib.error
-import urllib.parse
-import urllib.request
 from datetime import date, datetime, timedelta, timezone
+
+import requests
 
 API = "https://api.coingecko.com/api/v3"
 
@@ -33,29 +33,37 @@ FREE_PLAN_DAYS = 365
 
 
 def http_get(path, params, api_key=None, retries=4):
-    url = f"{API}{path}?{urllib.parse.urlencode(params)}"
+    """GET CoinGecko avec backoff. Renvoie le JSON decode.
+
+    Utilise `requests` comme le reste du projet plutot que urllib : l'URL est
+    construite a partir d'une constante de module, donc le schema ne peut pas
+    deriver vers file:// ou un protocole exotique.
+    """
     headers = {"Accept": "application/json", "User-Agent": "crypto-signal/1.0"}
     if api_key:
         headers["x-cg-demo-api-key"] = api_key
 
     delay = 2.0
     for attempt in range(retries):
-        req = urllib.request.Request(url, headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as exc:
-            if exc.code in (429, 500, 502, 503, 504) and attempt < retries - 1:
+            response = requests.get(
+                f"{API}{path}", params=params, headers=headers, timeout=30
+                )
+            if response.status_code in (429, 500, 502, 503, 504) and attempt < retries - 1:
                 time.sleep(delay)
                 delay *= 2
                 continue
-            raise RuntimeError(f"CoinGecko HTTP {exc.code} sur {path}") from exc
-        except urllib.error.URLError as exc:
+            if response.status_code >= 400:
+                raise RuntimeError(
+                    f"CoinGecko HTTP {response.status_code} sur {path}"
+                    )
+            return response.json()
+        except requests.exceptions.RequestException as exc:
             if attempt < retries - 1:
                 time.sleep(delay)
                 delay *= 2
                 continue
-            raise RuntimeError(f"Reseau indisponible sur {path}: {exc.reason}") from exc
+            raise RuntimeError(f"Reseau indisponible sur {path}: {exc}") from exc
     raise RuntimeError(f"Echec apres {retries} tentatives sur {path}")
 
 
