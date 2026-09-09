@@ -49,8 +49,11 @@ disable=
 ignored-classes = FieldInfo,
                   sqlalchemy.orm.scoping.scoped_session
 
-# matplotlib.cm builds its colormap members dynamically, so pylint cannot see
-# get_cmap and reports it as missing.
+# matplotlib.cm builds its colormap members dynamically. Whether pylint sees
+# get_cmap depends on the installed matplotlib and pylint versions: CI does not
+# flag it, some local combinations do. Excluded so the check gives the same
+# answer everywhere, rather than passing in CI and failing on a contributor's
+# machine.
 ignored-modules = matplotlib.cm
 
 [DESIGN]
