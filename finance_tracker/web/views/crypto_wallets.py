@@ -6,6 +6,7 @@ arbitrate. Two things are stated on screen rather than buried in a document —
 that syncing discloses the address to an indexer, and that a cost basis
 reconstructed from a chain is an estimate.
 """
+from datetime import date, datetime, time as dt_time
 from decimal import Decimal, InvalidOperation
 
 import pandas as pd
@@ -21,7 +22,14 @@ from finance_tracker.domain.models import (
     WalletHolding,
     )
 from finance_tracker.i18n import t
-from finance_tracker.services.crypto.coingecko_client import CoinGeckoClient
+from finance_tracker.services.crypto.coingecko_client import (
+    CoinGeckoClient,
+    CoinGeckoError,
+    )
+from finance_tracker.services.crypto.manual_asset import (
+    ManualAssetError,
+    add_manual_asset,
+    )
 from finance_tracker.services.wallets.cost_basis import set_manual_unit_cost
 from finance_tracker.services.wallets.registry import (
     COINGECKO,
@@ -149,6 +157,129 @@ def _render_add_wallet(session: Session) -> None:
                     ))
                 session.commit()
                 st.success(t("wallets.added"))
+                st.rerun()
+
+
+def _render_add_manual(session: Session, client: CoinGeckoClient) -> None:
+    """Form to declare an asset no address can reveal.
+
+    The counterpart of watching an address. Monero is the case it exists for —
+    a balance cannot be read from a Monero address without its view key — but
+    it serves any holding kept off a readable chain: an exchange balance, or an
+    asset the user would rather not expose to an indexer.
+
+    The listing is chosen from a search rather than typed, because a ticker is
+    not unique: several tokens answer to the same three letters, and an
+    identifier picked wrong prices the wrong asset at every scan afterwards.
+    """
+    with st.expander(f"➕ {t('wallets.manual_title')}", expanded=False):
+        st.caption(t("wallets.manual_help"))
+
+        query = st.text_input(
+            t("wallets.manual_search"),
+            key="manual_query",
+            placeholder=t("wallets.manual_search_placeholder"),
+            )
+
+        if st.button(t("wallets.manual_search_btn"), key="manual_search_btn"):
+            if not query.strip():
+                st.session_state["manual_hits"] = []
+                st.error(t("wallets.manual_query_required"))
+            else:
+                try:
+                    st.session_state["manual_hits"] = client.search(query)
+                except CoinGeckoError as exc:
+                    st.session_state["manual_hits"] = []
+                    st.error(t("wallets.manual_search_failed").format(error=exc))
+
+        hits = st.session_state.get("manual_hits") or []
+        if not hits:
+            if st.session_state.get("manual_hits") == []:
+                st.caption(t("wallets.manual_no_hit"))
+            return
+
+        with st.form("manual_asset_add"):
+            listing = st.selectbox(
+                t("wallets.manual_listing"),
+                options=hits,
+                format_func=lambda hit: hit.label,
+                )
+
+            col1, col2 = st.columns(2)
+            with col1:
+                name = st.text_input(
+                    t("wallets.manual_name"), value=listing.name,
+                    help=t("wallets.manual_name_help"),
+                    )
+                units = st.text_input(
+                    t("wallets.manual_units"),
+                    placeholder=t("wallets.manual_units_placeholder"),
+                    help=t("wallets.manual_units_help"),
+                    )
+                acquired = st.date_input(t("wallets.manual_date"), value=date.today())
+            with col2:
+                cost_mode = st.radio(
+                    t("wallets.manual_cost_mode"),
+                    options=("unit", "total"),
+                    format_func=lambda m: t(f"wallets.manual_cost_{m}"),
+                    horizontal=True,
+                    )
+                cost = st.text_input(
+                    t("wallets.manual_cost"),
+                    placeholder=t("wallets.manual_cost_placeholder"),
+                    help=t("wallets.manual_cost_help"),
+                    )
+                reserve = st.text_input(
+                    t("wallets.manual_reserve"),
+                    placeholder="0",
+                    help=t("wallets.manual_reserve_help"),
+                    )
+                arbitrated = st.checkbox(
+                    t("wallets.manual_arbitrated"), value=True,
+                    help=t("wallets.manual_arbitrated_help"),
+                    )
+
+            if st.form_submit_button(t("wallets.manual_add_btn"), width="stretch"):
+                held = _decimal_or_none(units)
+                if units.strip() and held is None:
+                    st.error(t("wallets.manual_units_invalid"))
+                    return
+
+                paid = _decimal_or_none(cost)
+                if cost.strip() and paid is None:
+                    st.error(t("wallets.manual_cost_invalid"))
+                    return
+
+                kept = _decimal_or_none(reserve)
+                if reserve.strip() and kept is None:
+                    st.error(t("wallets.manual_reserve_invalid"))
+                    return
+
+                try:
+                    product = add_manual_asset(
+                        session,
+                        name=name,
+                        coingecko_id=listing.id,
+                        symbol=listing.symbol,
+                        units=held,
+                        unit_cost_eur=paid if cost_mode == "unit" else None,
+                        total_cost_eur=paid if cost_mode == "total" else None,
+                        # The date field can be cleared, and comes back empty:
+                        # combining None would take the page down. The service
+                        # falls back to now.
+                        acquired_on=(
+                            datetime.combine(acquired, dt_time()) if acquired else None
+                            ),
+                        gas_reserve_eur=kept or Decimal("0"),
+                        arbitrated=arbitrated,
+                        )
+                except ManualAssetError as exc:
+                    st.error(str(exc))
+                    return
+
+                st.session_state["manual_hits"] = None
+                st.success(t("wallets.manual_added").format(
+                    name=product.name, listing=listing.id))
                 st.rerun()
 
 
@@ -336,8 +467,15 @@ def render(session: Session) -> None:
 
     render_disclaimer()
 
+    credential = get_credential(session, COINGECKO)
+    client = CoinGeckoClient(
+        api_key=credential.api_key,
+        base_url=credential.base_url or None,
+        )
+
     _render_credentials(session)
     _render_add_wallet(session)
+    _render_add_manual(session, client)
 
     st.subheader(t("wallets.section_wallets"))
     wallets = _render_wallets(session)
@@ -349,12 +487,6 @@ def render(session: Session) -> None:
                 t("wallets.sync_btn"), type="primary", width="stretch")
         with col2:
             basis_clicked = st.button(t("wallets.basis_btn"), width="stretch")
-
-        credential = get_credential(session, COINGECKO)
-        client = CoinGeckoClient(
-            api_key=credential.api_key,
-            base_url=credential.base_url or None,
-            )
 
         if sync_clicked:
             status = st.empty()

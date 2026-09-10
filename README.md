@@ -118,7 +118,7 @@ Pour un guide complet, voir :
   Arbitrage de chaque position crypto contre le classement du marché, sur six barrières explicites. Cinq verdicts possibles, avec le chiffre qui a fait passer ou échouer chaque barrière. ⚠️ *Outil éducatif, pas un conseil en investissement.*
 
 - **👛 Portefeuilles Crypto**
-  Suivi d'adresses publiques sur Bitcoin, Solana et les chaînes EVM (Ethereum, Base, Arbitrum, Optimism, Polygon, BSC). Soldes récupérés automatiquement, prix de revient reconstitué depuis l'historique on-chain — avec son indice de confiance.
+  Suivi d'adresses publiques sur Bitcoin, Solana et les chaînes EVM (Ethereum, Base, Arbitrum, Optimism, Polygon, BSC). Soldes récupérés automatiquement, prix de revient reconstitué depuis l'historique on-chain — avec son indice de confiance. Et pour ce qu'aucune adresse ne peut révéler — Monero, un solde d'échange, un avoir gardé au froid — une saisie à la main : la cotation se cherche par nom ou par symbole, la quantité et le prix de revient s'entrent une fois.
 
 - **📈 Simulateur long terme**
   Projections multi‑scénarios, croissance composée, analyse de sensibilité.
@@ -185,7 +185,7 @@ soit la force apparente du signal. C'est le but.
 | Ethereum, Base, Arbitrum, Optimism, Polygon, BSC | ✅ | ✅ | Clé d'explorateur gratuite, apportée par l'utilisateur |
 | Bitcoin | ✅ | ✅ | Aucune |
 | Solana | ✅ | ❌ (saisie manuelle) | Aucune |
-| Monero | ❌ | ❌ | *Impossible depuis une adresse seule* |
+| Monero | ❌ | ❌ | *Impossible depuis une adresse seule — saisie à la main* |
 
 **Deux limites, dites franchement.** Une chaîne enregistre des mouvements,
 jamais un prix d'achat : tout prix de revient reconstitué est une **estimation**,

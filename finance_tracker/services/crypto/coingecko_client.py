@@ -99,6 +99,50 @@ class MarketRow:
             )
 
 
+@dataclass(frozen=True)
+class Listing:
+    """One CoinGecko listing, as a search returns it.
+
+    Deliberately not a :class:`MarketRow`: a search answers "which asset do you
+    mean", not "what is it worth". It carries no price, and pretending
+    otherwise by reusing the market row would invite code to read a field that
+    was never fetched.
+
+    Parameters
+    ----------
+    id : str
+        CoinGecko identifier — the key every later price call is made with.
+    symbol : str
+        Ticker in upper case.
+    name : str
+        Display name.
+    rank : Optional[int]
+        Market-capitalisation rank, None when unranked. The one signal a user
+        has for telling a real asset from a namesake with the same ticker.
+    """
+
+    id: str
+    symbol: str
+    name: str
+    rank: Optional[int] = None
+
+    @classmethod
+    def from_api(cls, payload: dict) -> "Listing":
+        """Build a listing from a ``/search`` coin entry."""
+        return cls(
+            id=payload["id"],
+            symbol=str(payload.get("symbol", "")).upper(),
+            name=payload.get("name", ""),
+            rank=payload.get("market_cap_rank"),
+            )
+
+    @property
+    def label(self) -> str:
+        """One line identifying the listing unambiguously."""
+        rank = f"#{self.rank}" if self.rank else "—"
+        return f"{self.name} ({self.symbol}) · {rank} · {self.id}"
+
+
 class CoinGeckoClient:
     """Rate-limited CoinGecko client with retries and an in-process cache.
 
@@ -345,6 +389,75 @@ class CoinGeckoClient:
         value = float(price) if price is not None else None
         self._history_cache[cache_key] = value
         return value
+
+    def search(self, query: str, limit: int = 12) -> list[Listing]:
+        """Find listings matching a name or a ticker.
+
+        The lookup for an asset no address can reveal — Monero being the case
+        this exists for. A ticker is not unique on CoinGecko: several tokens
+        answer to the same three letters, so every hit keeps its rank and its
+        identifier and the caller is expected to make the user choose rather
+        than take the first.
+
+        Parameters
+        ----------
+        query : str
+            Free text: a name ("monero") or a ticker ("xmr").
+        limit : int, optional
+            Most hits to return. Results arrive ranked by relevance.
+
+        Returns
+        -------
+        list of Listing
+            Matching listings, best first. Empty when nothing matches — which
+            is an answer, not a failure.
+
+        Raises
+        ------
+        CoinGeckoError
+            When the API cannot be reached or refuses the call.
+        """
+        text = (query or "").strip()
+        if not text:
+            return []
+
+        payload = self.get("/search", {"query": text}, retries=2)
+        coins = (payload or {}).get("coins") or []
+        return [Listing.from_api(c) for c in coins[:limit] if c.get("id")]
+
+    def resolve_id(self, coin_id: str) -> Optional[Listing]:
+        """Confirm that *coin_id* is a real listing.
+
+        Used to check an identifier before it is stored: a typo saved here
+        would fail silently at every later scan, as an asset that never
+        prices.
+
+        Returns
+        -------
+        Listing or None
+            The listing, or None when CoinGecko does not know the identifier.
+        """
+        wanted = (coin_id or "").strip().lower()
+        if not wanted:
+            return None
+        try:
+            payload = self.get(
+                f"/coins/{wanted}",
+                {"localization": "false", "tickers": "false",
+                 "market_data": "false", "community_data": "false",
+                 "developer_data": "false"},
+                retries=2,
+                )
+        except CoinGeckoError:
+            return None
+        if not payload or "id" not in payload:
+            return None
+        return Listing(
+            id=payload["id"],
+            symbol=str(payload.get("symbol", "")).upper(),
+            name=payload.get("name", ""),
+            rank=payload.get("market_cap_rank"),
+            )
 
     def resolve_contract(self, chain: str, contract_address: str) -> Optional[dict]:
         """Look up the listing for a token contract.
