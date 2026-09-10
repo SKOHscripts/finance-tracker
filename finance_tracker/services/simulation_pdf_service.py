@@ -105,10 +105,16 @@ class SimulationPDFService:
         jinja2.TemplateSyntaxError
             If the template contains invalid syntax.
         """
-        from jinja2 import Environment, FileSystemLoader
+        from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-        # Template directory must be set at instance level for Jinja2 to locate files
-        env = Environment(loader=FileSystemLoader(self.templates_dir))
+        # Template directory must be set at instance level for Jinja2 to locate files.
+        # Escaping on: product names come from the user. The two variables that
+        # legitimately carry markup — the period and product tables, built here —
+        # are already marked `| safe` in the template.
+        env = Environment(
+            loader=FileSystemLoader(self.templates_dir),
+            autoescape=select_autoescape(["html", "xml"]),
+            )
         template = env.get_template("simulation_report.html")
 
         # Generate charts only for metrics present in data to avoid empty/broken images
