@@ -225,6 +225,17 @@ class CryptoAsset(SQLModel, table=True):
         key every price and history call is made with.
     symbol : str
         Ticker in upper case, cached for display (e.g. "XMR").
+    manual_units : Optional[Decimal]
+        Quantity typed by the user, which outranks every derived figure —
+        the chain balance included. None means the automatic derivation
+        applies. Exists because a chain can be read correctly and still be
+        wrong about what is held: a balance sitting at an address the user
+        does not watch, or one they do not control.
+    manual_cost_basis_eur : Optional[Decimal]
+        Total capital invested, typed by the user, outranking the ledger and
+        any on-chain reconstruction. None means the automatic derivation
+        applies. Stored as a total rather than a unit cost so that correcting
+        the quantity does not silently move the money spent.
     gas_reserve_eur : Decimal
         Share of the position that is never proposed for a swap, for an asset
         that also pays chain fees. A position with nothing left above its
@@ -242,6 +253,14 @@ class CryptoAsset(SQLModel, table=True):
     product_id: int = Field(foreign_key="product.id", unique=True, index=True)
     coingecko_id: str = Field(index=True)
     symbol: str = ""
+    manual_units: Optional[Decimal] = Field(
+        default=None,
+        sa_column=Column(Numeric(precision=28, scale=8), nullable=True),
+        )
+    manual_cost_basis_eur: Optional[Decimal] = Field(
+        default=None,
+        sa_column=Column(Numeric(precision=14, scale=2), nullable=True),
+        )
     gas_reserve_eur: Decimal = Field(
         default=Decimal("0"),
         sa_column=Column(Numeric(precision=12, scale=2), nullable=False, server_default="0"),
@@ -845,6 +864,51 @@ class ProviderCredential(SQLModel, table=True):
     provider: str = Field(unique=True, index=True)
     api_key: str = ""
     base_url: str = ""
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True)),
+        )
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column=Column(DateTime(timezone=True)),
+        )
+
+
+class SignalSetting(SQLModel, table=True):
+    """One rotation threshold the user has moved away from its shipped value.
+
+    The thresholds themselves live in `config/signal_rules.toml`, which is part
+    of the repository and the same for everyone. This table holds only the
+    *deviations*: a row exists solely for a setting the user has changed.
+
+    Storing deviations rather than a full copy is what keeps a hosted release
+    useful. A user who never touched a threshold picks up an improved default
+    on the next deploy; one who deliberately tightened a barrier keeps their
+    figure. A full snapshot would freeze both, and the second kind of user
+    would never learn the first kind of change had happened.
+
+    The value is text, and the type it should become is read from the rules
+    dataclass field it maps to. A column per threshold would mean a migration
+    for every new setting, on a table whose whole purpose is to change.
+
+    Parameters
+    ----------
+    id : Optional[int]
+        Primary key, auto-generated if not provided.
+    key : str
+        Dotted path of the setting, e.g. "gates.min_score_delta". Unique:
+        one deviation per setting.
+    value : str
+        The user's value, serialised as text and coerced back on load.
+    updated_at : datetime
+        When the deviation was last written.
+    created_at : datetime
+        Timestamp of record creation, timezone-aware.
+    """
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    key: str = Field(unique=True, index=True)
+    value: str = ""
     updated_at: datetime = Field(
         default_factory=datetime.utcnow,
         sa_column=Column(DateTime(timezone=True)),

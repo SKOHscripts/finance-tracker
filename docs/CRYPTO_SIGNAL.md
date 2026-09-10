@@ -336,12 +336,79 @@ bord comme le reste.
 
 ### 2. Renseigner le capital investi
 
-Sans lui, ni stop suiveur ni prise de bénéfice. Trois sources, par ordre de
+Sans lui, ni stop suiveur ni prise de bénéfice. Quatre sources, par ordre de
 préférence :
 
-1. ta saisie manuelle ;
-2. tes transactions d'achat en base ;
-3. l'estimation reconstituée depuis la chaîne.
+1. **ta correction**, saisie dans le tableau « Ce qui sera arbitré » ;
+2. le prix unitaire corrigé sur la page Portefeuilles ;
+3. tes transactions d'achat en base ;
+4. l'estimation reconstituée depuis la chaîne.
+
+### 2 bis. Corriger un chiffre faux
+
+Page **📡 Signal Crypto**, tableau « Ce qui sera arbitré », dépliant
+**✏️ Corriger les chiffres d'une ligne**.
+
+Chaque figure y apparaît deux fois : la valeur déduite avec sa source, en
+lecture seule, et à côté une colonne « corrigé » vide. Ce que tu écris dans la
+seconde prime sur tout — **y compris sur ce que rapporte la chaîne**.
+
+Cette priorité est délibérée. Une chaîne peut être lue correctement et se
+tromper sur ce qui est *détenu* : un solde à une adresse que tu ne suis pas, ou
+une adresse que tu ne contrôles pas. Sans un moyen de dire « non, c'est ça », le
+seul recours serait de se méfier du verdict entier.
+
+Trois propriétés rendent cette autorité tenable :
+
+- **C'est stocké**, pas appliqué et oublié. Une correction survit à une
+  synchronisation, à un rescan et à un redémarrage.
+- **C'est étiqueté.** La colonne source affiche « corrigé », donc un chiffre
+  saisi n'est jamais confondu avec un chiffre déduit.
+- **C'est réversible.** Vider la case rend la ligne à sa source automatique, sans
+  rien laisser derrière.
+
+Deux points de saisie :
+
+- Le capital se donne **au total ou à l'unité**, au choix, via le sélecteur
+  au-dessus du tableau. À l'unité, il est multiplié par la quantité effective.
+- Zéro n'est pas vide. **Zéro est une affirmation** — une ligne réellement
+  soldée, un airdrop qui n'a rien coûté — et elle est conservée telle quelle.
+
+Si ta correction contredit un solde synchronisé, l'écart est affiché. Ce n'est
+pas une erreur : tu as peut-être raison. Mais une contradiction silencieuse entre
+le chiffre affiché et ce que dit la chaîne, c'est ainsi qu'un portefeuille dérive
+sans que personne s'en aperçoive.
+
+### 2 ter. Régler les seuils
+
+Page **📡 Signal Crypto**, dépliant **⚙️ Paramètres de rotation**. Trente-six
+seuils, groupés par mécanisme, **chacun accompagné d'une phrase disant ce qu'il
+change**.
+
+Ce n'est pas de la politesse documentaire : un seuil dont tu ne peux pas énoncer
+le rôle est un seuil que tu ne peux pas régler en connaissance de cause, et toute
+la raison d'afficher les barrières plutôt qu'un verdict seul est que l'arbitrage
+reste le tien.
+
+Le fichier `config/signal_rules.toml` reste la source des valeurs livrées. La
+base ne stocke que **les écarts** — une ligne n'existe que pour un seuil que tu as
+déplacé. Deux conséquences voulues :
+
+- un seuil auquel tu n'as pas touché **profite d'une valeur améliorée** à la
+  prochaine version ; une copie complète te figerait sur les chiffres du jour
+  sans que tu saches que le défaut a changé ;
+- un seuil que tu as délibérément resserré **est conservé** de version en
+  version, et marqué comme tien.
+
+Une section s'enregistre d'un bloc, et se refuse d'un bloc. Un seuil n'a jamais
+raison qu'en relation avec les autres — une fenêtre courte doit rester plus
+courte qu'une longue — donc le jeu entier est validé avant qu'une seule ligne
+soit écrite. Les mêmes contrôles de cohérence que ceux du fichier s'appliquent :
+l'interface ne permet pas d'atteindre un état que le fichier refuserait.
+
+Les listes de texte — refuges, actif de référence, fournisseurs à consulter —
+restent dans le fichier. Ce sont des identifiants et de la prose, pas des seuils,
+et un identifiant mal saisi ne se signale qu'au scan suivant.
 
 ### 3. Lancer un scan
 

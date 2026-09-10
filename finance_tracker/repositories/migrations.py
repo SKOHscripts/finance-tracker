@@ -98,6 +98,11 @@ _WALLET_TABLES = (
     "providercredential",
 )
 
+# Table introduced by migration 003.
+_SETTINGS_TABLES = (
+    "signalsetting",
+)
+
 
 @dataclass(frozen=True)
 class Migration:
@@ -281,6 +286,25 @@ def _m002_valuation_source(conn: Connection) -> None:
     _add_column(conn, "valuation", "source", "VARCHAR(20) NOT NULL DEFAULT 'MANUAL'")
 
 
+def _m003_manual_overrides_and_settings(conn: Connection) -> None:
+    """Let the user correct a position's figures and move a threshold.
+
+    Two additions that share a purpose: making the automatic pipeline
+    correctable without forking it.
+
+    ``cryptoasset`` gains two nullable columns. Null is the whole point of them
+    being nullable: it means "no correction", which is not the same claim as
+    zero, and it is what every existing row keeps. Nothing is backfilled
+    because nothing was corrected.
+
+    ``signalsetting`` holds only the thresholds a user moved away from the
+    shipped value, so an untouched threshold keeps following the file.
+    """
+    _create_tables(conn, _SETTINGS_TABLES)
+    _add_column(conn, "cryptoasset", "manual_units", "NUMERIC(28, 8)")
+    _add_column(conn, "cryptoasset", "manual_cost_basis_eur", "NUMERIC(14, 2)")
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(
         version=1,
@@ -293,6 +317,15 @@ MIGRATIONS: tuple[Migration, ...] = (
         name="valuation_source",
         apply=_m002_valuation_source,
         description="Origine d'une valorisation : saisie manuelle ou cours récupéré.",
+        ),
+    Migration(
+        version=3,
+        name="manual_overrides_and_settings",
+        apply=_m003_manual_overrides_and_settings,
+        description=(
+            "Corrections manuelles d'une position et seuils de rotation "
+            "réglables par l'utilisateur."
+            ),
         ),
     )
 

@@ -9,18 +9,26 @@ the same false confidence.
 
 Units, most trustworthy first:
 
-1. **Wallet holdings.** What the chain says is at the address. Not an opinion.
-2. **Transactions.** Bought minus sold, from the ledger the user keeps.
-3. **Latest valuation.** No units at all, only a euro amount — enough to
+1. **A correction typed by the user.** Above the chain, deliberately: a
+   balance can be read correctly and still be wrong about what is *held* —
+   an address the user does not watch, or one they do not control.
+2. **Wallet holdings.** What the chain says is at the watched addresses.
+3. **Transactions.** Bought minus sold, from the ledger the user keeps.
+4. **Latest valuation.** No units at all, only a euro amount — enough to
    display and to arbitrate on, not enough to revalue at today's price.
 
 Cost basis, most trustworthy first:
 
-1. **A manual figure**, when the user has entered one. They know things no
-   chain and no ledger records.
-2. **Transactions.** Real purchases in euros, with fees.
-3. **A derived on-chain estimate.** A reconstruction; see
+1. **A correction typed by the user**, as a total. They know things no chain
+   and no ledger records.
+2. **A per-unit figure entered on the wallets page**, applied to the units.
+3. **Transactions.** Real purchases in euros, with fees.
+4. **A derived on-chain estimate.** A reconstruction; see
    :mod:`finance_tracker.services.crypto.cost_basis`.
+
+A correction is stored, reversible and labelled: the interface says a figure
+was typed rather than derived, and clearing it returns the line to whichever
+automatic source applied before.
 """
 from dataclasses import dataclass
 from decimal import Decimal
@@ -56,7 +64,7 @@ class PositionSources:
     bank statement are not the same claim.
     """
 
-    units_from: str = "none"  # "wallet" | "transactions" | "none"
+    units_from: str = "none"  # "manual" | "wallet" | "transactions" | "none"
     cost_basis_from: str = "none"  # "manual" | "transactions" | "onchain" | "none"
     value_from: str = "none"  # "units" | "valuation" | "none"
     note: str = ""
@@ -206,13 +214,17 @@ def resolve_position(session: Session, product: Product, asset: CryptoAsset) -> 
     """
     sources = PositionSources()
 
-    units = _units_from_wallets(session, product.id)
-    if units is not None:
-        sources.units_from = "wallet"
+    if asset.manual_units is not None:
+        units: Optional[Decimal] = Decimal(str(asset.manual_units))
+        sources.units_from = "manual"
     else:
-        units = _units_from_transactions(session, product.id)
+        units = _units_from_wallets(session, product.id)
         if units is not None:
-            sources.units_from = "transactions"
+            sources.units_from = "wallet"
+        else:
+            units = _units_from_transactions(session, product.id)
+            if units is not None:
+                sources.units_from = "transactions"
 
     notional: Optional[Decimal] = None
     if units is not None:
@@ -230,7 +242,10 @@ def resolve_position(session: Session, product: Product, asset: CryptoAsset) -> 
     estimate = _cost_basis_estimate(session, product.id)
     cost_basis: Optional[Decimal] = None
 
-    if estimate is not None and estimate.manual_unit_cost_eur is not None and units is not None:
+    if asset.manual_cost_basis_eur is not None:
+        cost_basis = Decimal(str(asset.manual_cost_basis_eur))
+        sources.cost_basis_from = "manual"
+    elif estimate is not None and estimate.manual_unit_cost_eur is not None and units is not None:
         cost_basis = Decimal(str(estimate.manual_unit_cost_eur)) * units
         sources.cost_basis_from = "manual"
     else:
@@ -253,7 +268,10 @@ def resolve_position(session: Session, product: Product, asset: CryptoAsset) -> 
         units=float(units) if units is not None else None,
         notional_eur=float(notional) if notional is not None else None,
         gas_reserve_eur=float(asset.gas_reserve_eur or 0),
-        cost_basis_eur=float(cost_basis) if cost_basis else None,
+        # `is not None`, not truthiness: a corrected cost basis of exactly zero
+        # is a claim (an airdrop that cost nothing), and reporting it as unknown
+        # would disable the trailing stop on a line the user just described.
+        cost_basis_eur=float(cost_basis) if cost_basis is not None else None,
         arbitrated=bool(asset.arbitrated),
         )
 

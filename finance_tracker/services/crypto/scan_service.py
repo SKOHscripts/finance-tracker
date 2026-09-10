@@ -31,7 +31,8 @@ from .coingecko_client import CoinGeckoClient, CoinGeckoError, MarketRow
 from .engine import AssetMetrics, PriorScan, ScanResult, build_metrics, run_scan
 from .metrics import daily_closes
 from .portfolio import ResolvedPosition, load_positions
-from .rules import EXCLUDED_IDS, Rules, load_rules
+from .rules import EXCLUDED_IDS, Rules
+from .settings import effective_rules
 
 # Extra depth requested from the ranking endpoint. Stablecoins and wrappers are
 # filtered out afterwards, so asking for exactly top_n would return fewer.
@@ -396,7 +397,10 @@ def run_signal_scan(
         When the portfolio holds no crypto position, or when market data
         cannot be retrieved.
     """
-    rules = rules or load_rules()
+    # The user's thresholds, not the shipped ones: a scan launched from the CLI
+    # and one launched from the app must reach the same verdict, and the
+    # thresholds a user moved are the ones they expect to be arbitrated on.
+    rules = rules or effective_rules(session)
     client = client or CoinGeckoClient(request_delay=rules.universe.request_delay_seconds)
 
     resolved_list = load_positions(session)

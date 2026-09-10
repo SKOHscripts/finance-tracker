@@ -889,15 +889,16 @@ def crypto_scan(
     import json as _json
 
     from finance_tracker.services.crypto.coingecko_client import CoinGeckoClient
-    from finance_tracker.services.crypto.rules import RulesError, load_rules
+    from finance_tracker.services.crypto.rules import RulesError
     from finance_tracker.services.crypto.scan_service import ScanError, run_signal_scan
+    from finance_tracker.services.crypto.settings import SettingsError, effective_rules
     from finance_tracker.services.wallets.registry import COINGECKO, get_credential
 
     session = get_session()
 
     try:
-        rules = load_rules()
-    except RulesError as exc:
+        rules = effective_rules(session)
+    except (RulesError, SettingsError) as exc:
         typer.echo(f"❌ Configuration invalide : {exc}", err=True)
         raise typer.Exit(code=1)
 
