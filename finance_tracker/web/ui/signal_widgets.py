@@ -5,7 +5,7 @@ rendered with the measured value beside the threshold rather than as a bare
 pass/fail. The same goes for provenance: a cost basis reconstructed from a
 chain and one typed from a receipt are shown differently on purpose.
 """
-from typing import Optional
+from typing import Any, Iterable, Optional
 
 import pandas as pd
 import streamlit as st
@@ -52,28 +52,69 @@ def source_label(source: str) -> str:
     return t(SOURCE_LABELS.get(source, "signal.source_none"))
 
 
-def render_gates(gates: list[dict], caption: Optional[str] = None) -> None:
+def gate_fields(gate: Any) -> dict:
+    """Read one barrier, whichever shape it arrives in.
+
+    A live scan hands out `Gate` dataclasses straight from the engine; a scan
+    read back from the database hands out the same barriers serialised to
+    dicts. This widget sits on the boundary between the two, so it accepts
+    either rather than making every caller remember which one it is holding —
+    which is exactly the mistake that made this function crash on a real scan.
+
+    Note the key: a serialised gate spells it `pass`, the dataclass spells it
+    `passed`. Both are read, and an absent one is treated as a failure, never
+    as a pass.
+
+    Parameters
+    ----------
+    gate : Gate or dict
+        One barrier.
+
+    Returns
+    -------
+    dict
+        Normalised fields: name, passed, value, threshold, unit.
+    """
+    if isinstance(gate, dict):
+        return {
+            "name": gate.get("name", ""),
+            "passed": bool(gate.get("pass", gate.get("passed", False))),
+            "value": gate.get("value"),
+            "threshold": gate.get("threshold"),
+            "unit": gate.get("unit", "") or "",
+            }
+    return {
+        "name": getattr(gate, "name", ""),
+        "passed": bool(getattr(gate, "passed", False)),
+        "value": getattr(gate, "value", None),
+        "threshold": getattr(gate, "threshold", None),
+        "unit": getattr(gate, "unit", "") or "",
+        }
+
+
+def render_gates(gates: Iterable[Any], caption: Optional[str] = None) -> None:
     """Render a mechanism's barriers as a table.
 
     Parameters
     ----------
-    gates : list[dict]
-        Serialised gates, each with name, pass, value, threshold and unit.
+    gates : Iterable[Gate or dict]
+        The barriers, as engine dataclasses or as their serialised form.
     caption : str, optional
         Line shown above the table.
     """
-    if not gates:
+    rows = [gate_fields(g) for g in gates or []]
+    if not rows:
         return
     if caption:
         st.caption(caption)
 
     frame = pd.DataFrame([{
-        t("signal.gate"): t(f"gate.{g['name']}"),
-        t("signal.gate_status"): "✅" if g["pass"] else "❌",
-        t("signal.gate_value"): _fmt(g.get("value")),
-        t("signal.gate_threshold"): _fmt(g.get("threshold")),
-        t("signal.gate_unit"): g.get("unit", ""),
-        } for g in gates])
+        t("signal.gate"): t(f"gate.{row['name']}"),
+        t("signal.gate_status"): "✅" if row["passed"] else "❌",
+        t("signal.gate_value"): _fmt(row["value"]),
+        t("signal.gate_threshold"): _fmt(row["threshold"]),
+        t("signal.gate_unit"): row["unit"],
+        } for row in rows])
 
     st.dataframe(frame, hide_index=True, width="stretch")
 
