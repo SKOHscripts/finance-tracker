@@ -17,6 +17,7 @@ from finance_tracker.i18n import t
 from finance_tracker.services.crypto.coingecko_client import CoinGeckoClient
 from finance_tracker.services.crypto.portfolio import load_positions
 from finance_tracker.services.crypto.rules import RulesError, load_rules
+from finance_tracker.services.crypto.settings import SettingsError, effective_rules
 from finance_tracker.services.crypto.scan_service import (
     ScanError,
     latest_run,
@@ -26,6 +27,8 @@ from finance_tracker.services.crypto.scan_service import (
     )
 from finance_tracker.services.wallets.registry import COINGECKO, get_credential
 from finance_tracker.web.ui.disclaimer import render_disclaimer, render_disclaimer_expander
+from finance_tracker.web.ui.position_editor import render_editor
+from finance_tracker.web.ui.settings_widgets import render_settings
 from finance_tracker.web.ui.signal_widgets import (
     render_gates,
     render_plan,
@@ -84,6 +87,11 @@ def _render_positions_overview(session: Session) -> bool:
     missing = [r.position.symbol for r in resolved if r.position.cost_basis_eur is None]
     if missing:
         st.caption(t("signal.missing_cost_basis").format(assets=", ".join(missing)))
+
+    # Correcting a figure belongs where the figure is wrong, not on another page.
+    with st.expander(f"✏️ {t('editor.title')}", expanded=False):
+        if render_editor(session, resolved):
+            st.rerun()
 
     return True
 
@@ -247,10 +255,23 @@ def render(session: Session) -> None:
     render_disclaimer()
 
     try:
-        rules = load_rules()
+        rules = effective_rules(session)
     except RulesError as exc:
         st.error(t("signal.rules_error").format(e=exc))
         return
+    except SettingsError as exc:
+        # A stored threshold has become incoherent — say so and fall back to
+        # the shipped values, so the panel that fixes it can still be drawn.
+        st.error(t("signal.settings_error").format(e=exc))
+        try:
+            rules = load_rules()
+        except RulesError as inner:
+            st.error(t("signal.rules_error").format(e=inner))
+            return
+
+    with st.expander(f"⚙️ {t('settings.title')}", expanded=False):
+        if render_settings(session):
+            st.rerun()
 
     st.subheader(t("signal.section_inputs"))
     st.caption(t("signal.inputs_help"))

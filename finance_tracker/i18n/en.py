@@ -458,7 +458,7 @@ STRINGS: dict[str, str] = {
     ),
     "signal.source_wallet": "chain",
     "signal.source_transactions": "transactions",
-    "signal.source_manual": "typed",
+    "signal.source_manual": "corrected",
     "signal.source_onchain": "estimated (chain)",
     "signal.source_valuation": "valuation",
     "signal.source_none": "—",
@@ -705,4 +705,257 @@ STRINGS: dict[str, str] = {
     "app.db_migrate_error": (
         "❌ Migration failed: {e}. Export your database before doing anything else."
     ),
+
+    # ── Rotation parameters ─────────────────────────────────────────────────
+    "section.universe": "Universe",
+    "sectionhelp.universe": (
+        "What the ranking looks at, and how fast it may ask."
+        ),
+    "section.signal": "Composite score",
+    "sectionhelp.signal": (
+        "How an asset is scored, before any barrier applies."
+        ),
+    "section.costs": "Cost of a move",
+    "sectionhelp.costs": (
+        "What a swap really costs — the figure the advantage has to beat."
+        ),
+    "section.gates": "Rotation barriers",
+    "sectionhelp.gates": (
+        "The six conditions that must all pass for a rotation to be proposed."
+        ),
+    "section.regime": "Market regime",
+    "sectionhelp.regime": (
+        "The market's observed state. A description, never a forecast."
+        ),
+    "section.temporisation": "Wait in a refuge",
+    "sectionhelp.temporisation": (
+        "Leaving for a stablecoin to wait, when no rotation passes and the regime is degraded."
+        ),
+    "section.profit_taking": "Profit taking",
+    "sectionhelp.profit_taking": (
+        "Recover the stake once, then let the rest run."
+        ),
+    "section.trailing_stop": "Trailing stop",
+    "sectionhelp.trailing_stop": (
+        "Full exit when a winning line gives back too much of its peak."
+        ),
+
+    "param.universe.top_n": "Ranking depth",
+    "paramhelp.universe.top_n": (
+        "How many assets the ranking looks at, by market capitalisation. Higher opens the field to less liquid lines; lower keeps it on the more established ones."
+        ),
+    "param.universe.request_delay_seconds": "Delay between calls",
+    "paramhelp.universe.request_delay_seconds": (
+        "Wait between two CoinGecko calls. The free plan drops bursts, so going too low makes the scan fail rather than run faster."
+        ),
+    "param.signal.fast_window_days": "Fast window",
+    "paramhelp.signal.fast_window_days": (
+        "Short momentum window. It catches recent movement, so it reacts quickly and is wrong more often."
+        ),
+    "param.signal.slow_window_days": "Slow window",
+    "paramhelp.signal.slow_window_days": (
+        "Long momentum window, the underlying trend. It must stay strictly longer than the fast window, or the score counts the same measurement twice."
+        ),
+    "param.signal.weight_slow_momentum": "Weight of the underlying trend",
+    "paramhelp.signal.weight_slow_momentum": (
+        "Weight of the underlying trend in the composite score. The dominant term by default."
+        ),
+    "param.signal.weight_fast_momentum": "Weight of recent movement",
+    "paramhelp.signal.weight_fast_momentum": (
+        "Weight of recent movement. Raising it makes the ranking twitchier, and rotations more frequent."
+        ),
+    "param.signal.weight_volatility": "Weight of the volatility penalty",
+    "paramhelp.signal.weight_volatility": (
+        "Weight of the volatility penalty, subtracted from the score. At equal momentum, it separates the asset that got there more calmly."
+        ),
+    "param.costs.swap_spread_pct": "Spread per leg",
+    "paramhelp.costs.swap_spread_pct": (
+        "Observed gap between the quoted price and the price obtained, per swap leg. It counts towards the cost the advantage has to beat."
+        ),
+    "param.costs.provider_fee_pct": "Provider fee per leg",
+    "paramhelp.costs.provider_fee_pct": (
+        "Fee the provider advertises, per swap leg. Adds to the spread."
+        ),
+    "param.costs.network_fees_total": "Chain fees, round trip",
+    "paramhelp.costs.network_fees_total": (
+        "Chain fees for a round trip, in euros. A flat amount, so it weighs proportionally far more on a small line — which is exactly why a small position is harder to justify moving."
+        ),
+    "param.costs.max_extra_slippage_pct": "Accepted slippage",
+    "paramhelp.costs.max_extra_slippage_pct": (
+        "Gap accepted between the quote and the execution. It sets the minimum number of units below which the swap must be called off."
+        ),
+    "param.gates.min_score_delta": "Minimum score gap",
+    "paramhelp.gates.min_score_delta": (
+        "How far the candidate must beat the held asset, in standard deviations. Below this, the gap is indistinguishable from noise."
+        ),
+    "param.gates.cost_margin_multiple": "Cost margin",
+    "paramhelp.gates.cost_margin_multiple": (
+        "How many times the expected advantage must be worth the round-trip cost. At 2, a gain that merely covers the fees is not enough."
+        ),
+    "param.gates.max_candidate_vol_pct": "Maximum candidate volatility",
+    "paramhelp.gates.max_candidate_vol_pct": (
+        "Annualised 30-day volatility above which a candidate is discarded. Higher, and the expected gain owes more to the day it was measured than to the asset."
+        ),
+    "param.gates.max_candidate_drawdown_pct": "Maximum candidate drawdown",
+    "paramhelp.gates.max_candidate_drawdown_pct": (
+        "Largest 90-day drawdown tolerated in a candidate. Filters out what climbs hard after having fallen harder."
+        ),
+    "param.gates.min_volume_24h": "Minimum 24 h volume",
+    "paramhelp.gates.min_volume_24h": (
+        "Minimum 24-hour traded volume for a candidate, in euros. Below this, getting back out of the position costs more than getting in."
+        ),
+    "param.gates.required_consecutive_weeks": "Consecutive scans required",
+    "paramhelp.gates.required_consecutive_weeks": (
+        "How many consecutive scans the same candidate must hold up for. This is what avoids paying two legs for a one-week signal."
+        ),
+    "param.gates.use_fallback_candidate": "Fall back to the next candidate",
+    "paramhelp.gates.use_fallback_candidate": (
+        "On, the engine walks down the ranking to the first asset that passes volatility, drawdown and volume. Off, it only ever looks at the top-ranked one — and an over-volatile leader then blocks every rotation, week after week."
+        ),
+    "param.regime.enabled": "Regime detection",
+    "paramhelp.regime.enabled": (
+        "Reading of the market's state. Off, rotations are no longer suspended in a falling market and the refuge exit never fires."
+        ),
+    "param.regime.long_average_days": "Reference moving average",
+    "paramhelp.regime.long_average_days": (
+        "Length of the reference asset's moving average. Above it the reading is favourable; below it, not."
+        ),
+    "param.regime.min_breadth_pct": "Minimum market breadth",
+    "paramhelp.regime.min_breadth_pct": (
+        "Share of the ranking with positive 90-day momentum from which the second reading is favourable. Two favourable readings give BULL, one MIXED, none BEAR."
+        ),
+    "param.temporisation.enabled": "Wait in a refuge",
+    "paramhelp.temporisation.enabled": (
+        "A third possible verdict: leave for a stablecoin and wait. Off, a deteriorating position has only the trailing stop left to exit on."
+        ),
+    "param.temporisation.max_held_slow_momentum_pct": "Maximum slow momentum of the line",
+    "paramhelp.temporisation.max_held_slow_momentum_pct": (
+        "Slow momentum of the held asset below which deterioration is established. Must be negative or zero: it describes a fall, not a rise."
+        ),
+    "param.temporisation.min_held_drawdown_pct": "Minimum drawdown of the line",
+    "paramhelp.temporisation.min_held_drawdown_pct": (
+        "90-day drawdown of the held asset from which deterioration is established."
+        ),
+    "param.temporisation.min_bearish_share_pct": "Minimum bearish share",
+    "paramhelp.temporisation.min_bearish_share_pct": (
+        "Share of the ranking with negative slow momentum from which the market as a whole is judged degraded, not just your line."
+        ),
+    "param.temporisation.cost_margin_multiple": "Cost margin",
+    "paramhelp.temporisation.cost_margin_multiple": (
+        "How many times the observed fall must be worth the one-way cost into the refuge. Lower than for a rotation, because one leg costs less than two."
+        ),
+    "param.temporisation.required_consecutive_weeks": "Consecutive scans required",
+    "paramhelp.temporisation.required_consecutive_weeks": (
+        "How many consecutive scans of deterioration before moving into a refuge."
+        ),
+    "param.profit_taking.enabled": "Profit taking",
+    "paramhelp.profit_taking.enabled": (
+        "Recover the stake once, then let the rest run. Answers the risk of never selling."
+        ),
+    "param.profit_taking.trigger_gain_pct": "Trigger threshold",
+    "paramhelp.profit_taking.trigger_gain_pct": (
+        "Unrealised gain on the line from which the stake recovery fires."
+        ),
+    "param.profit_taking.max_fraction": "Maximum fraction sold",
+    "paramhelp.profit_taking.max_fraction": (
+        "Largest share of the line this mechanism may sell. It recovers the capital invested net of fees, never the whole position."
+        ),
+    "param.profit_taking.min_notional": "Minimum notional",
+    "paramhelp.profit_taking.min_notional": (
+        "Amount below which a partial sale is not worth its fees."
+        ),
+    "param.profit_taking.once_only": "Once per position only",
+    "paramhelp.profit_taking.once_only": (
+        "One recovery per position. Off, the line can be trimmed each time the threshold is crossed again."
+        ),
+    "param.trailing_stop.enabled": "Trailing stop",
+    "paramhelp.trailing_stop.enabled": (
+        "Full exit into the refuge when the price gives back too much of its peak."
+        ),
+    "param.trailing_stop.max_drawdown_pct": "Tolerated give-back",
+    "paramhelp.trailing_stop.max_drawdown_pct": (
+        "Give-back from the window's peak beyond which the position is closed."
+        ),
+    "param.trailing_stop.window_days": "Peak window",
+    "paramhelp.trailing_stop.window_days": (
+        "Window the peak is measured over. The longer it is, the harder the stop is to trigger."
+        ),
+    "param.trailing_stop.min_gain_pct": "Minimum gain required",
+    "paramhelp.trailing_stop.min_gain_pct": (
+        "Minimum gain above the cost basis for the stop to act. At zero it never touches a losing position — the refuge exit decides there instead."
+        ),
+
+    # ── Position editor and settings panel ──────────────────────────────────
+    "editor.title": "Correct a line's figures",
+    "editor.help": (
+        "One column shows the derived figure and where it came from; the \u201ccorrected\u201d "
+        "column beside it stays empty until you touch it. What you write there outranks "
+        "everything, the chain included. Clearing the cell returns the line to its "
+        "automatic source."
+        ),
+    "editor.cost_mode": "Enter the corrected capital as",
+    "editor.cost_mode_total": "Total invested",
+    "editor.cost_mode_unit": "Unit cost",
+    "editor.col_asset": "Asset",
+    "editor.col_units_auto": "Units (auto)",
+    "editor.col_units_auto_help": (
+        "Quantity derived automatically, followed by its source: chain, transactions, "
+        "or a correction already in place."
+        ),
+    "editor.col_units_fix": "Corrected units",
+    "editor.col_units_fix_help": (
+        "In the asset's native units. Outranks both the chain and the ledger. "
+        "Empty = automatic; zero = a line genuinely emptied."
+        ),
+    "editor.col_cost_auto": "Invested (auto)",
+    "editor.col_cost_auto_help": (
+        "Capital derived automatically, followed by its source: transactions, on-chain "
+        "estimate, or a correction already in place."
+        ),
+    "editor.col_cost_fix_total": "Corrected capital (€)",
+    "editor.col_cost_fix_unit": "Corrected unit cost (€)",
+    "editor.col_cost_fix_help": (
+        "Empty = automatic. With no capital invested, neither the trailing stop nor "
+        "profit taking can fire on this line."
+        ),
+    "editor.col_reserve": "Reserve (€)",
+    "editor.col_reserve_help": (
+        "Share never proposed for a swap, for an asset that also pays chain fees."
+        ),
+    "editor.col_arbitrated": "Arbitrate",
+    "editor.col_arbitrated_help": (
+        "Unchecked, the line stays tracked and displayed but the engine proposes no "
+        "move on it."
+        ),
+    "editor.apply": "Apply corrections",
+    "editor.applied": "✅ {n} line(s) updated",
+    "editor.nothing_changed": "Nothing changed.",
+    "editor.reset_all": "Return everything to automatic",
+    "editor.reset_done": "✅ Every correction has been removed",
+    "editor.unreadable": "Unreadable figure: \u201c{value}\u201d.",
+    "editor.divergence": (
+        "⚠️ {symbol}: your correction says {manual} while the watched addresses report "
+        "{chain}. It may well be right — a balance held elsewhere, an address you do not "
+        "watch — but the gap is surfaced rather than hidden."
+        ),
+
+    "settings.title": "Rotation parameters",
+    "settings.help": (
+        "These thresholds decide when the engine proposes a move. Each is explained "
+        "under its field. What you leave alone follows the value shipped with the tool "
+        "and will pick up its future corrections; what you change is kept and marked."
+        ),
+    "settings.moved_count": "✍️ {n} parameter(s) moved away from the shipped value.",
+    "settings.default_is": "shipped value: {value}",
+    "settings.save_section": "Save this section",
+    "settings.saved": "✅ Parameters saved",
+    "settings.reset_all": "Return every parameter to its default",
+    "settings.reset_done": "✅ {n} parameter(s) returned to the shipped value",
+    "settings.reset_nothing": "No parameter had been changed.",
+    "settings.on": "on",
+    "settings.off": "off",
+    "signal.settings_error": (
+        "A stored threshold makes the rule set incoherent: {e} "
+        "The shipped values apply meanwhile — fix it in the parameters panel."
+        ),
 }

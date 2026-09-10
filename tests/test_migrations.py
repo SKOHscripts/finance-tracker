@@ -146,9 +146,40 @@ def test_legacy_database_gains_the_new_tables(legacy_engine):
     for expected in (
         "cryptoasset", "scanrun", "positionverdict", "profittaken", "swapexecution",
         "wallet", "walletholding", "wallettransfer", "costbasisestimate",
-        "providercredential",
+        "providercredential", "signalsetting",
         ):
         assert expected in tables, f"table manquante : {expected}"
+
+
+def test_the_correction_columns_arrive_empty(legacy_engine):
+    """`cryptoasset` gains its two correction columns, holding nothing.
+
+    Null is the point of them being nullable: it means "no correction", which
+    is not the same claim as zero. Nothing is backfilled because nothing was
+    corrected — a migration must never invent a figure the user did not type.
+    """
+    init_db(legacy_engine)
+
+    with legacy_engine.connect() as conn:
+        columns = {c["name"]: c for c in inspect(conn).get_columns("cryptoasset")}
+        for name in ("manual_units", "manual_cost_basis_eur"):
+            assert name in columns, f"colonne manquante : {name}"
+            assert columns[name]["nullable"], f"{name} doit accepter NULL"
+
+
+def test_a_database_already_at_version_two_only_gains_the_third(legacy_engine):
+    """The common upgrade path: someone who installed the previous release."""
+    init_db(legacy_engine)  # brings it fully up to date
+
+    # Roll the stamp back to 2, as a database from that release would read.
+    with legacy_engine.begin() as conn:
+        conn.execute(text("DELETE FROM schema_version WHERE version > 2"))
+
+    assert current_version(legacy_engine) == 2
+
+    applied = run_migrations(legacy_engine)
+    assert [m.version for m in applied] == [3]
+    assert current_version(legacy_engine) == LATEST_VERSION
 
 
 def test_migration_is_recorded(legacy_engine):

@@ -458,7 +458,7 @@ STRINGS: dict[str, str] = {
     ),
     "signal.source_wallet": "chaîne",
     "signal.source_transactions": "transactions",
-    "signal.source_manual": "saisie",
+    "signal.source_manual": "corrigé",
     "signal.source_onchain": "estimé (chaîne)",
     "signal.source_valuation": "valorisation",
     "signal.source_none": "—",
@@ -718,4 +718,257 @@ STRINGS: dict[str, str] = {
     "app.db_migrate_error": (
         "❌ Migration impossible : {e}. Exporte ta base avant toute autre manipulation."
     ),
+
+    # ── Paramètres de rotation ─────────────────────────────────────────────────
+    "section.universe": "Univers",
+    "sectionhelp.universe": (
+        "Ce que le classement examine, et à quel rythme il l'interroge."
+        ),
+    "section.signal": "Score composite",
+    "sectionhelp.signal": (
+        "Comment un actif est noté avant toute barrière."
+        ),
+    "section.costs": "Coûts d'un mouvement",
+    "sectionhelp.costs": (
+        "Ce qu'un swap coûte réellement — le chiffre que l'avantage doit dépasser."
+        ),
+    "section.gates": "Barrières de rotation",
+    "sectionhelp.gates": (
+        "Les six conditions qui doivent toutes passer pour qu'une rotation soit proposée."
+        ),
+    "section.regime": "Régime de marché",
+    "sectionhelp.regime": (
+        "L'état constaté du marché. Une description, jamais une prévision."
+        ),
+    "section.temporisation": "Temporisation en refuge",
+    "sectionhelp.temporisation": (
+        "Sortir vers un stablecoin pour attendre, quand aucune rotation ne passe et que le régime est dégradé."
+        ),
+    "section.profit_taking": "Prise de bénéfice",
+    "sectionhelp.profit_taking": (
+        "Récupérer la mise une fois, puis laisser courir."
+        ),
+    "section.trailing_stop": "Stop suiveur",
+    "sectionhelp.trailing_stop": (
+        "Sortie complète quand une ligne gagnante rend trop de son plus haut."
+        ),
+
+    "param.universe.top_n": "Profondeur du classement",
+    "paramhelp.universe.top_n": (
+        "Combien d'actifs le classement examine, par capitalisation. Plus haut ouvre le champ à des lignes moins liquides ; plus bas resserre sur les plus établies."
+        ),
+    "param.universe.request_delay_seconds": "Délai entre deux appels",
+    "paramhelp.universe.request_delay_seconds": (
+        "Temps d'attente entre deux appels à CoinGecko. Le plan gratuit coupe les rafales : descendre trop bas fait échouer le scan plutôt que l'accélérer."
+        ),
+    "param.signal.fast_window_days": "Fenêtre courte",
+    "paramhelp.signal.fast_window_days": (
+        "Fenêtre courte du momentum. Elle capte le mouvement récent, donc elle réagit vite et se trompe plus souvent."
+        ),
+    "param.signal.slow_window_days": "Fenêtre longue",
+    "paramhelp.signal.slow_window_days": (
+        "Fenêtre longue du momentum, la tendance de fond. Elle doit rester strictement plus longue que la fenêtre courte, sinon le score compte deux fois la même mesure."
+        ),
+    "param.signal.weight_slow_momentum": "Poids de la tendance de fond",
+    "paramhelp.signal.weight_slow_momentum": (
+        "Poids de la tendance de fond dans le score composite. C'est le terme dominant par défaut."
+        ),
+    "param.signal.weight_fast_momentum": "Poids du mouvement récent",
+    "paramhelp.signal.weight_fast_momentum": (
+        "Poids du mouvement récent. L'augmenter rend le classement plus nerveux, et les rotations plus fréquentes."
+        ),
+    "param.signal.weight_volatility": "Poids de la pénalité de volatilité",
+    "paramhelp.signal.weight_volatility": (
+        "Poids de la pénalité de volatilité, soustraite du score. À momentum égal, il départage celui qui y est arrivé le plus calmement."
+        ),
+    "param.costs.swap_spread_pct": "Spread par jambe",
+    "paramhelp.costs.swap_spread_pct": (
+        "Écart constaté entre le prix affiché et le prix obtenu, par jambe de swap. Il entre dans le coût que l'avantage doit dépasser."
+        ),
+    "param.costs.provider_fee_pct": "Commission par jambe",
+    "paramhelp.costs.provider_fee_pct": (
+        "Commission affichée par le fournisseur, par jambe de swap. S'ajoute au spread."
+        ),
+    "param.costs.network_fees_total": "Frais de chaîne, aller-retour",
+    "paramhelp.costs.network_fees_total": (
+        "Frais de chaîne pour un aller-retour, en euros. Montant fixe, donc il pèse proportionnellement bien plus lourd sur une petite ligne — c'est exactement pourquoi une petite position se justifie moins de bouger."
+        ),
+    "param.costs.max_extra_slippage_pct": "Glissement accepté",
+    "paramhelp.costs.max_extra_slippage_pct": (
+        "Écart accepté entre le devis et l'exécution. Il fixe le nombre minimal d'unités en dessous duquel il faut annuler le swap."
+        ),
+    "param.gates.min_score_delta": "Écart de score minimal",
+    "paramhelp.gates.min_score_delta": (
+        "De combien le candidat doit dominer l'actif détenu, en écarts-type. Sous ce seuil, l'écart n'est pas distinguable du bruit."
+        ),
+    "param.gates.cost_margin_multiple": "Marge sur le coût",
+    "paramhelp.gates.cost_margin_multiple": (
+        "Combien de fois l'avantage attendu doit valoir le coût de l'aller-retour. À 2, un gain qui couvre tout juste les frais ne suffit pas."
+        ),
+    "param.gates.max_candidate_vol_pct": "Volatilité maximale du candidat",
+    "paramhelp.gates.max_candidate_vol_pct": (
+        "Volatilité annualisée sur 30 jours au-delà de laquelle un candidat est écarté. Plus haut, le gain espéré tient surtout au jour où on l'a mesuré."
+        ),
+    "param.gates.max_candidate_drawdown_pct": "Drawdown maximal du candidat",
+    "paramhelp.gates.max_candidate_drawdown_pct": (
+        "Repli maximal sur 90 jours toléré chez un candidat. Filtre ce qui remonte fort après être tombé plus fort encore."
+        ),
+    "param.gates.min_volume_24h": "Volume 24 h minimal",
+    "paramhelp.gates.min_volume_24h": (
+        "Volume échangé sur 24 heures minimal pour un candidat, en euros. Sous ce seuil, ressortir de la position coûtera plus cher que d'y entrer."
+        ),
+    "param.gates.required_consecutive_weeks": "Scans consécutifs requis",
+    "paramhelp.gates.required_consecutive_weeks": (
+        "Nombre de scans consécutifs pendant lesquels le même candidat doit tenir. C'est ce qui évite de payer deux jambes pour un signal d'une semaine."
+        ),
+    "param.gates.use_fallback_candidate": "Repli sur le candidat suivant",
+    "paramhelp.gates.use_fallback_candidate": (
+        "Activé, le moteur descend le classement jusqu'au premier actif qui passe volatilité, drawdown et volume. Désactivé, il ne regarde que le mieux classé — et un leader trop volatil bloque alors toute rotation, semaine après semaine."
+        ),
+    "param.regime.enabled": "Détection de régime",
+    "paramhelp.regime.enabled": (
+        "Lecture de l'état du marché. Désactivée, les rotations ne sont plus suspendues en marché baissier et la temporisation ne se déclenche jamais."
+        ),
+    "param.regime.long_average_days": "Moyenne longue de référence",
+    "paramhelp.regime.long_average_days": (
+        "Longueur de la moyenne mobile de l'actif de référence. Au-dessus d'elle, la mesure est favorable ; en dessous, défavorable."
+        ),
+    "param.regime.min_breadth_pct": "Largeur de marché minimale",
+    "paramhelp.regime.min_breadth_pct": (
+        "Part du classement en momentum 90 jours positif à partir de laquelle la seconde mesure est favorable. Deux mesures favorables donnent BULL, une seule MIXTE, aucune BEAR."
+        ),
+    "param.temporisation.enabled": "Temporisation en refuge",
+    "paramhelp.temporisation.enabled": (
+        "Troisième verdict possible : sortir vers un stablecoin pour attendre. Désactivé, une position dégradée n'a plus que le stop suiveur pour sortir."
+        ),
+    "param.temporisation.max_held_slow_momentum_pct": "Momentum lent maximal de la ligne",
+    "paramhelp.temporisation.max_held_slow_momentum_pct": (
+        "Momentum lent de l'actif détenu sous lequel la dégradation est constatée. Doit être négatif ou nul : il décrit une baisse, pas une hausse."
+        ),
+    "param.temporisation.min_held_drawdown_pct": "Drawdown minimal de la ligne",
+    "paramhelp.temporisation.min_held_drawdown_pct": (
+        "Repli sur 90 jours de l'actif détenu à partir duquel la dégradation est constatée."
+        ),
+    "param.temporisation.min_bearish_share_pct": "Part baissière minimale",
+    "paramhelp.temporisation.min_bearish_share_pct": (
+        "Part du classement en momentum lent négatif à partir de laquelle le marché est jugé dégradé dans son ensemble, et pas seulement ta ligne."
+        ),
+    "param.temporisation.cost_margin_multiple": "Marge sur le coût",
+    "paramhelp.temporisation.cost_margin_multiple": (
+        "Combien de fois la baisse constatée doit valoir le coût de l'aller simple vers le refuge. Plus bas qu'en rotation, parce qu'un aller simple coûte moins qu'un aller-retour."
+        ),
+    "param.temporisation.required_consecutive_weeks": "Scans consécutifs requis",
+    "paramhelp.temporisation.required_consecutive_weeks": (
+        "Nombre de scans consécutifs de dégradation avant de passer en refuge."
+        ),
+    "param.profit_taking.enabled": "Prise de bénéfice",
+    "paramhelp.profit_taking.enabled": (
+        "Récupérer la mise une fois, puis laisser courir le reste. Répond au risque de ne jamais vendre."
+        ),
+    "param.profit_taking.trigger_gain_pct": "Seuil de déclenchement",
+    "paramhelp.profit_taking.trigger_gain_pct": (
+        "Plus-value latente à partir de laquelle la récupération se déclenche."
+        ),
+    "param.profit_taking.max_fraction": "Fraction maximale vendue",
+    "paramhelp.profit_taking.max_fraction": (
+        "Part maximale de la ligne que ce mécanisme peut vendre. Il récupère le capital investi net de frais, jamais la position entière."
+        ),
+    "param.profit_taking.min_notional": "Notionnel minimal",
+    "paramhelp.profit_taking.min_notional": (
+        "Montant en dessous duquel une vente partielle ne vaut pas ses frais."
+        ),
+    "param.profit_taking.once_only": "Une seule fois par position",
+    "paramhelp.profit_taking.once_only": (
+        "Une seule récupération par position. Désactivé, la ligne peut être allégée à chaque nouveau franchissement du seuil."
+        ),
+    "param.trailing_stop.enabled": "Stop suiveur",
+    "paramhelp.trailing_stop.enabled": (
+        "Sortie complète vers le refuge quand le prix décroche de son plus haut."
+        ),
+    "param.trailing_stop.max_drawdown_pct": "Repli toléré",
+    "paramhelp.trailing_stop.max_drawdown_pct": (
+        "Repli depuis le plus haut de la fenêtre au-delà duquel la position est soldée."
+        ),
+    "param.trailing_stop.window_days": "Fenêtre du plus haut",
+    "paramhelp.trailing_stop.window_days": (
+        "Fenêtre sur laquelle le plus haut est mesuré. Plus elle est longue, plus le stop est difficile à déclencher."
+        ),
+    "param.trailing_stop.min_gain_pct": "Gain minimal requis",
+    "paramhelp.trailing_stop.min_gain_pct": (
+        "Plus-value minimale au-dessus du prix de revient pour que le stop agisse. À zéro, il ne touche jamais une position en perte — c'est la temporisation qui décide alors."
+        ),
+
+    # ── Éditeur de positions et panneau de réglages ─────────────────────────
+    "editor.title": "Corriger les chiffres d'une ligne",
+    "editor.help": (
+        "Une colonne montre le chiffre dérivé et d'où il vient ; la colonne « corrigé » "
+        "à côté est vide tant que tu n'y touches pas. Ce que tu y écris prime sur tout, "
+        "y compris sur ce que dit la chaîne. Vider la case rend la ligne à sa source "
+        "automatique."
+        ),
+    "editor.cost_mode": "Saisir le capital corrigé en",
+    "editor.cost_mode_total": "Capital total investi",
+    "editor.cost_mode_unit": "Prix de revient unitaire",
+    "editor.col_asset": "Actif",
+    "editor.col_units_auto": "Quantité (auto)",
+    "editor.col_units_auto_help": (
+        "Quantité déduite automatiquement, suivie de sa source : chaîne, transactions, "
+        "ou correction déjà en place."
+        ),
+    "editor.col_units_fix": "Quantité corrigée",
+    "editor.col_units_fix_help": (
+        "En unités natives de l'actif. Prime sur la chaîne comme sur le journal. "
+        "Vide = automatique ; zéro = ligne réellement vidée."
+        ),
+    "editor.col_cost_auto": "Capital investi (auto)",
+    "editor.col_cost_auto_help": (
+        "Capital déduit automatiquement, suivi de sa source : transactions, estimation "
+        "on-chain, ou correction déjà en place."
+        ),
+    "editor.col_cost_fix_total": "Capital corrigé (€)",
+    "editor.col_cost_fix_unit": "PRU corrigé (€/unité)",
+    "editor.col_cost_fix_help": (
+        "Vide = automatique. Sans capital investi, ni stop suiveur ni prise de bénéfice "
+        "ne peuvent se déclencher sur cette ligne."
+        ),
+    "editor.col_reserve": "Réserve (€)",
+    "editor.col_reserve_help": (
+        "Part jamais proposée au swap, pour un actif qui paie aussi les frais de chaîne."
+        ),
+    "editor.col_arbitrated": "Arbitrer",
+    "editor.col_arbitrated_help": (
+        "Décoché, la ligne reste suivie et affichée mais le moteur ne propose aucun "
+        "mouvement dessus."
+        ),
+    "editor.apply": "Appliquer les corrections",
+    "editor.applied": "✅ {n} ligne(s) mise(s) à jour",
+    "editor.nothing_changed": "Rien n'a changé.",
+    "editor.reset_all": "Tout remettre en automatique",
+    "editor.reset_done": "✅ Toutes les corrections ont été retirées",
+    "editor.unreadable": "Chiffre illisible : « {value} ».",
+    "editor.divergence": (
+        "⚠️ {symbol} : ta correction annonce {manual} alors que les adresses suivies "
+        "en rapportent {chain}. C'est peut-être exact — un solde ailleurs, une adresse "
+        "que tu ne suis pas — mais l'écart est signalé plutôt que masqué."
+        ),
+
+    "settings.title": "Paramètres de rotation",
+    "settings.help": (
+        "Ces seuils décident quand le moteur propose un mouvement. Chacun est expliqué "
+        "sous son champ. Ce que tu ne touches pas suit la valeur livrée avec l'outil et "
+        "profitera de ses futures corrections ; ce que tu changes est conservé et marqué."
+        ),
+    "settings.moved_count": "✍️ {n} paramètre(s) écarté(s) de la valeur livrée.",
+    "settings.default_is": "valeur livrée : {value}",
+    "settings.save_section": "Enregistrer cette section",
+    "settings.saved": "✅ Paramètres enregistrés",
+    "settings.reset_all": "Remettre tous les paramètres par défaut",
+    "settings.reset_done": "✅ {n} paramètre(s) remis à la valeur livrée",
+    "settings.reset_nothing": "Aucun paramètre n'était modifié.",
+    "settings.on": "activé",
+    "settings.off": "désactivé",
+    "signal.settings_error": (
+        "Un seuil enregistré rend le jeu de règles incohérent : {e} "
+        "Les valeurs livrées s'appliquent en attendant — corrige-le dans les paramètres."
+        ),
 }

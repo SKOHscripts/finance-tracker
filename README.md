@@ -115,7 +115,7 @@ Pour un guide complet, voir :
   Génération de rapports complets, prêts à être partagés (PDF via WeasyPrint).
 
 - **📡 Signal Crypto**
-  Arbitrage de chaque position crypto contre le classement du marché, sur six barrières explicites. Cinq verdicts possibles, avec le chiffre qui a fait passer ou échouer chaque barrière. ⚠️ *Outil éducatif, pas un conseil en investissement.*
+  Arbitrage de chaque position crypto contre le classement du marché, sur six barrières explicites. Cinq verdicts possibles, avec le chiffre qui a fait passer ou échouer chaque barrière. Chaque figure dont le moteur se sert est corrigeable à la main, à l'endroit même où elle s'affiche — et les 36 seuils qui décident d'un mouvement sont réglables, chacun avec la phrase qui dit ce qu'il change. ⚠️ *Outil éducatif, pas un conseil en investissement.*
 
 - **👛 Portefeuilles Crypto**
   Suivi d'adresses publiques sur Bitcoin, Solana et les chaînes EVM (Ethereum, Base, Arbitrum, Optimism, Polygon, BSC). Soldes récupérés automatiquement, prix de revient reconstitué depuis l'historique on-chain — avec son indice de confiance. Et pour ce qu'aucune adresse ne peut révéler — Monero, un solde d'échange, un avoir gardé au froid — une saisie à la main : la cotation se cherche par nom ou par symbole, la quantité et le prix de revient s'entrent une fois.
