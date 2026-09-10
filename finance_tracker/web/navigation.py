@@ -22,6 +22,8 @@ def build_pages() -> list[Page]:
     from finance_tracker.web.views.simulation import render as simulation_render
     from finance_tracker.web.views.products import render as products_render
     from finance_tracker.web.views.transactions import render as transactions_render
+    from finance_tracker.web.views.crypto_signal import render as crypto_signal_render
+    from finance_tracker.web.views.crypto_wallets import render as crypto_wallets_render
     from finance_tracker.web.views.documentation import render as documentation_render
     from finance_tracker.i18n import t
 
@@ -32,8 +34,10 @@ def build_pages() -> list[Page]:
         # Analysis tools
         Page("dashboard", t("nav.dashboard"), dashboard_render),
         Page("simulation", t("nav.simulation"), simulation_render),
+        Page("crypto_signal", t("nav.crypto_signal"), crypto_signal_render),
 
         # Data management
         Page("products", t("nav.products"), products_render),
         Page("transactions", t("nav.transactions"), transactions_render),
+        Page("crypto_wallets", t("nav.crypto_wallets"), crypto_wallets_render),
         ]

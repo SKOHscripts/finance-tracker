@@ -438,6 +438,12 @@ streamlit run app.py
 
         **Documentation technique:**
         [{DOCS_GITHUB_URL}/DOCUMENTATION_TECHNIQUE.md]({DOCS_GITHUB_URL}/DOCUMENTATION_TECHNIQUE.md)
+
+        **Signal crypto & portefeuilles:**
+        [{DOCS_GITHUB_URL}/CRYPTO_SIGNAL.md]({DOCS_GITHUB_URL}/CRYPTO_SIGNAL.md)
+
+        **⚠️ Avertissement (à lire) :**
+        [{DOCS_GITHUB_URL}/DISCLAIMER.md]({DOCS_GITHUB_URL}/DISCLAIMER.md)
         """)
 
 

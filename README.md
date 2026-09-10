@@ -21,9 +21,11 @@
   - [Utilisateur – Zéro installation](#utilisateur--zéro-installation)
   - [Développeur – Démarrage rapide](#développeur--démarrage-rapide)
 - [🌐 Fonctionnalités Principales](#-fonctionnalités-principales)
+- [📡 Signal Crypto & Portefeuilles](#-signal-crypto--portefeuilles)
 - [📚 Documentation Spécialisée](#-documentation-spécialisée)
   - [Concepts fondamentaux](#concepts-fondamentaux)
   - [Interface web](#interface-web)
+  - [Signal crypto](#signal-crypto)
   - [Base de données](#base-de-données)
   - [Formules & modèles](#formules--modèles)
   - [Lignes de commande & installation avancée](#lignes-de-commande--installation-avancée)
@@ -42,6 +44,8 @@
 - Suivre vos **transactions** et **valorisations** dans le temps.
 - Calculer des indicateurs de performance réalistes (MWRR, rendement annualisé, etc.).
 - Visualiser l’évolution de votre patrimoine via un **dashboard web** clair.
+- Suivre ses **portefeuilles crypto** depuis une simple adresse publique, avec récupération automatique des soldes et reconstitution du prix de revient.
+- Obtenir un **signal de rotation crypto** : des règles écrites à l'avance, appliquées à des métriques passées, qui proposent — ou refusent — un swap.
 - Générer des **rapports PDF** et utiliser une **CLI** pour les utilisateurs avancés.
 
 Deux publics cibles :
@@ -110,6 +114,12 @@ Pour un guide complet, voir :
 - **📄 Rapports PDF**
   Génération de rapports complets, prêts à être partagés (PDF via WeasyPrint).
 
+- **📡 Signal Crypto**
+  Arbitrage de chaque position crypto contre le classement du marché, sur six barrières explicites. Cinq verdicts possibles, avec le chiffre qui a fait passer ou échouer chaque barrière. ⚠️ *Outil éducatif, pas un conseil en investissement.*
+
+- **👛 Portefeuilles Crypto**
+  Suivi d'adresses publiques sur Bitcoin, Solana et les chaînes EVM (Ethereum, Base, Arbitrum, Optimism, Polygon, BSC). Soldes récupérés automatiquement, prix de revient reconstitué depuis l'historique on-chain — avec son indice de confiance.
+
 - **📈 Simulateur long terme**
   Projections multi‑scénarios, croissance composée, analyse de sensibilité.
 
@@ -138,6 +148,65 @@ Les taux sont basés sur les séries longues [INSEE IPC](https://www.insee.fr/fr
 
 ---
 
+## 📡 Signal Crypto & Portefeuilles
+
+> ⚠️ **Ceci n'est pas un conseil en investissement.** Finance Tracker n'est ni
+> conseiller en investissement, ni intermédiaire financier, et n'est enregistré
+> auprès d'aucune autorité de marché. Le signal applique des règles écrites à
+> l'avance à des métriques **passées** : il ne prédit aucun prix et n'exécute
+> rien. Les crypto-actifs sont extrêmement volatils et vous pouvez perdre la
+> totalité de votre mise.
+> 👉 **[Lire l'avertissement complet](./docs/DISCLAIMER.md)**
+
+### Ce que fait le signal
+
+Chaque position crypto est arbitrée **indépendamment des autres**, avec son
+propre montant et donc son propre coût de mouvement. Quatre mécanismes, dans un
+ordre de priorité fixe :
+
+| Priorité | Mécanisme | Ce qu'il fait |
+|---|---|---|
+| 1 | **Stop suiveur** | Sort une ligne en gain qui a décroché de plus de 30 % de son plus haut |
+| 2 | **Prise de bénéfice** | Récupère la mise, une fois, au-delà de 100 % de plus-value |
+| 3 | **Rotation** | Swap vers le candidat du classement, si six barrières passent |
+| 4 | **Temporisation** | Aller simple vers un stablecoin quand le marché est mesurablement dégradé |
+
+Protéger le capital passe avant d'encaisser ; encaisser passe avant de courir
+après un autre actif.
+
+Une barrière de **persistance** exige que les conditions tiennent trois scans
+consécutifs. La première semaine ne produit donc jamais de mouvement, quelle que
+soit la force apparente du signal. C'est le but.
+
+### Suivi automatique des portefeuilles
+
+| Chaîne | Soldes | Historique et prix de revient | Clé nécessaire |
+|---|---|---|---|
+| Ethereum, Base, Arbitrum, Optimism, Polygon, BSC | ✅ | ✅ | Clé d'explorateur gratuite, apportée par l'utilisateur |
+| Bitcoin | ✅ | ✅ | Aucune |
+| Solana | ✅ | ❌ (saisie manuelle) | Aucune |
+| Monero | ❌ | ❌ | *Impossible depuis une adresse seule* |
+
+**Deux limites, dites franchement.** Une chaîne enregistre des mouvements,
+jamais un prix d'achat : tout prix de revient reconstitué est une **estimation**,
+affichée avec sa part non expliquée et son indice de confiance, et corrigeable à
+la main — votre valeur gagne toujours. Et interroger un indexeur **révèle votre
+adresse** à celui qui l'exploite : la synchronisation s'active portefeuille par
+portefeuille, et vous pouvez pointer l'outil vers votre propre nœud.
+
+### En ligne de commande
+
+```bash
+finance-tracker crypto-positions   # ce qui sera arbitré, et d'où viennent les chiffres
+finance-tracker crypto-scan        # lancer un scan
+finance-tracker crypto-history     # relire les scans passés
+finance-tracker wallet-sync        # synchroniser les adresses suivies
+```
+
+👉 Détails : **[docs/CRYPTO_SIGNAL.md](./docs/CRYPTO_SIGNAL.md)**
+
+---
+
 ## 📚 Documentation Spécialisée
 
 La documentation est découpée en plusieurs guides thématiques pour rester claire et ciblée :
@@ -159,6 +228,14 @@ Guide pas à pas de chaque page Streamlit :
 - Simulateur long terme
 
 - 👉 **[docs/INTERFACE_WEB.md](./docs/INTERFACE_WEB.md)**
+
+### Signal crypto
+
+Les cinq verdicts, les quatre mécanismes, le calcul du score, le coût réel d'un
+swap, le suivi de portefeuilles et la reconstitution du prix de revient.
+
+- 👉 **[docs/CRYPTO_SIGNAL.md](./docs/CRYPTO_SIGNAL.md)**
+- ⚠️ **[docs/DISCLAIMER.md](./docs/DISCLAIMER.md)** — portée et limites
 
 ### Base de données
 

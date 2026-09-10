@@ -56,6 +56,28 @@ Finance Tracker évolue progressivement d'une solution simple de suivi vers une 
 
 ---
 
+### ✅ V1.1.0 — Signal crypto & portefeuilles
+
+**Statut:** ✅ Livré
+
+- ✅ **Migrations de schéma versionnées** — une base exportée par une version
+  antérieure reste utilisable ; c'est le prérequis de tout le reste
+- ✅ **Moteur de rotation crypto** — quatre mécanismes, barrières explicites,
+  chaque verdict accompagné du chiffre qui l'a produit
+- ✅ **Régime de marché** — deux mesures indépendantes, bull / mixte / bear
+- ✅ **Suivi de portefeuilles** — Bitcoin, Solana, six chaînes EVM
+- ✅ **Prix de revient reconstitué** depuis l'historique on-chain, avec indice de
+  confiance et correction manuelle prioritaire
+- ✅ **Avertissement** sur chaque page produisant un verdict et chaque plan de swap
+- ✅ Commandes CLI : `crypto-scan`, `crypto-positions`, `crypto-history`,
+  `wallet-sync`
+
+**Limites assumées:** Monero illisible depuis une adresse seule (principe du
+protocole) ; historique Solana non reconstitué ; tout prix de revient dérivé
+d'une chaîne est une estimation.
+
+---
+
 ### 🚀 V?
 
 **Focus:** Calculs Avancés & Automatisation
@@ -140,11 +162,16 @@ Finance Tracker évolue progressivement d'une solution simple de suivi vers une 
 
 **Focus:** Plateforme Complète
 
-#### Recommandations
-- 🤖 **Analyse Prédictive**
-  - ML: Prédiction des prix (tendances)
-  - Recommandations d'allocation optimale
-  - Détection d'anomalies
+#### Analyse
+- 📊 **Backtesting du signal**
+  - Rejouer les barrières sur l'historique de marché
+  - Mesurer ce qu'un jeu de seuils aurait donné
+  - Comparer plusieurs calibrages sur la même période
+
+> ⚠️ **Pas de prédiction de prix.** Ce n'était pas un oubli de roadmap : aucun
+> mécanisme de cet outil n'anticipe une hausse ou une baisse, parce que personne
+> ne sait le faire de façon fiable et qu'un outil qui prétend le contraire fait
+> perdre de l'argent avec assurance. Voir [DISCLAIMER.md](./DISCLAIMER.md).
 
 #### Multi-Devise
 - 🌍 **Support Complet**

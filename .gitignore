@@ -52,3 +52,12 @@ reports/
 
 # Generated docs
 docs/products.md
+
+# ── Signal crypto : etat local, jamais versionne ───────────────────────────────
+# Ces fichiers associent des dates, des montants et des routes de swap. Les
+# envoyer chez un hebergeur annulerait une partie de la raison d'etre d'un
+# portefeuille auto-heberge. Le depot est public : rien de tout ca n'y entre.
+state/*
+!state/.gitkeep
+reports/
+data/

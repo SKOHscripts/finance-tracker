@@ -91,6 +91,8 @@ finance_tracker.web.app : Streamlit web interface
 finance_tracker.services.dashboard_service : Dashboard business logic
 """
 
+import os
+
 from tabulate import tabulate
 from datetime import datetime
 from decimal import Decimal
@@ -810,6 +812,258 @@ def export_pdf() -> None:
     filepath = pdf_service.generate_report(portfolio)
 
     typer.echo(f"✅ PDF généré: {filepath}")
+
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CRYPTO SIGNAL COMMANDS
+#
+# ⚠️  Educational tool. Not investment advice, no recommendation, nothing is
+#     executed. See docs/DISCLAIMER.md.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+CRYPTO_DISCLAIMER = (
+    "⚠️  Outil éducatif. Ni conseil en investissement, ni recommandation. "
+    "Rien n'est exécuté : à toi de décider et d'agir. Voir docs/DISCLAIMER.md."
+    )
+
+
+@app.command()
+def crypto_positions() -> None:
+    """Afficher les positions crypto que le moteur arbitrerait.
+
+    Montre pour chaque ligne sa quantité, son capital investi, et d'où chacun
+    de ces chiffres vient. Un verdict ne vaut que ce que valent ses entrées :
+    cette commande sert à les vérifier avant de lancer un scan.
+    """
+    from finance_tracker.services.crypto.portfolio import load_positions
+
+    session = get_session()
+    resolved = load_positions(session)
+
+    if not resolved:
+        typer.echo(
+            "Aucune position crypto. Associe un produit à un identifiant de marché, "
+            "ou ajoute un portefeuille à suivre depuis l'interface web."
+            )
+        raise typer.Exit(code=0)
+
+    rows = [[
+        entry.position.symbol,
+        entry.position.coingecko_id,
+        "—" if entry.position.units is None else f"{entry.position.units:.8f}".rstrip("0").rstrip("."),
+        entry.sources.units_from,
+        "—" if entry.position.cost_basis_eur is None else f"{entry.position.cost_basis_eur:.2f}",
+        entry.sources.cost_basis_from,
+        "oui" if entry.position.arbitrated else "non",
+        ] for entry in resolved]
+
+    typer.echo(tabulate(
+        rows,
+        headers=["Actif", "Identifiant", "Quantité", "Source", "Investi (EUR)", "Source", "Arbitré"],
+        tablefmt="simple",
+        ))
+
+    unknown = [e.position.symbol for e in resolved if e.position.cost_basis_eur is None]
+    if unknown:
+        typer.echo(
+            f"\nCapital investi inconnu sur : {', '.join(unknown)}. "
+            "Le stop suiveur et la prise de bénéfice restent inactifs sur ces lignes."
+            )
+
+
+@app.command()
+def crypto_scan(
+    dry_run: bool = typer.Option(
+        False, "--dry-run",
+        help="N'enregistre pas le scan. Aucune série de persistance ne progresse.",
+        ),
+    json_output: bool = typer.Option(False, "--json", help="Sortie JSON complète"),
+    ) -> None:
+    """Lancer un scan et afficher le verdict de chaque position.
+
+    Récupère le classement du marché, applique les barrières de
+    ``config/signal_rules.toml``, et écrit le résultat dans la base — c'est
+    cet historique que lisent les barrières de persistance au scan suivant.
+    """
+    import json as _json
+
+    from finance_tracker.services.crypto.coingecko_client import CoinGeckoClient
+    from finance_tracker.services.crypto.rules import RulesError, load_rules
+    from finance_tracker.services.crypto.scan_service import ScanError, run_signal_scan
+    from finance_tracker.services.wallets.registry import COINGECKO, get_credential
+
+    session = get_session()
+
+    try:
+        rules = load_rules()
+    except RulesError as exc:
+        typer.echo(f"❌ Configuration invalide : {exc}", err=True)
+        raise typer.Exit(code=1)
+
+    credential = get_credential(session, COINGECKO)
+    client = CoinGeckoClient(
+        api_key=credential.api_key or os.environ.get("COINGECKO_API_KEY", ""),
+        base_url=credential.base_url or None,
+        request_delay=rules.universe.request_delay_seconds,
+        )
+
+    def progress(step) -> None:
+        if not json_output:
+            typer.echo(f"  … {step.step}", err=True)
+
+    try:
+        result, _run = run_signal_scan(
+            session, rules=rules, client=client,
+            persist=not dry_run, on_progress=progress,
+            )
+    except ScanError as exc:
+        typer.echo(f"❌ Scan impossible : {exc}", err=True)
+        raise typer.Exit(code=1)
+
+    if json_output:
+        typer.echo(_json.dumps({
+            "verdict": result.verdict.value,
+            "regime": result.regime.as_dict(),
+            "candidate": None if not result.candidate else {
+                "id": result.candidate.id,
+                "symbol": result.candidate.symbol,
+                "score": round(result.candidate.score, 3),
+                },
+            "positions": [{
+                "id": o.position.coingecko_id,
+                "symbol": o.position.symbol,
+                "verdict": o.verdict.value,
+                "candidate_id": None if not result.candidate else result.candidate.id,
+                "value": round(o.current_value, 2),
+                "gain_pct": None if o.gain_pct is None else round(o.gain_pct, 1),
+                "streak_weeks": o.streak_weeks,
+                "plan": o.plan,
+                "detail": o.as_dict(),
+                } for o in result.positions],
+            }, indent=2, ensure_ascii=False, default=str))
+        return
+
+    typer.echo("")
+    typer.echo(CRYPTO_DISCLAIMER)
+    typer.echo("")
+    typer.echo(f"Verdict global : {result.verdict.value}")
+    typer.echo(f"Régime         : {result.regime.state.value}")
+    if result.candidate:
+        typer.echo(
+            f"Candidat       : {result.candidate.symbol} "
+            f"(score {result.candidate.score:.3f})"
+            )
+    if dry_run:
+        typer.echo("Mode --dry-run : rien n'a été enregistré.")
+    typer.echo("")
+
+    typer.echo(tabulate(
+        [[
+            o.position.symbol,
+            o.verdict.value,
+            f"{o.current_value:.2f}",
+            "—" if o.gain_pct is None else f"{o.gain_pct:+.1f} %",
+            o.streak_weeks or "—",
+            (o.plan or {}).get("to_symbol", "—"),
+            ] for o in result.positions],
+        headers=["Actif", "Verdict", "Valeur (EUR)", "Plus-value", "Série", "Vers"],
+        tablefmt="simple",
+        ))
+
+    for outcome in result.positions:
+        if not outcome.plan:
+            continue
+        plan = outcome.plan
+        typer.echo("")
+        typer.echo(f"── Plan pour {outcome.position.symbol} ──")
+        typer.echo(f"  {plan['from_symbol']} → {plan['to_symbol']} : {plan['amount']:.2f} EUR")
+        if plan.get("min_accept_units") is not None:
+            typer.echo(
+                f"  Minimum acceptable : {plan['min_accept_units']} {plan['to_symbol']} "
+                f"(marge {plan['max_acceptable_loss_pct']} %)"
+                )
+        for quote in plan.get("quotes_to_compare", []):
+            typer.echo(f"  - comparer : {quote}")
+        if plan.get("note"):
+            typer.echo(f"  {plan['note']}")
+
+
+@app.command()
+def crypto_history(limit: int = typer.Option(12, help="Nombre de scans à afficher")) -> None:
+    """Afficher l'historique des scans enregistrés.
+
+    C'est cette série que lisent les barrières de persistance : un mouvement
+    ne se déclenche que si les conditions tiennent plusieurs scans d'affilée.
+    """
+    from finance_tracker.services.crypto.scan_service import run_history
+
+    session = get_session()
+    runs = run_history(session, limit=limit)
+
+    if not runs:
+        typer.echo("Aucun scan enregistré.")
+        raise typer.Exit(code=0)
+
+    typer.echo(tabulate(
+        [[
+            run.scan_date.strftime("%Y-%m-%d %H:%M"),
+            run.verdict.value,
+            run.regime.value,
+            run.candidate_symbol or "—",
+            ] for run in runs],
+        headers=["Date", "Verdict", "Régime", "Candidat"],
+        tablefmt="simple",
+        ))
+
+
+@app.command()
+def wallet_sync(
+    cost_basis: bool = typer.Option(
+        True, help="Recalculer aussi les prix de revient après la synchronisation."),
+    ) -> None:
+    """Synchroniser les portefeuilles suivis et recalculer les prix de revient.
+
+    Ne touche qu'aux portefeuilles dont la synchronisation est activée : une
+    adresse enregistrée sans synchronisation n'est jamais envoyée à un
+    indexeur.
+    """
+    from finance_tracker.services.crypto.coingecko_client import CoinGeckoClient
+    from finance_tracker.services.wallets.registry import COINGECKO, get_credential
+    from finance_tracker.services.wallets.sync_service import refresh_cost_bases, sync_all
+
+    session = get_session()
+    credential = get_credential(session, COINGECKO)
+    client = CoinGeckoClient(
+        api_key=credential.api_key or os.environ.get("COINGECKO_API_KEY", ""),
+        base_url=credential.base_url or None,
+        )
+
+    reports = sync_all(session, client, on_progress=lambda s: typer.echo(f"  … {s}", err=True))
+
+    if not reports:
+        typer.echo("Aucun portefeuille à synchroniser.")
+        raise typer.Exit(code=0)
+
+    for report in reports:
+        if report.ok:
+            typer.echo(
+                f"✅ {report.label} : {report.balances_seen} solde(s), "
+                f"{report.transfers_added} mouvement(s) ajouté(s)"
+                )
+        else:
+            typer.echo(f"❌ {report.label} : {report.error}", err=True)
+        for note in report.notes:
+            typer.echo(f"   ℹ️  {note}")
+
+    if cost_basis:
+        results = refresh_cost_bases(
+            session, client, on_progress=lambda s: typer.echo(f"  … {s}", err=True))
+        typer.echo(f"💶 {len(results)} prix de revient recalculé(s).")
+        typer.echo(
+            "   Ce sont des estimations : une chaîne enregistre des mouvements, "
+            "jamais un prix d'achat."
+            )
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

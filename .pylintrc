@@ -42,6 +42,20 @@ disable=
     invalid-name,
     disallowed-name,
 
+[TYPECHECK]
+# SQLModel exposes table columns as pydantic FieldInfo at class level, so pylint
+# sees `Product.name.desc()` as an attribute error on FieldInfo. The columns are
+# real at runtime; only the static view is wrong.
+ignored-classes = FieldInfo,
+                  sqlalchemy.orm.scoping.scoped_session
+
+# matplotlib.cm builds its colormap members dynamically. Whether pylint sees
+# get_cmap depends on the installed matplotlib and pylint versions: CI does not
+# flag it, some local combinations do. Excluded so the check gives the same
+# answer everywhere, rather than passing in CI and failing on a contributor's
+# machine.
+ignored-modules = matplotlib.cm
+
 [DESIGN]
 max-args = 10
 max-returns = 10
