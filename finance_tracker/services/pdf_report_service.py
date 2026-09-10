@@ -66,10 +66,16 @@ class PDFReportService:
         str
             Rendered HTML content.
         """
-        from jinja2 import Environment, FileSystemLoader
+        from jinja2 import Environment, FileSystemLoader, select_autoescape
         from finance_tracker.utils.money import format_eur
 
-        env = Environment(loader=FileSystemLoader(self.templates_dir))
+        # Escaping on. A product name is typed by the user, and without this it
+        # reaches the report as markup: a name holding "<" silently breaks the
+        # layout, and one holding a tag injects it into the document.
+        env = Environment(
+            loader=FileSystemLoader(self.templates_dir),
+            autoescape=select_autoescape(["html", "xml"]),
+            )
         template = env.get_template("report.html")
 
         # Calculate percentage manually to handle zero division edge case
