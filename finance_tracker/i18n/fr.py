@@ -655,6 +655,60 @@ STRINGS: dict[str, str] = {
     "wallets.override_invalid": "Montant illisible.",
     "wallets.override_saved": "✅ Prix de revient de « {name} » mis à jour",
 
+    # ── Actif saisi à la main (sans adresse) ────────────────────────────────────
+    "wallets.manual_title": "Ajouter un actif sans adresse",
+    "wallets.manual_help": (
+        "Pour un avoir qu'aucune adresse ne peut révéler : Monero, dont le solde "
+        "ne se lit pas sans clé de vue, un solde d'échange, ou un actif que tu "
+        "préfères ne pas exposer à un indexeur. La quantité et le prix de revient "
+        "sont enregistrés comme un achat : ils restent modifiables dans la page "
+        "Transactions, comme pour n'importe quel produit."
+        ),
+    "wallets.manual_search": "Chercher la cotation",
+    "wallets.manual_search_placeholder": "ex. monero, ou XMR",
+    "wallets.manual_search_btn": "🔍 Chercher",
+    "wallets.manual_query_required": "Tape un nom ou un symbole à chercher.",
+    "wallets.manual_search_failed": "Recherche impossible : {error}",
+    "wallets.manual_no_hit": (
+        "Aucune cotation ne correspond. Essaie le nom complet plutôt que le symbole."
+        ),
+    "wallets.manual_listing": "Cotation",
+    "wallets.manual_name": "Nom du produit",
+    "wallets.manual_name_help": (
+        "Tel qu'il apparaîtra partout dans l'outil. Doit être unique."
+        ),
+    "wallets.manual_units": "Quantité détenue",
+    "wallets.manual_units_placeholder": "ex. 12.5",
+    "wallets.manual_units_help": (
+        "En unités natives de l'actif (XMR, BTC, ETH…), pas en satoshis ni en wei. "
+        "Laisse vide pour créer la ligne et saisir tes achats ensuite."
+        ),
+    "wallets.manual_units_invalid": "Quantité illisible.",
+    "wallets.manual_date": "Date de la position",
+    "wallets.manual_cost_mode": "Prix de revient donné en",
+    "wallets.manual_cost_unit": "Prix unitaire",
+    "wallets.manual_cost_total": "Montant total investi",
+    "wallets.manual_cost": "Montant (€)",
+    "wallets.manual_cost_placeholder": "ex. 142.30",
+    "wallets.manual_cost_help": (
+        "Laisse vide si l'actif n'a pas de prix d'achat — un airdrop, du minage. "
+        "Le moteur traite alors le prix de revient comme inconnu et désactive le "
+        "stop suiveur sur cette ligne, plutôt que de lire l'absence comme un gain total."
+        ),
+    "wallets.manual_cost_invalid": "Montant illisible.",
+    "wallets.manual_reserve": "Réserve de frais (€)",
+    "wallets.manual_reserve_help": (
+        "Part jamais proposée au swap, pour un actif qui paie aussi les frais de chaîne."
+        ),
+    "wallets.manual_reserve_invalid": "Réserve illisible.",
+    "wallets.manual_arbitrated": "Arbitrer cette ligne",
+    "wallets.manual_arbitrated_help": (
+        "Décoché, l'actif reste suivi et affiché mais le moteur ne propose aucun "
+        "mouvement dessus."
+        ),
+    "wallets.manual_add_btn": "Ajouter l'actif",
+    "wallets.manual_added": "✅ « {name} » ajouté et associé à la cotation {listing}",
+
     # ── Navigation et base ──────────────────────────────────────────────────────
     "nav.crypto_signal": "📡 Signal Crypto",
     "nav.crypto_wallets": "👛 Portefeuilles Crypto",

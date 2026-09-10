@@ -645,6 +645,57 @@ STRINGS: dict[str, str] = {
     "wallets.override_invalid": "Amount could not be read.",
     "wallets.override_saved": "✅ Cost basis of “{name}” updated",
 
+    # ── Manually declared asset (no address) ────────────────────────────────────
+    "wallets.manual_title": "Add an asset without an address",
+    "wallets.manual_help": (
+        "For a holding no address can reveal: Monero, whose balance cannot be read "
+        "without its view key, an exchange balance, or an asset you would rather "
+        "not expose to an indexer. Units and cost basis are recorded as a purchase, "
+        "so they stay editable in the Transactions page like any other product."
+        ),
+    "wallets.manual_search": "Search for the listing",
+    "wallets.manual_search_placeholder": "e.g. monero, or XMR",
+    "wallets.manual_search_btn": "🔍 Search",
+    "wallets.manual_query_required": "Type a name or a symbol to search for.",
+    "wallets.manual_search_failed": "Search failed: {error}",
+    "wallets.manual_no_hit": (
+        "No listing matches. Try the full name rather than the ticker."
+        ),
+    "wallets.manual_listing": "Listing",
+    "wallets.manual_name": "Product name",
+    "wallets.manual_name_help": "As it will appear throughout the app. Must be unique.",
+    "wallets.manual_units": "Units held",
+    "wallets.manual_units_placeholder": "e.g. 12.5",
+    "wallets.manual_units_help": (
+        "In the asset's native units (XMR, BTC, ETH…), not satoshis or wei. "
+        "Leave empty to create the line and enter your purchases afterwards."
+        ),
+    "wallets.manual_units_invalid": "Unreadable quantity.",
+    "wallets.manual_date": "Position date",
+    "wallets.manual_cost_mode": "Cost basis given as",
+    "wallets.manual_cost_unit": "Unit price",
+    "wallets.manual_cost_total": "Total invested",
+    "wallets.manual_cost": "Amount (€)",
+    "wallets.manual_cost_placeholder": "e.g. 142.30",
+    "wallets.manual_cost_help": (
+        "Leave empty if the asset has no purchase price — an airdrop, mining. "
+        "The engine then treats the cost basis as unknown and disables the trailing "
+        "stop on that line, rather than reading the absence as a total gain."
+        ),
+    "wallets.manual_cost_invalid": "Unreadable amount.",
+    "wallets.manual_reserve": "Fee reserve (€)",
+    "wallets.manual_reserve_help": (
+        "Share never proposed for a swap, for an asset that also pays chain fees."
+        ),
+    "wallets.manual_reserve_invalid": "Unreadable reserve.",
+    "wallets.manual_arbitrated": "Arbitrate this line",
+    "wallets.manual_arbitrated_help": (
+        "Unchecked, the asset stays tracked and displayed but the engine proposes "
+        "no move on it."
+        ),
+    "wallets.manual_add_btn": "Add the asset",
+    "wallets.manual_added": "✅ “{name}” added and mapped to listing {listing}",
+
     # ── Navigation and database ─────────────────────────────────────────────────
     "nav.crypto_signal": "📡 Crypto Signal",
     "nav.crypto_wallets": "👛 Crypto Wallets",

@@ -223,7 +223,9 @@ moteur de signal.
 
 **Monero ne peut pas être lu depuis une adresse seule.** C'est le principe même
 du protocole : sans clé de vue, une adresse XMR ne révèle rien. Ces positions se
-saisissent à la main, et c'est très bien ainsi.
+saisissent à la main — section « Ajouter un actif sans adresse » de la même
+page, décrite en [Mise en route](#1-associer-un-produit-à-une-cotation) — et
+c'est très bien ainsi.
 
 **Solana : soldes seulement.** Reconstituer l'historique demanderait de parcourir
 les signatures et de décoder chaque instruction, soit des centaines d'appels
@@ -307,8 +309,30 @@ Deux chemins.
 ajoute une adresse, synchronise, puis « Créer » à côté d'un solde découvert.
 Produit, cotation et association sont créés en une fois.
 
-**À la main** : crée un produit de type `CRYPTO`, puis associe-le à un
-identifiant de marché depuis la même page.
+**À la main**, pour un avoir qu'aucune adresse ne peut révéler : même page,
+section **« Ajouter un actif sans adresse »**. Cherche la cotation par nom ou
+par symbole, choisis-la dans la liste, puis renseigne la quantité et le prix de
+revient.
+
+La cotation se choisit dans une liste plutôt que se tape, et ce n'est pas du
+confort : **un symbole n'est pas unique**. Plusieurs jetons répondent à trois
+mêmes lettres, et un identifiant choisi de travers ne signale rien — il price
+simplement un autre actif à chaque scan. Le rang de capitalisation affiché à
+côté de chaque résultat est là pour départager.
+
+Deux choses à savoir sur la saisie :
+
+- **La quantité est en unités natives** — XMR, BTC, ETH — jamais en satoshis ni
+  en wei. C'est ce que le moteur multiplie par un cours.
+- **Le prix de revient peut rester vide.** Un airdrop ou du minage n'a pas de
+  prix d'achat. Le moteur traite alors le capital investi comme *inconnu* et
+  désactive le stop suiveur sur cette ligne, au lieu de lire l'absence comme un
+  gain total.
+
+Quantité et prix de revient sont enregistrés **comme un achat dans le journal**,
+pas dans un champ à part. Ils restent donc modifiables depuis la page
+Transactions, comme pour n'importe quel produit, et alimentent le tableau de
+bord comme le reste.
 
 ### 2. Renseigner le capital investi
 
