@@ -28,7 +28,7 @@ from finance_tracker.services.crypto.overrides import (
     set_overrides,
     set_reserve_and_arbitration,
     )
-from .signal_widgets import source_label
+from finance_tracker.web.ui.signal_widgets import source_label
 
 
 def _num(value: Any) -> Optional[Decimal]:
